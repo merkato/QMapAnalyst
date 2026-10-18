@@ -33,8 +33,7 @@ The plugin operates via a dockable widget (docked on the right by default) and i
 ### 1. GCP Points (Ground Control Points)
 Start by loading a raw, unreferenced historical map scan (pixels). Use this tab to capture point pairs between the historical map canvas and the main QGIS reference map. 
 
-> *![GCP Tab Screenshot](docs/images/tab_gcp.png)*  
-> *(Placeholder: Add a screenshot of the GCP tab here)*
+> *![GCP Tab](docs/gcp.png)*  
 
 * Enable or disable specific GCPs on the fly to see how they affect the transformation.
 * Save and load GCP sets using standard CSV or QGIS `.points` formats.
@@ -42,8 +41,7 @@ Start by loading a raw, unreferenced historical map scan (pixels). Use this tab 
 ### 2. Analysis & Transformation
 Once you have enough active GCPs (min. 2 for Helmert, 3 for Affine), navigate to the Analysis tab to compute the mathematical model.
 
-> *![Analysis Tab Screenshot](docs/images/tab_analysis.png)*  
-> *(Placeholder: Add a screenshot of the Analysis tab here)*
+> *![Analysis Tab](docs/analysis.png)*  
 
 * Instantly view the RMSE (Root Mean Square Error), Min/Max errors, and global rotation angle.
 * Estimate the original paper scale based on standard scanning resolutions (150, 300, 600 DPI).
@@ -51,8 +49,8 @@ Once you have enough active GCPs (min. 2 for Helmert, 3 for Affine), navigate to
 ### 3. Result Layers
 This tab is the core of the cartometric visualization. Set your grid step (in meters) and confidence radius, then generate analytical geometry.
 
-> *![Result Layers Screenshot](docs/images/tab_layers.png)*  
-> *(Placeholder: Add a screenshot of the Result Layers tab here)*
+> *![Result Layers](docs/results.png)*  
+
 
 * **Main Map Generations:** Create displacement vectors, error circles, and RBF distortion grids that align with your modern reference CRS.
 * **Historical Map Generations:** Project warped modern grids (e.g., PUWG 1992) and automated scale/rotation isolines back onto the historical pixel space.
@@ -64,5 +62,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👤 Author
 
 **Tomasz Nycz**  
-[GitHub Profile](https://github.com/your-username)  
+[GitHub Profile](https://github.com/merkato)  
 *If you use this plugin in academic research, please consider citing it!*
