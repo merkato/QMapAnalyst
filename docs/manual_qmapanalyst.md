@@ -21,7 +21,7 @@ Pracę z wtyczką rozpoczynamy od załadowania surowego, niezgeoreferowanego ska
 
 W tej zakładce definiujemy punkty kontrolne (Ground Control Points - GCP), które łączą piksele mapy dawnej z rzeczywistymi współrzędnymi referencyjnymi (np. w układzie PUWG 1992 na głównej mapie QGIS).
 
-![Edycja punktów GCP](gcp.png)
+![Edycja punktów GCP](gcp_table.png)
 
 ### Dodawanie punktów:
 1. Kliknij **➕ Dodaj parę GCP** (przycisk wciśnie się).

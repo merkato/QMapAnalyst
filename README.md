@@ -33,7 +33,7 @@ The plugin operates via a dockable widget (docked on the right by default) and i
 ### 1. GCP Points (Ground Control Points)
 Start by loading a raw, unreferenced historical map scan (pixels). Use this tab to capture point pairs between the historical map canvas and the main QGIS reference map. 
 
-> *![GCP Tab](docs/gcp.png)*  
+> *![GCP Tab](docs/gcp_table.png)*  
 
 * Enable or disable specific GCPs on the fly to see how they affect the transformation.
 * Save and load GCP sets using standard CSV or QGIS `.points` formats.
