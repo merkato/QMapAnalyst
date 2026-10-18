@@ -2,8 +2,8 @@
 name=QMapAnalyst
 qgisMinimumVersion=3.34
 qgisMaximumVersion=4.99
-description=Analyze historical maps, calculate transformations (Helmert, Affine), error circles, RBF distortion grids, and historic PUWG grids.
-version=0.1.0
+description=Analyze historical maps, calculate transformations (Helmert, Affine), error circles, RBF distortion grids, and cartographic grid on historical map.
+version=0.1.1
 author=Tomasz Nycz
 email=tomasz@nycz.beskidy.pl
 about=Modern QGIS plugin inspired by MapAnalyst, built with Python, NumPy, SciPy, and PyQt6.

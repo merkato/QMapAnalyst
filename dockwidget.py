@@ -67,7 +67,16 @@ class QMapAnalystDockWidget(QDockWidget):
 
         self.btn_clear_overlays = QPushButton("🧹 Wyczyść nakładki")
         self.btn_clear_overlays.clicked.connect(self.clear_old_overlays)
-
+        
+        self.btn_sync_views = QPushButton("🔗 Synchronizuj widok")
+        self.btn_sync_views.setCheckable(True)
+        self.btn_sync_views.setEnabled(False)
+        
+        toolbar_layout.addWidget(self.btn_load_raster)
+        toolbar_layout.addWidget(self.btn_pan_old)
+        toolbar_layout.addWidget(self.btn_zoom_full)
+        toolbar_layout.addWidget(self.btn_sync_views)  # <-- DODANO
+        toolbar_layout.addWidget(self.btn_clear_overlays)
         toolbar_layout.addWidget(self.btn_load_raster)
         toolbar_layout.addWidget(self.btn_pan_old)
         toolbar_layout.addWidget(self.btn_zoom_full)
@@ -240,6 +249,7 @@ class QMapAnalystDockWidget(QDockWidget):
         self.tool_click_ref.canvasClicked.connect(self.on_ref_canvas_clicked)
 
         self.old_canvas.setMapTool(self.tool_pan_old)
+        self.old_canvas.extentsChanged.connect(self.sync_main_canvas_to_old)
 
     def create_old_canvas_vector_layer(self, name: str, fields: list) -> QgsVectorLayer:
         if self.old_raster_layer and self.old_raster_layer.crs().isValid():
@@ -329,7 +339,51 @@ class QMapAnalystDockWidget(QDockWidget):
         if self.old_raster_layer:
             self.old_canvas.setExtent(self.old_raster_layer.extent())
             self.old_canvas.refresh()
+    def forward_transform_xy(self, x: float, y: float):
+        """Szybka globalna transformacja pikseli na współrzędne mapy dla nawigacji (bez RBF)."""
+        res = self.last_results
+        if "Helmert" in res["type"]:
+            p = res["params"]
+            tx, ty, a, b = p["tx"], p["ty"], p["a"], p["b"]
+            gx = tx + a * x - b * y
+            gy = ty + b * x + a * y
+        else:
+            p = res["params"]
+            tx, ty, a, b, c, d = p["tx"], p["ty"], p["a"], p["b"], p["c"], p["d"]
+            gx = tx + a * x + b * y
+            gy = ty + c * x + d * y
+        return gx, gy
 
+    def sync_main_canvas_to_old(self):
+        """Synchronizuje widok mapy głównej na podstawie aktualnego obszaru mapy dawnej."""
+        if not self.btn_sync_views.isChecked() or not self.last_results:
+            return
+
+        # Pobieramy obecny widok mapy dawnej (w pikselach)
+        ext = self.old_canvas.extent()
+        
+        # Ekstrahujemy 4 narożniki ekranu
+        pts = [
+            (ext.xMinimum(), ext.yMinimum()),
+            (ext.xMaximum(), ext.yMinimum()),
+            (ext.xMaximum(), ext.yMaximum()),
+            (ext.xMinimum(), ext.yMaximum())
+        ]
+
+        # Przekształcamy je na współrzędne referencyjne (współczesne metry)
+        trans_pts = [self.forward_transform_xy(x, y) for x, y in pts]
+        
+        x_coords = [p[0] for p in trans_pts]
+        y_coords = [p[1] for p in trans_pts]
+        
+        # Tworzymy nowy zakres graniczny (Bounding Box) z przekształconych narożników
+        from qgis.core import QgsRectangle
+        new_ext = QgsRectangle(min(x_coords), min(y_coords), max(x_coords), max(y_coords))
+        
+        # Ustawiamy widok w głównej mapie i odświeżamy
+        self.main_canvas.setExtent(new_ext)
+        self.main_canvas.refresh()
+    
     def start_gcp_capture(self, checked):
         if checked:
             if not self.old_raster_layer:
@@ -587,6 +641,7 @@ class QMapAnalystDockWidget(QDockWidget):
                 res = MathEngine.affine_transform(pts_old, pts_ref)
 
             self.last_results = res
+            self.btn_sync_views.setEnabled(True)
 
             span = float(np.max(np.ptp(pts_ref, axis=0)))
             if span > 0:
@@ -641,6 +696,25 @@ class QMapAnalystDockWidget(QDockWidget):
             ])
 
             self.txt_report.setText("\n".join(report))
+            self.lbl_status.setText(f"Obliczono ({active_count} pkt)! RMSE: {res['rmse']:.1f}m | Skala (300 DPI): ~1:{m_300}")
+
+            project = QgsProject.instance()
+            existing_names = [lyr.name() for lyr in project.mapLayers().values()]
+
+            if any(n.startswith("QMapAnalyst - Wektory") for n in existing_names):
+                self.generate_result_layers()
+            if any(n.startswith("QMapAnalyst - Okręgi") for n in existing_names):
+                self.generate_error_circles()
+            if any(n.startswith("QMapAnalyst - Siatka (") for n in existing_names):
+                self.generate_distortion_grid()
+            if any(n.startswith("QMapAnalyst - Siatka PUWG92") for n in existing_names):
+                self.generate_historic_grid()
+            if any(n.startswith("QMapAnalyst - Izolinie") for n in existing_names):
+                self.generate_isolines()
+
+        except Exception as e:
+            self._updating_table = False
+            self.txt_report.setText(f"Błąd obliczeń: {e}")
             self.lbl_status.setText(f"Obliczono ({active_count} pkt)! RMSE: {res['rmse']:.1f}m | Skala (300 DPI): ~1:{m_300}")
 
         except Exception as e:
