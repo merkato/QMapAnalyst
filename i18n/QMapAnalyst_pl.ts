@@ -124,12 +124,20 @@
         <translation>🛜 Siatkatka PUWG92 na mapie dawnej</translation>
     </message>
     <message>
-        <source>〰️ Izolinie skali i rotacji</source>
-        <translation>〰️ Izolinie skali i rotacji</translation>
+        <source>〰️ Izolinie rotacji</source>
+        <translation>〰️ Izolinie rotacji</translation>
     </message>
     <message>
         <source>Oczko siatek [m]:</source>
         <translation>Oczko siatek [m]:</translation>
+    </message>
+    <message>
+        <source>Widoczność nakładek:</source>
+        <translation>Widoczność nakładek:</translation>
+    </message>
+    <message>
+        <source>〰️ Izolinie skali</source>
+        <translation>〰️ Izolinie skali</translation>
     </message>
 </context>
 </TS>
