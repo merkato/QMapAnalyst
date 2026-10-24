@@ -7,7 +7,7 @@ from qgis.PyQt.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
     QComboBox, QPushButton, QTextEdit, QGroupBox, QFileDialog,
     QTableWidget, QTableWidgetItem, QHeaderView, QSplitter, QLabel,
-    QTabWidget, QSlider, QGridLayout, QSpinBox
+    QTabWidget, QSlider, QGridLayout, QSpinBox, QListWidget, QListWidgetItem
 )
 from qgis.gui import (
     QgsMapCanvas, QgsMapToolPan, QgsMapToolEmitPoint, QgsVertexMarker
@@ -87,6 +87,12 @@ class QMapAnalystDockWidget(QDockWidget):
         self.old_canvas.setCanvasColor(Qt.GlobalColor.white)
         self.old_canvas.setMinimumHeight(320)
         canvas_layout.addWidget(self.old_canvas)
+
+        self.lst_old_layers = QListWidget()
+        self.lst_old_layers.setMaximumHeight(80)
+        self.lst_old_layers.itemChanged.connect(self.refresh_old_canvas_layers)
+        canvas_layout.addWidget(QLabel("Widoczność nakładek:"))
+        canvas_layout.addWidget(self.lst_old_layers)
 
         canvas_group.setLayout(canvas_layout)
         splitter.addWidget(canvas_group)
@@ -214,17 +220,31 @@ class QMapAnalystDockWidget(QDockWidget):
         main_map_group.setLayout(main_map_layout)
         layers_layout.addWidget(main_map_group)
 
+        # --- 3. ZAKŁADKA WARSTW WYNIKOWYCH (Układ siatki dla mapy dawnej) ---
         old_map_group = QGroupBox("Generuj na mapie dawnej (w oknie powyżej)")
         old_map_layout = QGridLayout()
 
-        self.btn_gen_historic_grid = QPushButton("🛜 Siatka PUWG92 na mapie dawnej")
+        self.btn_gen_old_vectors = QPushButton("📏 Wektory przesunięć")
+        self.btn_gen_old_vectors.clicked.connect(self.generate_old_vectors)
+
+        self.btn_gen_old_circles = QPushButton("⭕ Okręgi błędów")
+        self.btn_gen_old_circles.clicked.connect(self.generate_old_circles)
+
+        self.btn_gen_historic_grid = QPushButton("🛜 Siatka PUWG92")
         self.btn_gen_historic_grid.clicked.connect(self.generate_historic_grid)
 
-        self.btn_gen_isolines = QPushButton("〰️ Izolinie skali i rotacji")
-        self.btn_gen_isolines.clicked.connect(self.generate_isolines)
+        self.btn_gen_iso_scale = QPushButton("〰️ Izolinie skali")
+        self.btn_gen_iso_scale.clicked.connect(lambda: self.generate_isolines(type="scale"))
 
-        old_map_layout.addWidget(self.btn_gen_historic_grid, 0, 0)
-        old_map_layout.addWidget(self.btn_gen_isolines, 0, 1)
+        self.btn_gen_iso_rot = QPushButton("〰️ Izolinie rotacji")
+        self.btn_gen_iso_rot.clicked.connect(lambda: self.generate_isolines(type="rot"))
+
+        # Układ: wiersz 0 (wektory, okręgi, siatka), wiersz 1 (izolinie skali, izolinie rotacji)
+        old_map_layout.addWidget(self.btn_gen_old_vectors, 0, 0)
+        old_map_layout.addWidget(self.btn_gen_old_circles, 0, 1)
+        old_map_layout.addWidget(self.btn_gen_historic_grid, 0, 2)
+        old_map_layout.addWidget(self.btn_gen_iso_scale, 1, 0)
+        old_map_layout.addWidget(self.btn_gen_iso_rot, 1, 1)
         old_map_group.setLayout(old_map_layout)
         layers_layout.addWidget(old_map_group)
 
@@ -251,12 +271,12 @@ class QMapAnalystDockWidget(QDockWidget):
         self.old_canvas.setMapTool(self.tool_pan_old)
         self.old_canvas.extentsChanged.connect(self.sync_main_canvas_to_old)
 
-    def create_old_canvas_vector_layer(self, name: str, fields: list) -> QgsVectorLayer:
+    def create_old_canvas_vector_layer(self, name: str, fields: list, geom_type: str = "LineString") -> QgsVectorLayer:
         if self.old_raster_layer and self.old_raster_layer.crs().isValid():
             crs_id = self.old_raster_layer.crs().authid()
-            uri = f"LineString?crs={crs_id}"
+            uri = f"{geom_type}?crs={crs_id}"
         else:
-            uri = "LineString?crs="
+            uri = f"{geom_type}?crs="
 
         lyr = QgsVectorLayer(uri, name, "memory")
         if self.old_raster_layer:
@@ -267,47 +287,66 @@ class QMapAnalystDockWidget(QDockWidget):
         lyr.updateFields()
         return lyr
 
-    def refresh_old_canvas_layers(self):
-        valid_overlays = []
+    def add_layer_to_old_canvas(self, layer):
+        """Dodaje warstwę na listę UI (zapisuje bezpiecznie tylko ID)."""
+        item = QListWidgetItem(layer.name())
+        item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+        item.setCheckState(Qt.CheckState.Checked)
+        item.setData(Qt.ItemDataRole.UserRole, layer.id())
+        self.lst_old_layers.addItem(item)
+        self.refresh_old_canvas_layers()
+    
+    def refresh_old_canvas_layers(self, *args):
+        layers_to_render = []
         project = QgsProject.instance()
 
-        for lyr in self.old_overlay_layers:
-            if lyr is None:
-                continue
-            try:
-                lyr_id = lyr.id()
-                if project.mapLayer(lyr_id) is not None and lyr.isValid():
-                    valid_overlays.append(lyr)
-            except RuntimeError:
-                continue
+        for i in range(self.lst_old_layers.count()):
+            item = self.lst_old_layers.item(i)
+            if item.checkState() == Qt.CheckState.Checked:
+                lyr_id = item.data(Qt.ItemDataRole.UserRole)
+                lyr = project.mapLayer(lyr_id)  # Pobranie świeżego obiektu po ID
+                if lyr and lyr.isValid():
+                    layers_to_render.append(lyr)
 
-        self.old_overlay_layers = valid_overlays
-
-        layers_to_render = list(self.old_overlay_layers)
-        if self.old_raster_layer is not None:
-            try:
-                if self.old_raster_layer.isValid():
-                    layers_to_render.append(self.old_raster_layer)
-            except RuntimeError:
-                self.old_raster_layer = None
+        if self.old_raster_layer and self.old_raster_layer.isValid():
+            layers_to_render.append(self.old_raster_layer)
 
         self.old_canvas.setLayers(layers_to_render)
         self.old_canvas.refresh()
 
     def remove_plugin_layers_by_prefix(self, prefix: str):
-        """Usuwa z projektu QGIS wszystkie warstwy zaczynające się od podanego prefiksu."""
+        """Usuwa z projektu QGIS oraz z UI wszystkie warstwy zaczynające się od prefiksu."""
         project = QgsProject.instance()
         layers_to_remove = []
         for lyr_id, lyr in project.mapLayers().items():
             if lyr.name().startswith(prefix):
                 layers_to_remove.append(lyr_id)
+                
         if layers_to_remove:
+            # 1. NAJPIERW zdejmujemy obiekty z listy UI (zanim usuniemy warstwy w C++)
+            items_to_remove = []
+            for i in range(self.lst_old_layers.count()):
+                item = self.lst_old_layers.item(i)
+                if item.data(Qt.ItemDataRole.UserRole) in layers_to_remove:
+                    items_to_remove.append(item)
+                    
+            for item in items_to_remove:
+                row = self.lst_old_layers.row(item)
+                self.lst_old_layers.takeItem(row)
+
+            if hasattr(self, 'old_overlay_layers'):
+                self.old_overlay_layers = [] 
+                
             project.removeMapLayers(layers_to_remove)
             self.refresh_old_canvas_layers()
-
+    
     def clear_old_overlays(self):
-        """Usuwa wszystkie wygenerowane przez wtyczkę warstwy z całego projektu."""
+        """Aktualizujemy czyszczenie, żeby opróżniało też listę UI."""
         self.remove_plugin_layers_by_prefix("QMapAnalyst -")
+        self.lst_old_layers.clear()
+        if hasattr(self, 'old_overlay_layers'):
+            self.old_overlay_layers.clear()
+        self.refresh_old_canvas_layers()
         self.lbl_status.setText("Wyczyszczono wszystkie wygenerowane warstwy z projektu.")
 
     def load_old_raster(self):
@@ -1044,12 +1083,12 @@ class QMapAnalystDockWidget(QDockWidget):
             self.style_line_layer(historic_grid_layer, QColor(138, 43, 226), width_mm=0.5, dashed=False)
 
             QgsProject.instance().addMapLayer(historic_grid_layer)
-            self.old_overlay_layers.append(historic_grid_layer)
+            self.add_layer_to_old_canvas(historic_grid_layer)
             self.refresh_old_canvas_layers()
 
             self.lbl_status.setText(f"Wygenerowano siatkę PUWG92 na mapie dawnej ({len(features)} linii).")
 
-    def generate_isolines(self):
+    def generate_isolines(self, type="scale"):
         if not self.last_results or not self.old_raster_layer:
             self.lbl_status.setText("Najpierw wykonaj obliczenia i wczytaj skan dawnej mapy!")
             return
@@ -1059,34 +1098,37 @@ class QMapAnalystDockWidget(QDockWidget):
             self.lbl_status.setText("Izolinie wymagają minimum 4 aktywnych punktów kontrolnych!")
             return
 
-        # Ciche czyszczenie starych izolinii
-        self.remove_plugin_layers_by_prefix("QMapAnalyst - Izolinie")
-
         X_old, Y_old, _, _, scale_grid, rot_grid = MathEngine.calculate_local_scale_and_rotation_grids(
             pts_old, self.last_results, nx=45, ny=45
         )
 
         dpi_text = self.cmb_dpi.currentText()
         dpi_val = float(dpi_text.split()[0])
-        scale_denom_grid = scale_grid * dpi_val / 0.0254
 
-        n_scale = self.build_isoline_layer(
-            scale_denom_grid,
-            f"QMapAnalyst - Izolinie skali (1:M dla {int(dpi_val)} DPI)",
-            "scale_M",
-            QColor(0, 150, 136),
-            is_scale_layer=True
-        )
-        n_rot = self.build_isoline_layer(
-            rot_grid,
-            "QMapAnalyst - Izolinie rotacji [deg]",
-            "rot_deg",
-            QColor(230, 126, 34),
-            is_scale_layer=False
-        )
+        # Rozdzielona logika w zależności od wciśniętego przycisku
+        if type == "scale":
+            self.remove_plugin_layers_by_prefix("QMapAnalyst - Izolinie skali")
+            scale_denom_grid = scale_grid * dpi_val / 0.0254
+            n_lines = self.build_isoline_layer(
+                scale_denom_grid,
+                f"QMapAnalyst - Izolinie skali (1:M dla {int(dpi_val)} DPI)",
+                "scale_M",
+                QColor(0, 150, 136),
+                is_scale_layer=True
+            )
+            self.lbl_status.setText(f"Izolinie skali gotowe ({n_lines} odcinków).")
+            
+        elif type == "rot":
+            self.remove_plugin_layers_by_prefix("QMapAnalyst - Izolinie rotacji")
+            n_lines = self.build_isoline_layer(
+                rot_grid,
+                "QMapAnalyst - Izolinie rotacji [deg]",
+                "rot_deg",
+                QColor(230, 126, 34),
+                is_scale_layer=False
+            )
+            self.lbl_status.setText(f"Izolinie rotacji gotowe ({n_lines} odcinków).")
 
-        self.refresh_old_canvas_layers()
-        self.lbl_status.setText(f"Izolinie i etykiety gotowe (Skala: {n_scale} odc., Rotacja: {n_rot} odc.).")
 
     def build_isoline_layer(self, Z_grid, layer_name, attr_name, color: QColor, is_scale_layer: bool):
         try:
@@ -1136,11 +1178,12 @@ class QMapAnalystDockWidget(QDockWidget):
 
             from qgis.core import (
                 QgsPalLayerSettings, QgsVectorLayerSimpleLabeling,
-                QgsTextFormat, QgsTextBufferSettings
+                QgsTextFormat, QgsTextBufferSettings, Qgis
             )
             
             setting = QgsPalLayerSettings()
             setting.enabled = True
+            setting.isExpression = True 
             
             if is_scale_layer:
                 setting.fieldName = "concat('1 : ', format_number(\"scale_M\", 0))"
@@ -1158,17 +1201,106 @@ class QMapAnalystDockWidget(QDockWidget):
             text_format.setBuffer(buffer_settings)
             
             setting.setFormat(text_format)
-            setting.placement = QgsPalLayerSettings.Line
+            # Nowy, bezpieczny sposób na ustawienie etykiety na linii:
+            setting.placement = Qgis.LabelPlacement.Line 
             setting.dist = 1.5 
 
             layer.setLabeling(QgsVectorLayerSimpleLabeling(setting))
             layer.setLabelsEnabled(True)
 
             QgsProject.instance().addMapLayer(layer)
-            self.old_overlay_layers.append(layer)
+            self.add_layer_to_old_canvas(layer)
 
         return len(feats)
+    
+    def generate_old_vectors(self):
+        if not self.last_results:
+            return
+        self.remove_plugin_layers_by_prefix("QMapAnalyst - Dawne Wektory")
+        
+        pts_old, pts_ref = self.get_gcp_arrays()
+        pts_trans = self.last_results["pts_transformed"]
+        errors = self.last_results["errors"]
+        mean_scale = (self.last_results["scale_x"] + self.last_results["scale_y"]) / 2.0
+        mag = self.get_magnification_factor()
 
+        layer = self.create_old_canvas_vector_layer("QMapAnalyst - Dawne Wektory", [QgsField("error", QMetaType.Type.Double)])
+        prov = layer.dataProvider()
+
+        feats = []
+        for i in range(len(pts_old)):
+            # Wektor błędu w metrach (różnica między transformowanym old a ref)
+            dx_m = pts_ref[i, 0] - pts_trans[i, 0]
+            dy_m = pts_ref[i, 1] - pts_trans[i, 1]
+            
+            # Przeskalowanie błędu do przestrzeni pikselowej dawnej mapy
+            dx_px = (dx_m / mean_scale) * mag if mean_scale > 0 else 0
+            dy_px = (dy_m / mean_scale) * mag if mean_scale > 0 else 0
+            
+            pt_start = QgsPointXY(pts_old[i, 0], pts_old[i, 1])
+            pt_end = QgsPointXY(pts_old[i, 0] + dx_px, pts_old[i, 1] + dy_px)
+            
+            feat = QgsFeature()
+            feat.setGeometry(QgsGeometry.fromPolylineXY([pt_start, pt_end]))
+            feat.setAttributes([float(errors[i])])
+            feats.append(feat)
+
+        if feats:
+            prov.addFeatures(feats)
+            self.style_line_layer(layer, QColor(220, 30, 30), width_mm=1.0)
+            QgsProject.instance().addMapLayer(layer)
+            self.add_layer_to_old_canvas(layer)
+
+    def generate_old_circles(self):
+        if not self.last_results:
+            return
+        self.remove_plugin_layers_by_prefix("QMapAnalyst - Dawne Okręgi")
+        
+        pts_old, _ = self.get_gcp_arrays()
+        errors = self.last_results["errors"]
+        mean_scale = (self.last_results["scale_x"] + self.last_results["scale_y"]) / 2.0
+        mag = self.get_magnification_factor()
+
+        layer = self.create_old_canvas_vector_layer(
+            "QMapAnalyst - Dawne Okręgi", 
+            [QgsField("error", QMetaType.Type.Double)],
+            geom_type="Polygon"
+        )
+        prov = layer.dataProvider()
+
+        feats = []
+        for i in range(len(pts_old)):
+            # Promień w pikselach
+            radius_px = (float(errors[i]) / mean_scale) * mag if mean_scale > 0 else 10
+            
+            geom = QgsGeometry.fromPointXY(QgsPointXY(pts_old[i, 0], pts_old[i, 1])).buffer(radius_px, 36)
+            feat = QgsFeature()
+            feat.setGeometry(geom)
+            feat.setAttributes([float(errors[i])])
+            feats.append(feat)
+
+        if feats:
+            prov.addFeatures(feats)
+            symbol = QgsSymbol.defaultSymbol(layer.geometryType())
+            sl = symbol.symbolLayer(0)
+            sl.setFillColor(QColor(0, 0, 0, 0))
+            sl.setStrokeColor(QColor(220, 50, 50))
+            sl.setStrokeWidth(1.0)
+            layer.setRenderer(QgsSingleSymbolRenderer(symbol))
+            
+            QgsProject.instance().addMapLayer(layer)
+            self.add_layer_to_old_canvas(layer)
+
+    def get_magnification_factor(self) -> float:
+        """Zwraca mnożnik skali dla wektorów i okręgów błędów. Zwraca 1.0, jeśli brak opcji w UI."""
+        if hasattr(self, 'cmb_magnification'):
+            text = self.cmb_magnification.currentText().replace("x", "")
+            try:
+                return float(text)
+            except ValueError:
+                return 1.0
+        return 1.0
+    
     def closeEvent(self, event):
         for marker in self.ref_markers:
             self.main_canvas.scene().removeItem(marker)
