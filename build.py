@@ -6,8 +6,9 @@ PLUGIN_NAME = "QMapAnalyst"
 ZIP_FILENAME = f"{PLUGIN_NAME}.zip"
 
 # Czego NIE pakować do paczki ZIP
-EXCLUDE_DIRS = ["__pycache__", ".git", ".idea", ".vscode"]
-EXCLUDE_FILES = [ZIP_FILENAME, "build.py", ".gitignore", "resources.qrc", "resources.py"]
+EXCLUDE_DIRS = ["__pycache__", ".git", ".idea", ".vscode", "tests"]
+EXCLUDE_FILES = [ZIP_FILENAME, "build.py", ".gitignore", "resources.qrc", "resources.py",
+                 "build_translations.py", "en.py"]
 EXCLUDE_EXTS = [".pyc", ".pyo"]
 
 def build_plugin():
