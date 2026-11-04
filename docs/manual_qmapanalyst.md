@@ -134,16 +134,22 @@ Ponowne wygenerowanie warstwy zastępuje poprzednią wersję (z zachowaniem jej 
 
 ## 6. Zakładka Eksport
 
-Wybierz folder i zaznacz, co zapisać:
+Wybierz folder i zaznacz, co zapisać. Nazwy plików zaczynają się od nazwy skanu (np. `Charlottenbrunn_raport.pdf`):
 
-* **Raport PDF** – strona z analizą, strona z estymacją odwzorowania oraz po jednej stronie na każdą widoczną nakładkę mapy dawnej,
-* **TIFF** – bieżący widok mapy dawnej z nakładkami,
+* **Raport analizy – PDF** – wielostronicowy raport A4 z nagłówkiem (tytuł, model, układ, DPI) i numeracją stron: dane wejściowe, dokładność, parametry z błędami, skala, punkty odstające, porównanie modeli, zniekształcenia lokalne, autokorelacja, **tabela wszystkich punktów z resztami**, ranking odwzorowań oraz szczegóły najlepszego kandydata i testowanych hipotez,
+* **Raport analizy – TXT** – ta sama treść jako tekst z wyrównanymi kolumnami (UTF-8) – do archiwizacji, wklejenia do publikacji lub porównań,
+* **Mapy z nakładkami – PDF** – po jednej stronie A4 (poziomo) na każdą widoczną nakładkę mapy dawnej,
+* **TIFF** – bieżący widok mapy dawnej z nakładkami (podwójna rozdzielczość ekranu, z plikiem `.tfw`),
 * **CSV punktów** – współrzędne, punkty transformowane, reszty, LOO i w,
 * **CSV odwzorowań** – pełny ranking z parametrami.
+
+Raport można też zapisać bezpośrednio z zakładki **Analiza** przyciskiem **Zapisz raport…** – w formacie PDF, TXT lub HTML (format wynika z rozszerzenia pliku). Raport jest w języku interfejsu QGIS.
 
 ---
 
 ## 7. Uwagi techniczne
+
+* **Język:** interfejs, raport analizy (w panelu i w PDF), komunikaty, nazwy warstw i legendy są po polsku albo po angielsku – zgodnie z językiem interfejsu QGIS (każdy język inny niż polski → angielski). W wersji polskiej liczby w raporcie i tabelach mają przecinek dziesiętny; pliki CSV zawsze używają kropki.
 
 * Obliczenia wykorzystują NumPy i SciPy (dostarczane z QGIS); matplotlib nie jest już wymagany.
 * Błędy w trakcie działania są zapisywane w panelu *Komunikaty dziennika* (zakładka *QMapAnalyst*), a pasek stanu wtyczki pokazuje ich krótki opis.

@@ -250,7 +250,7 @@ def style_points(layer, field="outlier"):
         })
     cats = [
         QgsRendererCategory(0, sym(QColor(30, 136, 229)), tr("Aktywny")),
-        QgsRendererCategory(1, sym(QColor(229, 57, 53), "triangle"), tr("Odstający (|w| > 3.29)")),
+        QgsRendererCategory(1, sym(QColor(229, 57, 53), "triangle"), tr("Odstający (|w| > 3,29)")),
         QgsRendererCategory(2, sym(QColor(150, 150, 150), "square"), tr("Wyłączony")),
     ]
     layer.setRenderer(QgsCategorizedSymbolRenderer(field, cats))

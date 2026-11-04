@@ -14,13 +14,18 @@
   * **Tissot-based local distortion** (scale variation, rotation, angular distortion 2ω)
 * **Map projection estimation:** fits 15 projections that matter for 15th–20th-century cartography to the control points and ranks them by AICc with Akaike weights. The projections are Plate carrée, equirectangular, Mercator, Cassini–Soldner, Gauss–Krüger, Sanson–Flamsteed, Bonne, trapezoidal, De l'Isle equidistant conic, Lambert conformal conic, Albers, Lambert azimuthal, stereographic, Postel and Hassler polyconic. Projection parameters (λ₀, φ₀, φ₁, φ₂) come with standard errors, and λ₀ is also given relative to the Ferro, Paris, Pulkovo and Warsaw meridians. The plugin can draw the estimated **graticule on the scan** for visual comparison.
 * **Visualisation:** displacement vectors (arrows) and error circles on both maps, a TPS distortion grid with reliable and extrapolated zones, a warped reference grid on the scan, isolines of scale, rotation and angular distortion with labels, and a GCP layer that carries all statistics as attributes.
-* **Export:** multi-page PDF report, TIFF view, CSV tables of points and projection ranking.
+* **Export:**
+  * full analysis report as a paginated PDF (header, page numbers), aligned plain text (TXT) or HTML, covering input data, all statistics, the residual table of every point, the projection ranking and hypotheses
+  * a PDF with one map page per overlay
+  * a georeferenced TIFF view
+  * CSV tables of points and of the projection ranking
 * **Workflow:**
   * continuous GCP capture and in-table coordinate editing
   * zoom to a point and synchronised views
   * the reference CRS is stored with the GCPs (`.points` / CSV)
   * automatic recomputation that refreshes existing result layers
-* Works with QGIS 3.34+ (Qt5) and QGIS 4 (Qt6). The interface is available in Polish and English.
+* Works with QGIS 3.34+ (Qt5) and QGIS 4 (Qt6).
+* **Bilingual:** the interface, the analysis report (panel and PDF), status and error messages, layer names and legends are available in Polish and English. The language follows the QGIS interface; any locale other than Polish uses English. Numbers in the Polish report use a decimal comma.
 
 ## 🚀 Installation
 

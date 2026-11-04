@@ -42,6 +42,19 @@ MODELS = {
 INCH_M = 0.0254
 
 
+class EngineError(ValueError):
+    """Błąd obliczeń z tłumaczalnym szablonem komunikatu.
+
+    `template` jest tekstem źródłowym (po polsku) tłumaczonym w interfejsie
+    (kontekst QMapAnalystEngine); `params` wstawiane są metodą str.format().
+    """
+
+    def __init__(self, template: str, **params):
+        self.template = template
+        self.params = params
+        super().__init__(template.format(**params) if params else template)
+
+
 def scale_denominator(m_per_px: float, dpi: float) -> float:
     """Mianownik skali mapy papierowej dla danej rozdzielczości skanu."""
     if dpi <= 0:
@@ -194,17 +207,17 @@ class FitResult:
 def fit_transform(model: str, src: np.ndarray, dst: np.ndarray) -> FitResult:
     """Wyrównanie transformacji metodą najmniejszych kwadratów wraz z pełną statystyką."""
     if model not in MODELS:
-        raise ValueError(f"Nieznany model transformacji: {model}")
+        raise EngineError("Nieznany model transformacji: {model}", model=model)
     src = np.asarray(src, dtype=float).reshape(-1, 2)
     dst = np.asarray(dst, dtype=float).reshape(-1, 2)
     n = src.shape[0]
     if n != dst.shape[0]:
-        raise ValueError("Liczba punktów źródłowych i docelowych jest różna.")
+        raise EngineError("Liczba punktów źródłowych i docelowych jest różna.")
     min_pts = MODELS[model]["min_pts"]
     if n < min_pts:
-        raise ValueError(f"Transformacja {MODELS[model]['name']} wymaga minimum {min_pts} punktów.")
+        raise EngineError("Transformacja „{name}” wymaga minimum {k} punktów.", name=MODELS[model]["name"], k=min_pts)
     if not (np.all(np.isfinite(src)) and np.all(np.isfinite(dst))):
-        raise ValueError("Współrzędne punktów zawierają wartości nieliczbowe.")
+        raise EngineError("Współrzędne punktów zawierają wartości nieliczbowe.")
 
     sc, ss = _normalization(src)
     dc = dst.mean(axis=0)
@@ -215,7 +228,7 @@ def fit_transform(model: str, src: np.ndarray, dst: np.ndarray) -> FitResult:
     p_count = A.shape[1]
     params, _, rank, _ = np.linalg.lstsq(A, L, rcond=None)
     if rank < p_count:
-        raise ValueError("Układ równań jest osobliwy – punkty są współliniowe lub zdublowane.")
+        raise EngineError("Układ równań jest osobliwy – punkty są współliniowe lub zdublowane.")
 
     res = FitResult(model=model, src=src, dst=dst, params=params,
                     src_center=sc, src_scale=ss, dst_center=dc)

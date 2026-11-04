@@ -4,7 +4,7 @@
 <context>
     <name>QMapAnalystDockWidget</name>
     <message>
-        <source>np. 21°02′30″ E, 21 2 30 lub 21.0417</source>
+        <source>np. 21°02′30″ E, 21 2 30 lub 21,0417</source>
         <translation>e.g. 21°02′30″ E, 21 2 30 or 21.0417</translation>
     </message>
     <message>
@@ -158,6 +158,14 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
     <message>
         <source>Po zmianie punktów GCP automatycznie przelicz analizę i odśwież istniejące warstwy wynikowe</source>
         <translation>Automatically recompute the analysis and refresh existing result layers when GCPs change</translation>
+    </message>
+    <message>
+        <source>Zapisz raport…</source>
+        <translation>Save report…</translation>
+    </message>
+    <message>
+        <source>Zapisz pełny raport analizy (dane wejściowe, statystyki, punkty, odwzorowanie) jako PDF, TXT lub HTML</source>
+        <translation>Save the full analysis report (input data, statistics, points, projection) as PDF, TXT or HTML</translation>
     </message>
     <message>
         <source>Wyniki analizy pojawią się tutaj.</source>
@@ -320,8 +328,16 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Choose the export folder</translation>
     </message>
     <message>
-        <source>Raport PDF (statystyki, odwzorowanie, strony z nakładkami)</source>
-        <translation>PDF report (statistics, projection, overlay pages)</translation>
+        <source>Raport analizy – PDF (wielostronicowy)</source>
+        <translation>Analysis report – PDF (multi-page)</translation>
+    </message>
+    <message>
+        <source>Raport analizy – TXT</source>
+        <translation>Analysis report – TXT</translation>
+    </message>
+    <message>
+        <source>Mapy z nakładkami – PDF (strona na każdą widoczną nakładkę)</source>
+        <translation>Maps with overlays – PDF (one page per visible overlay)</translation>
     </message>
     <message>
         <source>Widok mapy dawnej z nakładkami (TIFF)</source>
@@ -408,8 +424,12 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation> (hypothesis)</translation>
     </message>
     <message>
-        <source>Analiza kartometryczna</source>
-        <translation>Cartometric analysis</translation>
+        <source>Zapisz raport analizy</source>
+        <translation>Save analysis report</translation>
+    </message>
+    <message>
+        <source>Raport PDF (*.pdf);;Tekst (*.txt);;Strona HTML (*.html)</source>
+        <translation>PDF report (*.pdf);;Text (*.txt);;HTML page (*.html)</translation>
     </message>
     <message>
         <source>Akt.</source>
@@ -468,7 +488,7 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Cross-validation error: error of the point when the transformation is computed without it</translation>
     </message>
     <message>
-        <source>Reszta standaryzowana (test Baardy). |w| &gt; 3.29 – punkt podejrzany o błąd grubej identyfikacji</source>
+        <source>Reszta standaryzowana (test Baardy). |w| &gt; 3,29 – punkt podejrzany o błąd grubej identyfikacji</source>
         <translation>Standardized residual (Baarda test). |w| &gt; 3.29 – point suspected of a gross identification error</translation>
     </message>
     <message>
@@ -484,8 +504,8 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Interval:</translation>
     </message>
     <message>
-        <source>Hipoteza {name}: σ₀ = {s:.2f} px, ΔAICc = {d:.1f}, miejsce w rankingu: {r}.</source>
-        <translation>Hypothesis {name}: σ₀ = {s:.2f} px, ΔAICc = {d:.1f}, rank: {r}.</translation>
+        <source>Hipoteza {name}: σ₀ = {s} px, ΔAICc = {d}, miejsce w rankingu: {r}.</source>
+        <translation>Hypothesis {name}: σ₀ = {s} px, ΔAICc = {d}, rank: {r}.</translation>
     </message>
     <message>
         <source>Folder docelowy:</source>
@@ -520,7 +540,7 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>The file contains no points.</translation>
     </message>
     <message>
-        <source>Wczytano {n} punktów (układ: {crs}).</source>
+        <source>Wczytano punkty (liczba: {n}, układ: {crs}).</source>
         <translation>Loaded {n} points (CRS: {crs}).</translation>
     </message>
     <message>
@@ -528,8 +548,8 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Computing transformation…</translation>
     </message>
     <message>
-        <source>Obliczono ({n} pkt): σ₀ = {s:.2f} {u}, RMSE = {r:.2f} {u}, skala ≈ {m}</source>
-        <translation>Computed ({n} pts): σ₀ = {s:.2f} {u}, RMSE = {r:.2f} {u}, scale ≈ {m}</translation>
+        <source>Obliczono ({n} pkt): σ₀ = {s} {u}, RMSE = {r} {u}, skala ≈ {m}</source>
+        <translation>Computed ({n} pts): σ₀ = {s} {u}, RMSE = {r} {u}, scale ≈ {m}</translation>
     </message>
     <message>
         <source>Najpierw oblicz transformację.</source>
@@ -592,11 +612,43 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Nothing to export – compute the transformation first.</translation>
     </message>
     <message>
+        <source>Analiza kartometryczna – {name}</source>
+        <translation>Cartometric analysis – {name}</translation>
+    </message>
+    <message>
+        <source>Układ odniesienia</source>
+        <translation>Reference system</translation>
+    </message>
+    <message>
+        <source>Transformacja</source>
+        <translation>Transformation</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość skanu</source>
+        <translation>Scan resolution</translation>
+    </message>
+    <message>
+        <source>Punkty GCP (aktywne / wszystkie)</source>
+        <translation>GCPs (active / total)</translation>
+    </message>
+    <message>
+        <source>Data analizy</source>
+        <translation>Analysis date</translation>
+    </message>
+    <message>
+        <source>Wersja wtyczki</source>
+        <translation>Plugin version</translation>
+    </message>
+    <message>
+        <source>Eksportowanie…</source>
+        <translation>Exporting…</translation>
+    </message>
+    <message>
         <source>Błąd: {err}</source>
         <translation>Error: {err}</translation>
     </message>
     <message>
-        <source>np. 52° N lub 52.0</source>
+        <source>np. 52° N lub 52,0</source>
         <translation>e.g. 52° N or 52.0</translation>
     </message>
     <message>
@@ -612,15 +664,15 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Scan loaded: {w} × {h} px. Add or load GCPs.</translation>
     </message>
     <message>
-        <source>Usunięto {n} punktów.</source>
+        <source>Usunięto punkty (liczba: {n}).</source>
         <translation>Removed {n} points.</translation>
     </message>
     <message>
-        <source>Zapisano {n} punktów do pliku.</source>
+        <source>Zapisano punkty do pliku (liczba: {n}).</source>
         <translation>Saved {n} points to the file.</translation>
     </message>
     <message>
-        <source>Transformacja „{name}” wymaga minimum {k} aktywnych punktów (aktywne: {n} z {t}).</source>
+        <source>Transformacja „{name}” wymaga co najmniej {k} aktywnych punktów (aktywne: {n} z {t}).</source>
         <translation>The “{name}” transformation requires at least {k} active points (active: {n} of {t}).</translation>
     </message>
     <message>
@@ -632,11 +684,11 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Turn on view synchronization so that the main map follows the scan.</translation>
     </message>
     <message>
-        <source>Siatka zniekształceń: {a} odcinków pewnych, {b} ekstrapolowanych.</source>
+        <source>Siatka zniekształceń gotowa (odcinki w obszarze pewnym: {a}, ekstrapolowane: {b}).</source>
         <translation>Distortion grid: {a} reliable segments, {b} extrapolated.</translation>
     </message>
     <message>
-        <source>Wygenerowano siatkę układu odniesienia ({n} linii).</source>
+        <source>Wygenerowano siatkę układu odniesienia (linie: {n}).</source>
         <translation>Reference system grid created ({n} lines).</translation>
     </message>
     <message>
@@ -648,35 +700,51 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Angular distortion isolines 2ω [°]</translation>
     </message>
     <message>
-        <source>Izolinie gotowe: {n} linii, {k} poziomów.</source>
+        <source>Izolinie gotowe (linie: {n}, poziomy: {k}).</source>
         <translation>Isolines ready: {n} lines, {k} levels.</translation>
     </message>
     <message>
-        <source>Narysowano siatkę geograficzną ({n} linii, oczko {s}).</source>
+        <source>Narysowano siatkę geograficzną (linie: {n}, oczko {s}).</source>
         <translation>Graticule drawn ({n} lines, interval {s}).</translation>
     </message>
     <message>
-        <source>Eksportowanie…</source>
-        <translation>Exporting…</translation>
-    </message>
-    <message>
-        <source>Wyeksportowano {n} plików do: {d}</source>
+        <source>Wyeksportowano pliki do: {d} (liczba plików: {n})</source>
         <translation>Exported {n} files to: {d}</translation>
     </message>
     <message>
-        <source>Estymacja odwzorowania</source>
-        <translation>Projection estimation</translation>
+        <source>Skan mapy dawnej</source>
+        <translation>Historical map scan</translation>
+    </message>
+    <message>
+        <source>Rozmiar skanu</source>
+        <translation>Scan size</translation>
+    </message>
+    <message>
+        <source>Uwaga</source>
+        <translation>Note</translation>
+    </message>
+    <message>
+        <source>punkty GCP zmieniono po obliczeniu – wyniki mogą być nieaktualne</source>
+        <translation>GCPs changed after the computation – results may be out of date</translation>
+    </message>
+    <message>
+        <source>raport</source>
+        <translation>report</translation>
+    </message>
+    <message>
+        <source>Zapisano raport: {p}</source>
+        <translation>Report saved: {p}</translation>
     </message>
     <message>
         <source>od</source>
         <translation>from</translation>
     </message>
     <message>
-        <source>Swobodne dopasowanie: σ₀ = {s:.2f} px.</source>
-        <translation>Free fit: σ₀ = {s:.2f} px.</translation>
+        <source>Swobodne dopasowanie: σ₀ = {s} px.</source>
+        <translation>Free fit: σ₀ = {s} px.</translation>
     </message>
     <message>
-        <source>Zakończono dodawanie punktów. Liczba par: {n}.</source>
+        <source>Zakończono dodawanie punktów (liczba par: {n}).</source>
         <translation>Point capture finished. Number of pairs: {n}.</translation>
     </message>
     <message>
@@ -700,7 +768,7 @@ No – append the new points to the existing ones.</translation>
         <translation>Coordinates were transformed from {crs}.</translation>
     </message>
     <message>
-        <source>Pominięto {n} niepoprawnych wierszy.</source>
+        <source>Pominięto niepoprawne wiersze (liczba: {n}).</source>
         <translation>Skipped {n} invalid rows.</translation>
     </message>
     <message>
@@ -708,7 +776,7 @@ No – append the new points to the existing ones.</translation>
         <translation>outliers: {k}</translation>
     </message>
     <message>
-        <source>Ta operacja wymaga minimum {k} aktywnych punktów.</source>
+        <source>Ta operacja wymaga co najmniej {k} aktywnych punktów (GCP).</source>
         <translation>This operation requires at least {k} active points.</translation>
     </message>
     <message>
@@ -724,7 +792,7 @@ No – append the new points to the existing ones.</translation>
         <translation>Scale isolines (1:M, {dpi} DPI)</translation>
     </message>
     <message>
-        <source>Estymacja odwzorowania wymaga minimum {k} aktywnych punktów.</source>
+        <source>Estymacja odwzorowania wymaga co najmniej {k} aktywnych punktów (GCP).</source>
         <translation>Projection estimation requires at least {k} active points.</translation>
     </message>
     <message>
@@ -732,8 +800,8 @@ No – append the new points to the existing ones.</translation>
         <translation>Reference system ({crs})</translation>
     </message>
     <message>
-        <source>Najlepsze dopasowanie: {name} (σ₀ = {s:.2f} px, waga {w:.0f}%).</source>
-        <translation>Best fit: {name} (σ₀ = {s:.2f} px, weight {w:.0f}%).</translation>
+        <source>Najlepsze dopasowanie: {name} (σ₀ = {s} px, waga {w}%).</source>
+        <translation>Best fit: {name} (σ₀ = {s} px, weight {w}%).</translation>
     </message>
     <message>
         <source>Podaj wartość parametru: {p}</source>
@@ -744,7 +812,7 @@ No – append the new points to the existing ones.</translation>
         <translation>Invalid number – the previous value was restored.</translation>
     </message>
     <message>
-        <source>Zbyt gęsta siatka ({n} linii) – zwiększ oczko siatki.</source>
+        <source>Zbyt gęsta siatka (linie: {n}) – zwiększ oczko siatki.</source>
         <translation>Grid too dense ({n} lines) – increase the grid spacing.</translation>
     </message>
     <message>
@@ -752,8 +820,12 @@ No – append the new points to the existing ones.</translation>
         <translation>reference system</translation>
     </message>
     <message>
-        <source>Wynik nierozstrzygnięty: {k} odwzorowań równorzędnych (ΔAICc &lt; 2). Porównaj siatki geograficzne kandydatów z mapą.</source>
+        <source>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2): {k}. Porównaj siatki geograficzne kandydatów z mapą.</source>
         <translation>Inconclusive: {k} equivalent projections (ΔAICc &lt; 2). Compare the candidates' graticules with the map.</translation>
+    </message>
+    <message>
+        <source>Estymacja odwzorowania</source>
+        <translation>Projection estimation</translation>
     </message>
     <message>
         <source>Niepoprawny zapis kąta „{t}” ({p}).</source>
@@ -766,6 +838,22 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>wył.</source>
         <translation>off</translation>
+    </message>
+    <message>
+        <source>punkty</source>
+        <translation>points</translation>
+    </message>
+    <message>
+        <source>odwzorowania</source>
+        <translation>projections</translation>
+    </message>
+    <message>
+        <source>widok</source>
+        <translation>view</translation>
+    </message>
+    <message>
+        <source>mapy</source>
+        <translation>maps</translation>
     </message>
     <message>
         <source>Helmert (4 parametry)</source>
@@ -1262,6 +1350,42 @@ No – append the new points to the existing ones.</translation>
         <translation>Computed on a sphere; geographic coordinates of the points derived from the project reference system.</translation>
     </message>
     <message>
+        <source>Dane wejściowe</source>
+        <translation>Input data</translation>
+    </message>
+    <message>
+        <source>Punkty kontrolne i reszty</source>
+        <translation>Control points and residuals</translation>
+    </message>
+    <message>
+        <source>Akt.</source>
+        <translation>On</translation>
+    </message>
+    <message>
+        <source>X dawna</source>
+        <translation>X old</translation>
+    </message>
+    <message>
+        <source>Y dawna</source>
+        <translation>Y old</translation>
+    </message>
+    <message>
+        <source>X ref.</source>
+        <translation>X ref.</translation>
+    </message>
+    <message>
+        <source>Y ref.</source>
+        <translation>Y ref.</translation>
+    </message>
+    <message>
+        <source>Błąd</source>
+        <translation>Error</translation>
+    </message>
+    <message>
+        <source>Reszty v = współrzędne referencyjne − transformowane, w jednostkach układu odniesienia</source>
+        <translation>Residuals v = reference − transformed coordinates, in reference system units</translation>
+    </message>
+    <message>
         <source>Za mało obserwacji nadliczbowych do testu.</source>
         <translation>Not enough redundant observations for the test.</translation>
     </message>
@@ -1272,10 +1396,6 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>Model</source>
         <translation>Model</translation>
-    </message>
-    <message>
-        <source>ΔAICc &lt; 2 – modele równorzędne; &gt; 10 – model wyraźnie gorszy. Niższy błąd LOO oznacza lepszą zdolność predykcji.</source>
-        <translation>ΔAICc &lt; 2 – models are equivalent; &gt; 10 – the model is clearly worse. A lower LOO error means better predictive ability.</translation>
     </message>
     <message>
         <source>Zniekształcenia lokalne (TPS, wewnątrz otoczki punktów)</source>
@@ -1296,10 +1416,6 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>Najlepiej dopasowane</source>
         <translation>Best fit</translation>
-    </message>
-    <message>
-        <source>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2)</source>
-        <translation>Inconclusive – equivalent projections (ΔAICc &lt; 2)</translation>
     </message>
     <message>
         <source>Kolejność w rankingu nie przesądza o odwzorowaniu. Proste odwzorowania bez dopasowywanych parametrów wygrywają, gdy dane nie wnoszą dodatkowej informacji. Porównaj siatkę geograficzną kandydatów z siatką (lub ramką z podziałką) narysowaną na mapie.</source>
@@ -1334,10 +1450,6 @@ No – append the new points to the existing ones.</translation>
         <translation>No outliers</translation>
     </message>
     <message>
-        <source>Błąd</source>
-        <translation>Error</translation>
-    </message>
-    <message>
         <source>Błąd LOO</source>
         <translation>LOO error</translation>
     </message>
@@ -1346,8 +1458,8 @@ No – append the new points to the existing ones.</translation>
         <translation>redundancy</translation>
     </message>
     <message>
-        <source>Test Baardy: reszta standaryzowana w &gt; 3.29 (α = 0.001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.</source>
-        <translation>Baarda test: standardized residual w &gt; 3.29 (α = 0.001). Check the point identification or disable it and recompute.</translation>
+        <source>ΔAICc &lt; 2 – modele równorzędne; &gt; 10 – model wyraźnie gorszy. Niższy błąd LOO oznacza lepszą zdolność predykcji.</source>
+        <translation>ΔAICc &lt; 2 – models are equivalent; &gt; 10 – the model is clearly worse. A lower LOO error means better predictive ability.</translation>
     </message>
     <message>
         <source>Reszty sąsiednich punktów są podobne – błędy mają charakter systematyczny (lokalne zniekształcenia, łączenie arkuszy, różne źródła pomiarów). Rozważ model wyższego rzędu lub analizę siatki zniekształceń.</source>
@@ -1356,6 +1468,10 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>Brak istotnej autokorelacji – reszty mają charakter losowy.</source>
         <translation>No significant autocorrelation – the residuals are random.</translation>
+    </message>
+    <message>
+        <source>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2)</source>
+        <translation>Inconclusive – equivalent projections (ΔAICc &lt; 2)</translation>
     </message>
     <message>
         <source>(hipoteza)</source>
@@ -1378,16 +1494,20 @@ No – append the new points to the existing ones.</translation>
         <translation>Free-fit parameters</translation>
     </message>
     <message>
+        <source>Test Baardy: reszta standaryzowana w &gt; 3,29 (α = 0,001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.</source>
+        <translation>Baarda test: standardized residual w &gt; 3.29 (α = 0.001). Check the point identification or disable it and recompute.</translation>
+    </message>
+    <message>
         <source>Hipoteza jest zgodna z danymi (ΔAICc &lt; 2 względem najlepszego modelu).</source>
         <translation>The hypothesis is consistent with the data (ΔAICc &lt; 2 relative to the best model).</translation>
     </message>
     <message>
-        <source>Hipoteza słabiej wspierana przez dane (2 ≤ ΔAICc &lt; 10) – sprawdź parametry i punkty odstające.</source>
-        <translation>The hypothesis is less supported by the data (2 ≤ ΔAICc &lt; 10) – check the parameters and outliers.</translation>
-    </message>
-    <message>
         <source>Hipoteza wyraźnie gorsza od najlepszego modelu (ΔAICc ≥ 10).</source>
         <translation>The hypothesis is clearly worse than the best model (ΔAICc ≥ 10).</translation>
+    </message>
+    <message>
+        <source>Hipoteza słabiej wspierana przez dane (2 ≤ ΔAICc &lt; 10) – sprawdź parametry i punkty odstające.</source>
+        <translation>The hypothesis is less supported by the data (2 ≤ ΔAICc &lt; 10) – check the parameters and outliers.</translation>
     </message>
     <message>
         <source>Helmert (4 parametry)</source>
@@ -1701,6 +1821,18 @@ No – append the new points to the existing ones.</translation>
 <context>
     <name>QMapAnalystExport</name>
     <message>
+        <source>Brak widocznych nakładek mapy dawnej do eksportu.</source>
+        <translation>No visible historical map overlays to export.</translation>
+    </message>
+    <message>
+        <source>Nie udało się zapisać obrazu: {p}</source>
+        <translation>Could not save the image: {p}</translation>
+    </message>
+    <message>
+        <source>Nie można utworzyć pliku PDF: {p}</source>
+        <translation>Cannot create the PDF file: {p}</translation>
+    </message>
+    <message>
         <source>Wygenerowano:</source>
         <translation>Generated:</translation>
     </message>
@@ -1712,6 +1844,10 @@ No – append the new points to the existing ones.</translation>
         <source>Eksport PDF nie powiódł się (kod {code}): {msg}</source>
         <translation>PDF export failed (code {code}): {msg}</translation>
     </message>
+    <message>
+        <source>Strona {i} z {n}</source>
+        <translation>Page {i} of {n}</translation>
+    </message>
 </context>
 <context>
     <name>QMapAnalystLayers</name>
@@ -1720,7 +1856,7 @@ No – append the new points to the existing ones.</translation>
         <translation>Active</translation>
     </message>
     <message>
-        <source>Odstający (|w| &gt; 3.29)</source>
+        <source>Odstający (|w| &gt; 3,29)</source>
         <translation>Outlier (|w| &gt; 3.29)</translation>
     </message>
     <message>
@@ -1734,6 +1870,61 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>Odstający</source>
         <translation>Outlier</translation>
+    </message>
+</context>
+<context>
+    <name>QMapAnalystEngine</name>
+    <message>
+        <source>Nieznany model transformacji: {model}</source>
+        <translation>Unknown transformation model: {model}</translation>
+    </message>
+    <message>
+        <source>Liczba punktów źródłowych i docelowych jest różna.</source>
+        <translation>The numbers of source and target points differ.</translation>
+    </message>
+    <message>
+        <source>Transformacja „{name}” wymaga minimum {k} punktów.</source>
+        <translation>The “{name}” transformation requires at least {k} points.</translation>
+    </message>
+    <message>
+        <source>Współrzędne punktów zawierają wartości nieliczbowe.</source>
+        <translation>Point coordinates contain non-numeric values.</translation>
+    </message>
+    <message>
+        <source>Układ równań jest osobliwy – punkty są współliniowe lub zdublowane.</source>
+        <translation>The equation system is singular – the points are collinear or duplicated.</translation>
+    </message>
+    <message>
+        <source>Estymacja odwzorowania wymaga minimum {k} aktywnych punktów (zalecane &gt; 15).</source>
+        <translation>Projection estimation requires at least {k} active points (&gt; 15 recommended).</translation>
+    </message>
+    <message>
+        <source>Odwzorowanie nie jest określone dla tych parametrów w obszarze punktów.</source>
+        <translation>The projection is not defined for these parameters within the point area.</translation>
+    </message>
+    <message>
+        <source>Brak danych estymacji.</source>
+        <translation>No estimation data.</translation>
+    </message>
+    <message>
+        <source>Kandydat referencyjny nie ma odwzorowania geograficznego.</source>
+        <translation>The reference candidate has no geographic projection.</translation>
+    </message>
+    <message>
+        <source>Brak scipy.optimize – estymacja odwzorowania niemożliwa.</source>
+        <translation>scipy.optimize is missing – projection estimation is not possible.</translation>
+    </message>
+    <message>
+        <source>Helmert (4 parametry)</source>
+        <translation>Helmert (4 parameters)</translation>
+    </message>
+    <message>
+        <source>Afiniczna (6 parametrów)</source>
+        <translation>Affine (6 parameters)</translation>
+    </message>
+    <message>
+        <source>Wielomianowa 2. stopnia (12 parametrów)</source>
+        <translation>2nd-order polynomial (12 parameters)</translation>
     </message>
 </context>
 </TS>

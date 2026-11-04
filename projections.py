@@ -28,7 +28,8 @@ try:
 except Exception:  # pragma: no cover
     least_squares = None
 
-from .math_engine import aicc
+from .lang import decimal_sep, num
+from .math_engine import EngineError, aicc
 
 EARTH_RADIUS_M = 6371008.8
 INCH_M = 0.0254
@@ -348,7 +349,7 @@ class Candidate:
 
     def to_pixels(self, lon_deg, lat_deg) -> np.ndarray:
         if self.is_reference:
-            raise ValueError("Kandydat referencyjny nie ma odwzorowania geograficznego.")
+            raise EngineError("Kandydat referencyjny nie ma odwzorowania geograficznego.")
         P = self.project(lon_deg, lat_deg)
         return P @ self.A.T + self.t
 
@@ -465,7 +466,7 @@ def fit_projection(proj: ProjectionDef, lonlat_deg: np.ndarray, pixels: np.ndarr
     success = True
     if free:
         if least_squares is None:
-            raise RuntimeError("Brak scipy.optimize – estymacja odwzorowania niemożliwa.")
+            raise EngineError("Brak scipy.optimize – estymacja odwzorowania niemożliwa.")
         lo, hi = _bounds(free, lon_c, lat_c, lon_span)
         best = None
         for x0 in _initial_guesses(free, lon_c, lat_c, lat_min, lat_max, lon_span):
@@ -546,7 +547,7 @@ def estimate_projections(lonlat_deg, pixels, ref_xy=None, ref_label=None,
     n = len(pixels)
     min_pts = 5 if mode == "helmert" else 6
     if n < min_pts:
-        raise ValueError(f"Estymacja odwzorowania wymaga minimum {min_pts} aktywnych punktów (zalecane > 15).")
+        raise EngineError("Estymacja odwzorowania wymaga minimum {k} aktywnych punktów (zalecane > 15).", k=min_pts)
 
     defs = [p for p in PROJECTIONS if keys is None or p.key in keys]
     cands = []
@@ -576,7 +577,7 @@ def estimate_projections(lonlat_deg, pixels, ref_xy=None, ref_label=None,
         discriminable = False
         msgs.append(("Zasięg punktów to tylko ~{ext}°. Na tak małym obszarze różnice między odwzorowaniami "
                      "są zwykle mniejsze niż błędy rysunku mapy – wynik ma charakter orientacyjny.",
-                     {"ext": f"{ext:.1f}"}))
+                     {"ext": num(ext, 1)}))
     if spread < 0.10:
         discriminable = False
         msgs.append(("Błędy σ₀ wszystkich kandydatów różnią się o mniej niż {pct}% – "
@@ -591,7 +592,7 @@ def estimate_projections(lonlat_deg, pixels, ref_xy=None, ref_label=None,
         if np.isfinite(a_h) and np.isfinite(a_a) and a_h - a_a > 10:
             msgs.append(("Dane wykazują anizotropię skali (nierównomierny skurcz papieru, ΔAICc = {d}). W trybie Helmerta "
                          "odwzorowania z parametrem zmieniającym proporcje siatki (np. walcowe z równoleżnikiem "
-                         "standardowym) mogą wygrywać pozornie – użyj dopasowania afinicznego.", {"d": f"{a_h - a_a:.1f}"}))
+                         "standardowym) mogą wygrywać pozornie – użyj dopasowania afinicznego.", {"d": num(a_h - a_a, 1)}))
     if n < 15:
         msgs.append(("Mała liczba punktów (< 15) – parametry odwzorowania mogą być słabo wyznaczone.", {}))
     b = next((c for c in cands if not c.is_reference and c.success), None)
@@ -660,7 +661,7 @@ def evaluate_hypothesis(key, params_deg, lonlat_deg, pixels, mode="helmert") -> 
         x, y = proj.func(lam, phi, {k: math.radians(v) for k, v in p_deg.items()})
     P = np.column_stack([np.broadcast_to(x, lam.shape), np.broadcast_to(y, lam.shape)])
     if not np.all(np.isfinite(P)):
-        raise ValueError("Odwzorowanie nie jest określone dla tych parametrów w obszarze punktów.")
+        raise EngineError("Odwzorowanie nie jest określone dla tych parametrów w obszarze punktów.")
     n = len(pixels)
     k_total = 6 if mode == "affine" else 4
     A, t, r = _fit_plane(P, pixels, mode)
@@ -678,7 +679,7 @@ def evaluate_hypothesis(key, params_deg, lonlat_deg, pixels, mode="helmert") -> 
 def add_hypothesis(est, key, params_deg) -> Candidate:
     """Dodaje (lub zastępuje) hipotezę danego odwzorowania w rankingu i przelicza wagi."""
     if est.lonlat is None or est.pixels is None:
-        raise ValueError("Brak danych estymacji.")
+        raise EngineError("Brak danych estymacji.")
     cand = evaluate_hypothesis(key, params_deg, est.lonlat, est.pixels, est.fit_mode)
     est.candidates = [c for c in est.candidates if not (c.is_hypothesis and c.key == key)]
     est.candidates.append(cand)
@@ -769,7 +770,8 @@ def format_dms(value: float, pos: str = "E", neg: str = "W") -> str:
     if m >= 60:
         m = 0
         d += 1
-    return f"{d}°{m:02d}′{s:04.1f}″ {hemi}"
+    sec = f"{s:04.1f}".replace(".", decimal_sep())
+    return f"{d}°{m:02d}′{sec}″ {hemi}"
 
 
 def graticule_lines(cand: Candidate, lon_range, lat_range, step_deg: float, samples: int = 60) -> list:

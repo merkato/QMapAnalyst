@@ -4,8 +4,8 @@
 <context>
     <name>QMapAnalystDockWidget</name>
     <message>
-        <source>np. 21°02′30″ E, 21 2 30 lub 21.0417</source>
-        <translation>np. 21°02′30″ E, 21 2 30 lub 21.0417</translation>
+        <source>np. 21°02′30″ E, 21 2 30 lub 21,0417</source>
+        <translation>np. 21°02′30″ E, 21 2 30 lub 21,0417</translation>
     </message>
     <message>
         <source>GCP</source>
@@ -158,6 +158,14 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
     <message>
         <source>Po zmianie punktów GCP automatycznie przelicz analizę i odśwież istniejące warstwy wynikowe</source>
         <translation>Po zmianie punktów GCP automatycznie przelicz analizę i odśwież istniejące warstwy wynikowe</translation>
+    </message>
+    <message>
+        <source>Zapisz raport…</source>
+        <translation>Zapisz raport…</translation>
+    </message>
+    <message>
+        <source>Zapisz pełny raport analizy (dane wejściowe, statystyki, punkty, odwzorowanie) jako PDF, TXT lub HTML</source>
+        <translation>Zapisz pełny raport analizy (dane wejściowe, statystyki, punkty, odwzorowanie) jako PDF, TXT lub HTML</translation>
     </message>
     <message>
         <source>Wyniki analizy pojawią się tutaj.</source>
@@ -320,8 +328,16 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Wybierz folder zapisu eksportu</translation>
     </message>
     <message>
-        <source>Raport PDF (statystyki, odwzorowanie, strony z nakładkami)</source>
-        <translation>Raport PDF (statystyki, odwzorowanie, strony z nakładkami)</translation>
+        <source>Raport analizy – PDF (wielostronicowy)</source>
+        <translation>Raport analizy – PDF (wielostronicowy)</translation>
+    </message>
+    <message>
+        <source>Raport analizy – TXT</source>
+        <translation>Raport analizy – TXT</translation>
+    </message>
+    <message>
+        <source>Mapy z nakładkami – PDF (strona na każdą widoczną nakładkę)</source>
+        <translation>Mapy z nakładkami – PDF (strona na każdą widoczną nakładkę)</translation>
     </message>
     <message>
         <source>Widok mapy dawnej z nakładkami (TIFF)</source>
@@ -408,8 +424,12 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation> (hipoteza)</translation>
     </message>
     <message>
-        <source>Analiza kartometryczna</source>
-        <translation>Analiza kartometryczna</translation>
+        <source>Zapisz raport analizy</source>
+        <translation>Zapisz raport analizy</translation>
+    </message>
+    <message>
+        <source>Raport PDF (*.pdf);;Tekst (*.txt);;Strona HTML (*.html)</source>
+        <translation>Raport PDF (*.pdf);;Tekst (*.txt);;Strona HTML (*.html)</translation>
     </message>
     <message>
         <source>Akt.</source>
@@ -468,8 +488,8 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Błąd walidacji krzyżowej: błąd punktu, gdy transformację wyznaczono bez niego</translation>
     </message>
     <message>
-        <source>Reszta standaryzowana (test Baardy). |w| &gt; 3.29 – punkt podejrzany o błąd grubej identyfikacji</source>
-        <translation>Reszta standaryzowana (test Baardy). |w| &gt; 3.29 – punkt podejrzany o błąd grubej identyfikacji</translation>
+        <source>Reszta standaryzowana (test Baardy). |w| &gt; 3,29 – punkt podejrzany o błąd grubej identyfikacji</source>
+        <translation>Reszta standaryzowana (test Baardy). |w| &gt; 3,29 – punkt podejrzany o błąd grubej identyfikacji</translation>
     </message>
     <message>
         <source>Waga</source>
@@ -484,8 +504,8 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Oczko:</translation>
     </message>
     <message>
-        <source>Hipoteza {name}: σ₀ = {s:.2f} px, ΔAICc = {d:.1f}, miejsce w rankingu: {r}.</source>
-        <translation>Hipoteza {name}: σ₀ = {s:.2f} px, ΔAICc = {d:.1f}, miejsce w rankingu: {r}.</translation>
+        <source>Hipoteza {name}: σ₀ = {s} px, ΔAICc = {d}, miejsce w rankingu: {r}.</source>
+        <translation>Hipoteza {name}: σ₀ = {s} px, ΔAICc = {d}, miejsce w rankingu: {r}.</translation>
     </message>
     <message>
         <source>Folder docelowy:</source>
@@ -520,16 +540,16 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Plik nie zawiera punktów.</translation>
     </message>
     <message>
-        <source>Wczytano {n} punktów (układ: {crs}).</source>
-        <translation>Wczytano {n} punktów (układ: {crs}).</translation>
+        <source>Wczytano punkty (liczba: {n}, układ: {crs}).</source>
+        <translation>Wczytano punkty (liczba: {n}, układ: {crs}).</translation>
     </message>
     <message>
         <source>Obliczanie transformacji…</source>
         <translation>Obliczanie transformacji…</translation>
     </message>
     <message>
-        <source>Obliczono ({n} pkt): σ₀ = {s:.2f} {u}, RMSE = {r:.2f} {u}, skala ≈ {m}</source>
-        <translation>Obliczono ({n} pkt): σ₀ = {s:.2f} {u}, RMSE = {r:.2f} {u}, skala ≈ {m}</translation>
+        <source>Obliczono ({n} pkt): σ₀ = {s} {u}, RMSE = {r} {u}, skala ≈ {m}</source>
+        <translation>Obliczono ({n} pkt): σ₀ = {s} {u}, RMSE = {r} {u}, skala ≈ {m}</translation>
     </message>
     <message>
         <source>Najpierw oblicz transformację.</source>
@@ -592,12 +612,44 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Brak wyników do eksportu – najpierw oblicz transformację.</translation>
     </message>
     <message>
+        <source>Analiza kartometryczna – {name}</source>
+        <translation>Analiza kartometryczna – {name}</translation>
+    </message>
+    <message>
+        <source>Układ odniesienia</source>
+        <translation>Układ odniesienia</translation>
+    </message>
+    <message>
+        <source>Transformacja</source>
+        <translation>Transformacja</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość skanu</source>
+        <translation>Rozdzielczość skanu</translation>
+    </message>
+    <message>
+        <source>Punkty GCP (aktywne / wszystkie)</source>
+        <translation>Punkty GCP (aktywne / wszystkie)</translation>
+    </message>
+    <message>
+        <source>Data analizy</source>
+        <translation>Data analizy</translation>
+    </message>
+    <message>
+        <source>Wersja wtyczki</source>
+        <translation>Wersja wtyczki</translation>
+    </message>
+    <message>
+        <source>Eksportowanie…</source>
+        <translation>Eksportowanie…</translation>
+    </message>
+    <message>
         <source>Błąd: {err}</source>
         <translation>Błąd: {err}</translation>
     </message>
     <message>
-        <source>np. 52° N lub 52.0</source>
-        <translation>np. 52° N lub 52.0</translation>
+        <source>np. 52° N lub 52,0</source>
+        <translation>np. 52° N lub 52,0</translation>
     </message>
     <message>
         <source>Południk zerowy, względem którego podano λ₀</source>
@@ -612,16 +664,16 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Skan wczytany: {w} × {h} px. Dodaj lub wczytaj punkty GCP.</translation>
     </message>
     <message>
-        <source>Usunięto {n} punktów.</source>
-        <translation>Usunięto {n} punktów.</translation>
+        <source>Usunięto punkty (liczba: {n}).</source>
+        <translation>Usunięto punkty (liczba: {n}).</translation>
     </message>
     <message>
-        <source>Zapisano {n} punktów do pliku.</source>
-        <translation>Zapisano {n} punktów do pliku.</translation>
+        <source>Zapisano punkty do pliku (liczba: {n}).</source>
+        <translation>Zapisano punkty do pliku (liczba: {n}).</translation>
     </message>
     <message>
-        <source>Transformacja „{name}” wymaga minimum {k} aktywnych punktów (aktywne: {n} z {t}).</source>
-        <translation>Transformacja „{name}” wymaga minimum {k} aktywnych punktów (aktywne: {n} z {t}).</translation>
+        <source>Transformacja „{name}” wymaga co najmniej {k} aktywnych punktów (aktywne: {n} z {t}).</source>
+        <translation>Transformacja „{name}” wymaga co najmniej {k} aktywnych punktów (aktywne: {n} z {t}).</translation>
     </message>
     <message>
         <source>Para #{n} dodana ({m}). KROK 1/2: kliknij kolejny punkt na mapie dawnej.</source>
@@ -632,12 +684,12 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Włącz synchronizację widoków, aby mapa główna podążała za skanem.</translation>
     </message>
     <message>
-        <source>Siatka zniekształceń: {a} odcinków pewnych, {b} ekstrapolowanych.</source>
-        <translation>Siatka zniekształceń: {a} odcinków pewnych, {b} ekstrapolowanych.</translation>
+        <source>Siatka zniekształceń gotowa (odcinki w obszarze pewnym: {a}, ekstrapolowane: {b}).</source>
+        <translation>Siatka zniekształceń gotowa (odcinki w obszarze pewnym: {a}, ekstrapolowane: {b}).</translation>
     </message>
     <message>
-        <source>Wygenerowano siatkę układu odniesienia ({n} linii).</source>
-        <translation>Wygenerowano siatkę układu odniesienia ({n} linii).</translation>
+        <source>Wygenerowano siatkę układu odniesienia (linie: {n}).</source>
+        <translation>Wygenerowano siatkę układu odniesienia (linie: {n}).</translation>
     </message>
     <message>
         <source>Izolinie rotacji [°]</source>
@@ -648,36 +700,52 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Izolinie zniekształceń kątowych 2ω [°]</translation>
     </message>
     <message>
-        <source>Izolinie gotowe: {n} linii, {k} poziomów.</source>
-        <translation>Izolinie gotowe: {n} linii, {k} poziomów.</translation>
+        <source>Izolinie gotowe (linie: {n}, poziomy: {k}).</source>
+        <translation>Izolinie gotowe (linie: {n}, poziomy: {k}).</translation>
     </message>
     <message>
-        <source>Narysowano siatkę geograficzną ({n} linii, oczko {s}).</source>
-        <translation>Narysowano siatkę geograficzną ({n} linii, oczko {s}).</translation>
+        <source>Narysowano siatkę geograficzną (linie: {n}, oczko {s}).</source>
+        <translation>Narysowano siatkę geograficzną (linie: {n}, oczko {s}).</translation>
     </message>
     <message>
-        <source>Eksportowanie…</source>
-        <translation>Eksportowanie…</translation>
+        <source>Wyeksportowano pliki do: {d} (liczba plików: {n})</source>
+        <translation>Wyeksportowano pliki do: {d} (liczba plików: {n})</translation>
     </message>
     <message>
-        <source>Wyeksportowano {n} plików do: {d}</source>
-        <translation>Wyeksportowano {n} plików do: {d}</translation>
+        <source>Skan mapy dawnej</source>
+        <translation>Skan mapy dawnej</translation>
     </message>
     <message>
-        <source>Estymacja odwzorowania</source>
-        <translation>Estymacja odwzorowania</translation>
+        <source>Rozmiar skanu</source>
+        <translation>Rozmiar skanu</translation>
+    </message>
+    <message>
+        <source>Uwaga</source>
+        <translation>Uwaga</translation>
+    </message>
+    <message>
+        <source>punkty GCP zmieniono po obliczeniu – wyniki mogą być nieaktualne</source>
+        <translation>punkty GCP zmieniono po obliczeniu – wyniki mogą być nieaktualne</translation>
+    </message>
+    <message>
+        <source>raport</source>
+        <translation>raport</translation>
+    </message>
+    <message>
+        <source>Zapisano raport: {p}</source>
+        <translation>Zapisano raport: {p}</translation>
     </message>
     <message>
         <source>od</source>
         <translation>od</translation>
     </message>
     <message>
-        <source>Swobodne dopasowanie: σ₀ = {s:.2f} px.</source>
-        <translation>Swobodne dopasowanie: σ₀ = {s:.2f} px.</translation>
+        <source>Swobodne dopasowanie: σ₀ = {s} px.</source>
+        <translation>Swobodne dopasowanie: σ₀ = {s} px.</translation>
     </message>
     <message>
-        <source>Zakończono dodawanie punktów. Liczba par: {n}.</source>
-        <translation>Zakończono dodawanie punktów. Liczba par: {n}.</translation>
+        <source>Zakończono dodawanie punktów (liczba par: {n}).</source>
+        <translation>Zakończono dodawanie punktów (liczba par: {n}).</translation>
     </message>
     <message>
         <source>Dodano parę #{n}. KROK 1/2: kliknij kolejny punkt na mapie dawnej (lub wyłącz tryb dodawania).</source>
@@ -700,16 +768,16 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Współrzędne przeliczono z układu {crs}.</translation>
     </message>
     <message>
-        <source>Pominięto {n} niepoprawnych wierszy.</source>
-        <translation>Pominięto {n} niepoprawnych wierszy.</translation>
+        <source>Pominięto niepoprawne wiersze (liczba: {n}).</source>
+        <translation>Pominięto niepoprawne wiersze (liczba: {n}).</translation>
     </message>
     <message>
         <source>punkty odstające: {k}</source>
         <translation>punkty odstające: {k}</translation>
     </message>
     <message>
-        <source>Ta operacja wymaga minimum {k} aktywnych punktów.</source>
-        <translation>Ta operacja wymaga minimum {k} aktywnych punktów.</translation>
+        <source>Ta operacja wymaga co najmniej {k} aktywnych punktów (GCP).</source>
+        <translation>Ta operacja wymaga co najmniej {k} aktywnych punktów (GCP).</translation>
     </message>
     <message>
         <source>Siatka {crs}</source>
@@ -724,16 +792,16 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Izolinie skali (1:M, {dpi} DPI)</translation>
     </message>
     <message>
-        <source>Estymacja odwzorowania wymaga minimum {k} aktywnych punktów.</source>
-        <translation>Estymacja odwzorowania wymaga minimum {k} aktywnych punktów.</translation>
+        <source>Estymacja odwzorowania wymaga co najmniej {k} aktywnych punktów (GCP).</source>
+        <translation>Estymacja odwzorowania wymaga co najmniej {k} aktywnych punktów (GCP).</translation>
     </message>
     <message>
         <source>Układ odniesienia ({crs})</source>
         <translation>Układ odniesienia ({crs})</translation>
     </message>
     <message>
-        <source>Najlepsze dopasowanie: {name} (σ₀ = {s:.2f} px, waga {w:.0f}%).</source>
-        <translation>Najlepsze dopasowanie: {name} (σ₀ = {s:.2f} px, waga {w:.0f}%).</translation>
+        <source>Najlepsze dopasowanie: {name} (σ₀ = {s} px, waga {w}%).</source>
+        <translation>Najlepsze dopasowanie: {name} (σ₀ = {s} px, waga {w}%).</translation>
     </message>
     <message>
         <source>Podaj wartość parametru: {p}</source>
@@ -744,16 +812,20 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Niepoprawna wartość liczbowa – przywrócono poprzednią.</translation>
     </message>
     <message>
-        <source>Zbyt gęsta siatka ({n} linii) – zwiększ oczko siatki.</source>
-        <translation>Zbyt gęsta siatka ({n} linii) – zwiększ oczko siatki.</translation>
+        <source>Zbyt gęsta siatka (linie: {n}) – zwiększ oczko siatki.</source>
+        <translation>Zbyt gęsta siatka (linie: {n}) – zwiększ oczko siatki.</translation>
     </message>
     <message>
         <source>układu odniesienia</source>
         <translation>układu odniesienia</translation>
     </message>
     <message>
-        <source>Wynik nierozstrzygnięty: {k} odwzorowań równorzędnych (ΔAICc &lt; 2). Porównaj siatki geograficzne kandydatów z mapą.</source>
-        <translation>Wynik nierozstrzygnięty: {k} odwzorowań równorzędnych (ΔAICc &lt; 2). Porównaj siatki geograficzne kandydatów z mapą.</translation>
+        <source>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2): {k}. Porównaj siatki geograficzne kandydatów z mapą.</source>
+        <translation>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2): {k}. Porównaj siatki geograficzne kandydatów z mapą.</translation>
+    </message>
+    <message>
+        <source>Estymacja odwzorowania</source>
+        <translation>Estymacja odwzorowania</translation>
     </message>
     <message>
         <source>Niepoprawny zapis kąta „{t}” ({p}).</source>
@@ -766,6 +838,22 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>wył.</source>
         <translation>wył.</translation>
+    </message>
+    <message>
+        <source>punkty</source>
+        <translation>punkty</translation>
+    </message>
+    <message>
+        <source>odwzorowania</source>
+        <translation>odwzorowania</translation>
+    </message>
+    <message>
+        <source>widok</source>
+        <translation>widok</translation>
+    </message>
+    <message>
+        <source>mapy</source>
+        <translation>mapy</translation>
     </message>
     <message>
         <source>Helmert (4 parametry)</source>
@@ -1262,6 +1350,42 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Obliczenia na sferze; współrzędne geograficzne punktów wyznaczone z układu odniesienia projektu.</translation>
     </message>
     <message>
+        <source>Dane wejściowe</source>
+        <translation>Dane wejściowe</translation>
+    </message>
+    <message>
+        <source>Punkty kontrolne i reszty</source>
+        <translation>Punkty kontrolne i reszty</translation>
+    </message>
+    <message>
+        <source>Akt.</source>
+        <translation>Akt.</translation>
+    </message>
+    <message>
+        <source>X dawna</source>
+        <translation>X dawna</translation>
+    </message>
+    <message>
+        <source>Y dawna</source>
+        <translation>Y dawna</translation>
+    </message>
+    <message>
+        <source>X ref.</source>
+        <translation>X ref.</translation>
+    </message>
+    <message>
+        <source>Y ref.</source>
+        <translation>Y ref.</translation>
+    </message>
+    <message>
+        <source>Błąd</source>
+        <translation>Błąd</translation>
+    </message>
+    <message>
+        <source>Reszty v = współrzędne referencyjne − transformowane, w jednostkach układu odniesienia</source>
+        <translation>Reszty v = współrzędne referencyjne − transformowane, w jednostkach układu odniesienia</translation>
+    </message>
+    <message>
         <source>Za mało obserwacji nadliczbowych do testu.</source>
         <translation>Za mało obserwacji nadliczbowych do testu.</translation>
     </message>
@@ -1272,10 +1396,6 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>Model</source>
         <translation>Model</translation>
-    </message>
-    <message>
-        <source>ΔAICc &lt; 2 – modele równorzędne; &gt; 10 – model wyraźnie gorszy. Niższy błąd LOO oznacza lepszą zdolność predykcji.</source>
-        <translation>ΔAICc &lt; 2 – modele równorzędne; &gt; 10 – model wyraźnie gorszy. Niższy błąd LOO oznacza lepszą zdolność predykcji.</translation>
     </message>
     <message>
         <source>Zniekształcenia lokalne (TPS, wewnątrz otoczki punktów)</source>
@@ -1296,10 +1416,6 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>Najlepiej dopasowane</source>
         <translation>Najlepiej dopasowane</translation>
-    </message>
-    <message>
-        <source>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2)</source>
-        <translation>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2)</translation>
     </message>
     <message>
         <source>Kolejność w rankingu nie przesądza o odwzorowaniu. Proste odwzorowania bez dopasowywanych parametrów wygrywają, gdy dane nie wnoszą dodatkowej informacji. Porównaj siatkę geograficzną kandydatów z siatką (lub ramką z podziałką) narysowaną na mapie.</source>
@@ -1334,10 +1450,6 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Brak punktów odstających</translation>
     </message>
     <message>
-        <source>Błąd</source>
-        <translation>Błąd</translation>
-    </message>
-    <message>
         <source>Błąd LOO</source>
         <translation>Błąd LOO</translation>
     </message>
@@ -1346,8 +1458,8 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>nadwyżkowość</translation>
     </message>
     <message>
-        <source>Test Baardy: reszta standaryzowana w &gt; 3.29 (α = 0.001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.</source>
-        <translation>Test Baardy: reszta standaryzowana w &gt; 3.29 (α = 0.001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.</translation>
+        <source>ΔAICc &lt; 2 – modele równorzędne; &gt; 10 – model wyraźnie gorszy. Niższy błąd LOO oznacza lepszą zdolność predykcji.</source>
+        <translation>ΔAICc &lt; 2 – modele równorzędne; &gt; 10 – model wyraźnie gorszy. Niższy błąd LOO oznacza lepszą zdolność predykcji.</translation>
     </message>
     <message>
         <source>Reszty sąsiednich punktów są podobne – błędy mają charakter systematyczny (lokalne zniekształcenia, łączenie arkuszy, różne źródła pomiarów). Rozważ model wyższego rzędu lub analizę siatki zniekształceń.</source>
@@ -1356,6 +1468,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>Brak istotnej autokorelacji – reszty mają charakter losowy.</source>
         <translation>Brak istotnej autokorelacji – reszty mają charakter losowy.</translation>
+    </message>
+    <message>
+        <source>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2)</source>
+        <translation>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2)</translation>
     </message>
     <message>
         <source>(hipoteza)</source>
@@ -1378,16 +1494,20 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Parametry swobodnego dopasowania</translation>
     </message>
     <message>
+        <source>Test Baardy: reszta standaryzowana w &gt; 3,29 (α = 0,001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.</source>
+        <translation>Test Baardy: reszta standaryzowana w &gt; 3,29 (α = 0,001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.</translation>
+    </message>
+    <message>
         <source>Hipoteza jest zgodna z danymi (ΔAICc &lt; 2 względem najlepszego modelu).</source>
         <translation>Hipoteza jest zgodna z danymi (ΔAICc &lt; 2 względem najlepszego modelu).</translation>
     </message>
     <message>
-        <source>Hipoteza słabiej wspierana przez dane (2 ≤ ΔAICc &lt; 10) – sprawdź parametry i punkty odstające.</source>
-        <translation>Hipoteza słabiej wspierana przez dane (2 ≤ ΔAICc &lt; 10) – sprawdź parametry i punkty odstające.</translation>
-    </message>
-    <message>
         <source>Hipoteza wyraźnie gorsza od najlepszego modelu (ΔAICc ≥ 10).</source>
         <translation>Hipoteza wyraźnie gorsza od najlepszego modelu (ΔAICc ≥ 10).</translation>
+    </message>
+    <message>
+        <source>Hipoteza słabiej wspierana przez dane (2 ≤ ΔAICc &lt; 10) – sprawdź parametry i punkty odstające.</source>
+        <translation>Hipoteza słabiej wspierana przez dane (2 ≤ ΔAICc &lt; 10) – sprawdź parametry i punkty odstające.</translation>
     </message>
     <message>
         <source>Helmert (4 parametry)</source>
@@ -1701,6 +1821,18 @@ Nie – dopisz nowe punkty do istniejących.</translation>
 <context>
     <name>QMapAnalystExport</name>
     <message>
+        <source>Brak widocznych nakładek mapy dawnej do eksportu.</source>
+        <translation>Brak widocznych nakładek mapy dawnej do eksportu.</translation>
+    </message>
+    <message>
+        <source>Nie udało się zapisać obrazu: {p}</source>
+        <translation>Nie udało się zapisać obrazu: {p}</translation>
+    </message>
+    <message>
+        <source>Nie można utworzyć pliku PDF: {p}</source>
+        <translation>Nie można utworzyć pliku PDF: {p}</translation>
+    </message>
+    <message>
         <source>Wygenerowano:</source>
         <translation>Wygenerowano:</translation>
     </message>
@@ -1712,6 +1844,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <source>Eksport PDF nie powiódł się (kod {code}): {msg}</source>
         <translation>Eksport PDF nie powiódł się (kod {code}): {msg}</translation>
     </message>
+    <message>
+        <source>Strona {i} z {n}</source>
+        <translation>Strona {i} z {n}</translation>
+    </message>
 </context>
 <context>
     <name>QMapAnalystLayers</name>
@@ -1720,8 +1856,8 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Aktywny</translation>
     </message>
     <message>
-        <source>Odstający (|w| &gt; 3.29)</source>
-        <translation>Odstający (|w| &gt; 3.29)</translation>
+        <source>Odstający (|w| &gt; 3,29)</source>
+        <translation>Odstający (|w| &gt; 3,29)</translation>
     </message>
     <message>
         <source>Wyłączony</source>
@@ -1734,6 +1870,61 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>Odstający</source>
         <translation>Odstający</translation>
+    </message>
+</context>
+<context>
+    <name>QMapAnalystEngine</name>
+    <message>
+        <source>Nieznany model transformacji: {model}</source>
+        <translation>Nieznany model transformacji: {model}</translation>
+    </message>
+    <message>
+        <source>Liczba punktów źródłowych i docelowych jest różna.</source>
+        <translation>Liczba punktów źródłowych i docelowych jest różna.</translation>
+    </message>
+    <message>
+        <source>Transformacja „{name}” wymaga minimum {k} punktów.</source>
+        <translation>Transformacja „{name}” wymaga minimum {k} punktów.</translation>
+    </message>
+    <message>
+        <source>Współrzędne punktów zawierają wartości nieliczbowe.</source>
+        <translation>Współrzędne punktów zawierają wartości nieliczbowe.</translation>
+    </message>
+    <message>
+        <source>Układ równań jest osobliwy – punkty są współliniowe lub zdublowane.</source>
+        <translation>Układ równań jest osobliwy – punkty są współliniowe lub zdublowane.</translation>
+    </message>
+    <message>
+        <source>Estymacja odwzorowania wymaga minimum {k} aktywnych punktów (zalecane &gt; 15).</source>
+        <translation>Estymacja odwzorowania wymaga minimum {k} aktywnych punktów (zalecane &gt; 15).</translation>
+    </message>
+    <message>
+        <source>Odwzorowanie nie jest określone dla tych parametrów w obszarze punktów.</source>
+        <translation>Odwzorowanie nie jest określone dla tych parametrów w obszarze punktów.</translation>
+    </message>
+    <message>
+        <source>Brak danych estymacji.</source>
+        <translation>Brak danych estymacji.</translation>
+    </message>
+    <message>
+        <source>Kandydat referencyjny nie ma odwzorowania geograficznego.</source>
+        <translation>Kandydat referencyjny nie ma odwzorowania geograficznego.</translation>
+    </message>
+    <message>
+        <source>Brak scipy.optimize – estymacja odwzorowania niemożliwa.</source>
+        <translation>Brak scipy.optimize – estymacja odwzorowania niemożliwa.</translation>
+    </message>
+    <message>
+        <source>Helmert (4 parametry)</source>
+        <translation>Helmert (4 parametry)</translation>
+    </message>
+    <message>
+        <source>Afiniczna (6 parametrów)</source>
+        <translation>Afiniczna (6 parametrów)</translation>
+    </message>
+    <message>
+        <source>Wielomianowa 2. stopnia (12 parametrów)</source>
+        <translation>Wielomianowa 2. stopnia (12 parametrów)</translation>
     </message>
 </context>
 </TS>

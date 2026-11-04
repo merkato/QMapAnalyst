@@ -7,6 +7,7 @@ import inspect
 import math
 import os
 import traceback
+from datetime import datetime
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import cached_property
@@ -35,6 +36,7 @@ from . import gcp_io
 from . import math_engine as me
 from . import projections as pj
 from . import report
+from .lang import num
 from .layers import (
     LayerRegistry, add_features, memory_layer, merge_segments, polyline, set_labels, split_lines,
     style_arrows, style_line, style_outline, style_points,
@@ -158,7 +160,7 @@ def _num_item(value, digits=2, editable=False, color=None, tip=None):
     if value is None or (isinstance(value, float) and not math.isfinite(value)):
         it = QTableWidgetItem("–")
     else:
-        it = QTableWidgetItem(f"{value:.{digits}f}")
+        it = QTableWidgetItem(num(value, digits, group=False))
     it.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
     flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
     if editable:
@@ -223,9 +225,19 @@ class QMapAnalystDockWidget(QDockWidget):
         self.lbl_status.setText(text)
         self.lbl_status.setToolTip(text)
 
+    @staticmethod
+    def error_text(exc):
+        """Przetłumaczony komunikat błędu (EngineError ma tłumaczalny szablon)."""
+        if isinstance(exc, me.EngineError):
+            tr_ = lambda t: QCoreApplication.translate("QMapAnalystEngine", t)  # noqa: E731
+            params = {k: tr_(v) if isinstance(v, str) else v for k, v in exc.params.items()}
+            return tr_(exc.template).format(**params) if params else tr_(exc.template)
+        return str(exc)
+
     def report_exception(self, where, exc):
-        QgsMessageLog.logMessage(f"{where}: {traceback.format_exc()}", LOG_TAG, Qgis.MessageLevel.Critical)
-        self.set_status(self.tr("Błąd: {err}").format(err=exc), "error")
+        level = Qgis.MessageLevel.Warning if isinstance(exc, me.EngineError) else Qgis.MessageLevel.Critical
+        QgsMessageLog.logMessage(f"{where}: {traceback.format_exc()}", LOG_TAG, level)
+        self.set_status(self.tr("Błąd: {err}").format(err=self.error_text(exc)), "error")
         self.progress.hide()
 
     @contextmanager
@@ -265,6 +277,7 @@ class QMapAnalystDockWidget(QDockWidget):
 
         status = QHBoxLayout()
         self.lbl_status = QLabel()
+        self.lbl_status.setTextFormat(Qt.TextFormat.PlainText)
         self.lbl_status.setWordWrap(True)
         self.lbl_status.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.progress = QProgressBar()
@@ -373,7 +386,7 @@ class QMapAnalystDockWidget(QDockWidget):
             (self.tr("Y ref."), self.tr("Współrzędna Y w układzie odniesienia")),
             (self.tr("Błąd"), self.tr("Odległość punktu transformowanego od referencyjnego")),
             (self.tr("LOO"), self.tr("Błąd walidacji krzyżowej: błąd punktu, gdy transformację wyznaczono bez niego")),
-            ("w", self.tr("Reszta standaryzowana (test Baardy). |w| > 3.29 – punkt podejrzany o błąd grubej identyfikacji")),
+            ("w", self.tr("Reszta standaryzowana (test Baardy). |w| > 3,29 – punkt podejrzany o błąd grubej identyfikacji")),
         ]
         for i, (txt, tip) in enumerate(headers):
             it = QTableWidgetItem(txt)
@@ -432,7 +445,12 @@ class QMapAnalystDockWidget(QDockWidget):
         self.chk_auto = QCheckBox(self.tr("Przeliczaj automatycznie"))
         self.chk_auto.setChecked(True)
         self.chk_auto.setToolTip(self.tr("Po zmianie punktów GCP automatycznie przelicz analizę i odśwież istniejące warstwy wynikowe"))
+        self.btn_save_report = _button(self.tr("Zapisz raport…"), "/mActionFileSave.svg",
+                                       self.tr("Zapisz pełny raport analizy (dane wejściowe, statystyki, punkty, odwzorowanie) "
+                                               "jako PDF, TXT lub HTML"))
+        self.btn_save_report.clicked.connect(self.save_report_dialog)
         row.addWidget(self.btn_calculate, 1)
+        row.addWidget(self.btn_save_report)
         row.addWidget(self.chk_auto)
         lay.addLayout(row)
 
@@ -526,10 +544,10 @@ class QMapAnalystDockWidget(QDockWidget):
 
         self.hyp_edits = {}
         self.hyp_labels = {}
-        hint = self.tr("np. 21°02′30″ E, 21 2 30 lub 21.0417")
+        hint = self.tr("np. 21°02′30″ E, 21 2 30 lub 21,0417")
         for key in ("lon0", "lat0", "lat1", "lat2"):
             ed = QLineEdit()
-            ed.setPlaceholderText(hint if key == "lon0" else self.tr("np. 52° N lub 52.0"))
+            ed.setPlaceholderText(hint if key == "lon0" else self.tr("np. 52° N lub 52,0"))
             ed.returnPressed.connect(self.run_hypothesis)
             lab = QLabel(self.tr(pj.PARAM_LABELS[key]) + ":")
             if key == "lon0":
@@ -623,11 +641,11 @@ class QMapAnalystDockWidget(QDockWidget):
         if self.old_raster_layer is not None:
             self.generate_graticule()
         free = self.projection.free_fit(key)
-        msg = self.tr("Hipoteza {name}: σ₀ = {s:.2f} px, ΔAICc = {d:.1f}, miejsce w rankingu: {r}.").format(
-            name=self.tr(cand.name), s=cand.sigma0_px, d=cand.delta_aicc,
+        msg = self.tr("Hipoteza {name}: σ₀ = {s} px, ΔAICc = {d}, miejsce w rankingu: {r}.").format(
+            name=self.tr(cand.name), s=num(cand.sigma0_px, 2), d=num(cand.delta_aicc, 1),
             r=self.projection.candidates.index(cand) + 1)
         if free is not None and np.isfinite(free.sigma0_px):
-            msg += " " + self.tr("Swobodne dopasowanie: σ₀ = {s:.2f} px.").format(s=free.sigma0_px)
+            msg += " " + self.tr("Swobodne dopasowanie: σ₀ = {s} px.").format(s=num(free.sigma0_px, 2))
         self.set_status(msg, "ok" if cand.delta_aicc < 2 else "warn")
 
     # --- warstwy --------------------------------------------------------
@@ -735,15 +753,20 @@ class QMapAnalystDockWidget(QDockWidget):
         self.file_export_dir.setDialogTitle(self.tr("Wybierz folder zapisu eksportu"))
         v.addWidget(QLabel(self.tr("Folder docelowy:")))
         v.addWidget(self.file_export_dir)
-        self.chk_exp_pdf = QCheckBox(self.tr("Raport PDF (statystyki, odwzorowanie, strony z nakładkami)"))
+        self.chk_exp_pdf = QCheckBox(self.tr("Raport analizy – PDF (wielostronicowy)"))
         self.chk_exp_pdf.setChecked(True)
+        self.chk_exp_txt = QCheckBox(self.tr("Raport analizy – TXT"))
+        self.chk_exp_txt.setChecked(True)
+        self.chk_exp_maps = QCheckBox(self.tr("Mapy z nakładkami – PDF (strona na każdą widoczną nakładkę)"))
+        self.chk_exp_maps.setChecked(True)
         self.chk_exp_tiff = QCheckBox(self.tr("Widok mapy dawnej z nakładkami (TIFF)"))
         self.chk_exp_tiff.setChecked(True)
         self.chk_exp_csv = QCheckBox(self.tr("Tabela punktów z resztami (CSV)"))
         self.chk_exp_csv.setChecked(True)
         self.chk_exp_proj = QCheckBox(self.tr("Ranking odwzorowań (CSV)"))
         self.chk_exp_proj.setChecked(True)
-        for w in (self.chk_exp_pdf, self.chk_exp_tiff, self.chk_exp_csv, self.chk_exp_proj):
+        for w in (self.chk_exp_pdf, self.chk_exp_txt, self.chk_exp_maps, self.chk_exp_tiff, self.chk_exp_csv,
+                  self.chk_exp_proj):
             v.addWidget(w)
         self.btn_execute_export = _button(self.tr("Eksportuj"), "/mActionFileSave.svg")
         self.btn_execute_export.clicked.connect(self.execute_export)
@@ -793,7 +816,7 @@ class QMapAnalystDockWidget(QDockWidget):
             btn.setChecked(current is tool)
 
     def on_old_mouse_move(self, pt):
-        self.lbl_coords.setText(f"{pt.x():.1f}, {pt.y():.1f} px")
+        self.lbl_coords.setText(f"X {num(pt.x(), 1, group=False)}  Y {num(pt.y(), 1, group=False)} px")
 
     def update_enabled_state(self):
         has_raster = self.old_raster_layer is not None
@@ -804,6 +827,7 @@ class QMapAnalystDockWidget(QDockWidget):
                   self.btn_gen_iso_scale, self.btn_gen_iso_rot, self.btn_gen_iso_omega):
             b.setEnabled(has_res and has_raster)
         self.btn_sync_views.setEnabled(has_res)
+        self.btn_save_report.setEnabled(has_res)
         self.btn_graticule.setEnabled(self.projection is not None and has_raster)
         self.btn_save_gcp.setEnabled(bool(self.gcps))
         self.btn_remove_gcp.setEnabled(bool(self.gcps))
@@ -1039,7 +1063,7 @@ class QMapAnalystDockWidget(QDockWidget):
             self._temp_old_point = None
             self._restore_main_tool()
             self.old_canvas.setMapTool(self.tool_pan_old)
-            self.set_status(self.tr("Zakończono dodawanie punktów. Liczba par: {n}.").format(n=len(self.gcps)))
+            self.set_status(self.tr("Zakończono dodawanie punktów (liczba par: {n}).").format(n=len(self.gcps)))
 
     def _remove_temp_marker(self):
         if self._temp_marker is not None:
@@ -1275,7 +1299,7 @@ class QMapAnalystDockWidget(QDockWidget):
             self.ref_crs = None
         self.tbl_gcp.clearSelection()
         self.gcps_changed()
-        self.set_status(self.tr("Usunięto {n} punktów.").format(n=len(rows)))
+        self.set_status(self.tr("Usunięto punkty (liczba: {n}).").format(n=len(rows)))
 
     @guarded
     def toggle_selected_gcp(self):
@@ -1315,7 +1339,7 @@ class QMapAnalystDockWidget(QDockWidget):
             gcp_io.write_file(path, gcp_io.format_points(rows, self._crs_definition(crs)))
         else:
             gcp_io.write_file(path, gcp_io.format_csv(rows))
-        self.set_status(self.tr("Zapisano {n} punktów do pliku.").format(n=len(self.gcps)), "ok")
+        self.set_status(self.tr("Zapisano punkty do pliku (liczba: {n}).").format(n=len(self.gcps)), "ok")
 
     @staticmethod
     def _crs_definition(crs):
@@ -1381,11 +1405,11 @@ class QMapAnalystDockWidget(QDockWidget):
         added = len(rows)
         self.gcps_changed()
         self.update_ref_markers()
-        msg = self.tr("Wczytano {n} punktów (układ: {crs}).").format(n=added, crs=self.crs_short(self.ref_crs))
+        msg = self.tr("Wczytano punkty (liczba: {n}, układ: {crs}).").format(n=added, crs=self.crs_short(self.ref_crs))
         if ct is not None:
             msg += " " + self.tr("Współrzędne przeliczono z układu {crs}.").format(crs=self.crs_short(file_crs))
         if skipped:
-            msg += " " + self.tr("Pominięto {n} niepoprawnych wierszy.").format(n=skipped)
+            msg += " " + self.tr("Pominięto niepoprawne wiersze (liczba: {n}).").format(n=skipped)
         self.set_status(msg, "ok" if not skipped else "warn")
 
     # ------------------------------------------------------------------
@@ -1411,7 +1435,7 @@ class QMapAnalystDockWidget(QDockWidget):
         model = self.cmb_transform_type.currentData()
         meta = me.MODELS[model]
         if len(idx) < meta["min_pts"]:
-            msg = self.tr("Transformacja „{name}” wymaga minimum {k} aktywnych punktów (aktywne: {n} z {t}).").format(
+            msg = self.tr("Transformacja „{name}” wymaga co najmniej {k} aktywnych punktów (aktywne: {n} z {t}).").format(
                 name=self.tr(meta["name"]), k=meta["min_pts"], n=len(idx), t=len(self.gcps))
             self.txt_report.setHtml(f"<p style='color:#cf222e'>{msg}</p>")
             if not auto:
@@ -1459,8 +1483,8 @@ class QMapAnalystDockWidget(QDockWidget):
         st_ = fit.stats
         M = me.scale_denominator(fit.derived["scale"] * m_per_unit, self.spin_dpi.value())
         n_out = int(np.sum(np.nan_to_num(fit.std_residuals) > me.OUTLIER_THRESHOLD))
-        msg = self.tr("Obliczono ({n} pkt): σ₀ = {s:.2f} {u}, RMSE = {r:.2f} {u}, skala ≈ {m}").format(
-            n=len(idx), s=st_["sigma0"], r=st_["rmse"], u=unit, m=report.fmt_scale(M))
+        msg = self.tr("Obliczono ({n} pkt): σ₀ = {s} {u}, RMSE = {r} {u}, skala ≈ {m}").format(
+            n=len(idx), s=num(st_["sigma0"], 2), r=num(st_["rmse"], 2), u=unit, m=report.fmt_scale(M))
         if n_out:
             msg += " · " + self.tr("punkty odstające: {k}").format(k=n_out)
         if auto and self.btn_capture.isChecked():
@@ -1518,7 +1542,7 @@ class QMapAnalystDockWidget(QDockWidget):
             self.set_status(self.tr("Najpierw wczytaj skan mapy dawnej."), "warn")
             return False
         if self.analysis.fit.stats["n"] < min_pts:
-            self.set_status(self.tr("Ta operacja wymaga minimum {k} aktywnych punktów.").format(k=min_pts), "warn")
+            self.set_status(self.tr("Ta operacja wymaga co najmniej {k} aktywnych punktów (GCP).").format(k=min_pts), "warn")
             return False
         return True
 
@@ -1654,7 +1678,7 @@ class QMapAnalystDockWidget(QDockWidget):
             style_line(unc, QColor(140, 140, 140), 0.3, dashed=True)
             self.registry.set_main("main.grid.unc", unc)
             self.registry.set_main("main.grid", rel)
-        self.set_status(self.tr("Siatka zniekształceń: {a} odcinków pewnych, {b} ekstrapolowanych.").format(
+        self.set_status(self.tr("Siatka zniekształceń gotowa (odcinki w obszarze pewnym: {a}, ekstrapolowane: {b}).").format(
             a=len(rel_items), b=len(unc_items)), "ok")
 
     # ------------------------------------------------------------------
@@ -1722,7 +1746,7 @@ class QMapAnalystDockWidget(QDockWidget):
             y0, y1 = math.floor(mn[1] / step) * step, math.ceil(mx[1] / step) * step
             nx, ny = int((x1 - x0) / step) + 1, int((y1 - y0) / step) + 1
             if nx * ny > 250000:
-                self.set_status(self.tr("Zbyt gęsta siatka ({n} linii) – zwiększ oczko siatki.").format(n=nx + ny), "warn")
+                self.set_status(self.tr("Zbyt gęsta siatka (linie: {n}) – zwiększ oczko siatki.").format(n=nx + ny), "warn")
                 return
             xs = np.linspace(x0, x1, nx)
             ys = np.linspace(y0, y1, ny)
@@ -1747,7 +1771,7 @@ class QMapAnalystDockWidget(QDockWidget):
             style_line(lyr, QColor(138, 43, 226), 0.35)
             set_labels(lyr, "concat(\"axis\", ' ', format_number(\"value\", 0))", QColor(110, 30, 180), on_line=True, size=7)
             self.registry.set_old("old.refgrid", lyr)
-        self.set_status(self.tr("Wygenerowano siatkę układu odniesienia ({n} linii).").format(n=len(items)), "ok")
+        self.set_status(self.tr("Wygenerowano siatkę układu odniesienia (linie: {n}).").format(n=len(items)), "ok")
 
     @guarded
     def generate_isolines(self, kind="scale"):
@@ -1790,7 +1814,7 @@ class QMapAnalystDockWidget(QDockWidget):
             style_line(lyr, color, 0.45)
             set_labels(lyr, expr, color, on_line=True)
             self.registry.set_old(f"old.iso.{kind}", lyr)
-        self.set_status(self.tr("Izolinie gotowe: {n} linii, {k} poziomów.").format(n=len(items), k=len(levels)), "ok")
+        self.set_status(self.tr("Izolinie gotowe (linie: {n}, poziomy: {k}).").format(n=len(items), k=len(levels)), "ok")
 
     # ------------------------------------------------------------------
     #  Estymacja odwzorowania
@@ -1813,7 +1837,7 @@ class QMapAnalystDockWidget(QDockWidget):
         mode = self.cmb_proj_mode.currentData()
         need = 5 if mode == "helmert" else 6
         if len(idx) < need:
-            self.set_status(self.tr("Estymacja odwzorowania wymaga minimum {k} aktywnych punktów.").format(k=need), "warn")
+            self.set_status(self.tr("Estymacja odwzorowania wymaga co najmniej {k} aktywnych punktów (GCP).").format(k=need), "warn")
             return
         ll = self._lonlat(ref)
         self.progress.setRange(0, len(pj.PROJECTIONS))
@@ -1837,12 +1861,11 @@ class QMapAnalystDockWidget(QDockWidget):
         self.render_report()
         best = self.projection.best
         if best is not None and self.projection.conclusive:
-            self.set_status(self.tr("Najlepsze dopasowanie: {name} (σ₀ = {s:.2f} px, waga {w:.0f}%).").format(
-                name=self.tr(best.name), s=best.sigma0_px, w=best.weight * 100), "ok")
+            self.set_status(self.tr("Najlepsze dopasowanie: {name} (σ₀ = {s} px, waga {w}%).").format(
+                name=self.tr(best.name), s=num(best.sigma0_px, 2), w=num(best.weight * 100, 0)), "ok")
         elif best is not None:
             eq = self.projection.equivalent()
-            self.set_status(self.tr("Wynik nierozstrzygnięty: {k} odwzorowań równorzędnych (ΔAICc < 2). "
-                                    "Porównaj siatki geograficzne kandydatów z mapą.").format(k=max(1, len(eq))), "warn")
+            self.set_status(self.tr("Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc < 2): {k}. Porównaj siatki geograficzne kandydatów z mapą.").format(k=max(1, len(eq))), "warn")
 
     def fill_projection_table(self):
         est = self.projection
@@ -1952,7 +1975,7 @@ class QMapAnalystDockWidget(QDockWidget):
         style_line(lyr, color, 0.35, dashed=c.is_hypothesis)
         set_labels(lyr, '"label"', color.darker(115), on_line=True, size=7)
         self.registry.set_old(f"old.graticule.{c.key}" + (".hyp" if c.is_hypothesis else ""), lyr)
-        self.set_status(self.tr("Narysowano siatkę geograficzną ({n} linii, oczko {s}).").format(
+        self.set_status(self.tr("Narysowano siatkę geograficzną (linie: {n}, oczko {s}).").format(
             n=len(items), s=pj.step_label(step)), "ok")
 
     # ------------------------------------------------------------------
@@ -1971,33 +1994,151 @@ class QMapAnalystDockWidget(QDockWidget):
         self.btn_execute_export.setEnabled(False)
         try:
             with self.busy(self.tr("Eksportowanie…")):
-                if self.chk_exp_csv.isChecked():
-                    done.append(self.export_gcp_csv(os.path.join(out_dir, "QMapAnalyst_GCP.csv")))
-                if self.chk_exp_proj.isChecked() and self.projection is not None:
-                    done.append(self.export_projection_csv(os.path.join(out_dir, "QMapAnalyst_Odwzorowania.csv")))
-                if self.chk_exp_tiff.isChecked() and self.old_raster_layer is not None:
-                    done.append(ex.export_canvas_image(self.old_canvas, os.path.join(out_dir, "QMapAnalyst_Map.tif")))
+                base = self.export_basename()
+                f = lambda suffix, ext: os.path.join(out_dir, f"{base}_{suffix}.{ext}")  # noqa: E731
                 if self.chk_exp_pdf.isChecked():
-                    done.append(self.export_pdf(os.path.join(out_dir, "QMapAnalyst_Raport.pdf")))
+                    done.append(self.export_report_pdf(f(self.tr("raport"), "pdf")))
+                if self.chk_exp_txt.isChecked():
+                    done.append(self.export_report_txt(f(self.tr("raport"), "txt")))
+                if self.chk_exp_csv.isChecked():
+                    done.append(self.export_gcp_csv(f(self.tr("punkty"), "csv")))
+                if self.chk_exp_proj.isChecked() and self.projection is not None:
+                    done.append(self.export_projection_csv(f(self.tr("odwzorowania"), "csv")))
+                if self.chk_exp_tiff.isChecked() and self.old_raster_layer is not None:
+                    done.append(ex.export_canvas_image(self.old_canvas, f(self.tr("widok"), "tif")))
+                if self.chk_exp_maps.isChecked() and self.old_overlay_layers():
+                    done.append(self.export_maps_pdf(f(self.tr("mapy"), "pdf")))
         finally:
             self.btn_execute_export.setEnabled(True)
-        self.set_status(self.tr("Wyeksportowano {n} plików do: {d}").format(n=len(done), d=out_dir), "ok")
+        self.set_status(self.tr("Wyeksportowano pliki do: {d} (liczba plików: {n})").format(n=len(done), d=out_dir), "ok")
 
-    def export_pdf(self, path):
-        colors = dict(report.LIGHT, font_pt=8)
-        pages = [(self.tr("Analiza kartometryczna"), report.analysis_html(
-            {**self.report_context(colors), "projection_html": None}, colors))]
-        if self.projection is not None and not self.projection_stale:
-            html = report.projection_summary_html(self.projection, float(self.spin_dpi.value()), colors, with_css=True)
-            best = self.projection.best
-            if best is not None:
-                html += report.candidate_html(best, self.projection, float(self.spin_dpi.value()), colors)
-            pages.append((self.tr("Estymacja odwzorowania"), html))
+    # --- raport pełny (PDF / TXT / HTML) -----------------------------------
+    def export_basename(self):
+        if self.old_raster_layer is not None:
+            src = self.old_raster_layer.source().split("|")[0]
+            name = os.path.splitext(os.path.basename(src))[0]
+            name = "".join(ch if ch.isalnum() or ch in "-_()" else "_" for ch in name).strip("_")
+            if name:
+                return name
+        return "QMapAnalyst"
+
+    @staticmethod
+    def plugin_version():
+        try:
+            with open(os.path.join(os.path.dirname(__file__), "metadata.txt"), encoding="utf-8") as f:
+                for line in f:
+                    if line.startswith("version="):
+                        return line.split("=", 1)[1].strip()
+        except OSError:
+            pass
+        return ""
+
+    def report_title(self):
+        return self.tr("Analiza kartometryczna – {name}").format(name=self.export_basename())
+
+    def report_subtitle(self):
+        st = self.analysis
+        return " · ".join([self.tr(me.MODELS[st.fit.model]["name"]), self.crs_short(st.ref_crs),
+                           f"{num(self.spin_dpi.value(), 0)} DPI"])
+
+    def report_meta_rows(self):
+        st = self.analysis
+        rows = []
+        if self.old_raster_layer is not None:
+            lyr = self.old_raster_layer
+            rows.append((self.tr("Skan mapy dawnej"), os.path.basename(lyr.source().split("|")[0])))
+            rows.append((self.tr("Rozmiar skanu"), f"{lyr.width()} × {lyr.height()} px"))
+        rows += [
+            (self.tr("Układ odniesienia"), self.ref_crs_label()),
+            (self.tr("Transformacja"), self.tr(me.MODELS[st.fit.model]["name"])),
+            (self.tr("Rozdzielczość skanu"), f"{num(self.spin_dpi.value(), 0)} DPI"),
+            (self.tr("Punkty GCP (aktywne / wszystkie)"), f"{st.fit.stats['n']} / {len(self.gcps)}"),
+            (self.tr("Data analizy"), datetime.now().strftime("%Y-%m-%d %H:%M")),
+            (self.tr("Wersja wtyczki"), f"QMapAnalyst {self.plugin_version()}".strip()),
+        ]
+        if self.analysis_stale:
+            rows.append((self.tr("Uwaga"), self.tr("punkty GCP zmieniono po obliczeniu – wyniki mogą być nieaktualne")))
+        return rows
+
+    def report_gcp_rows(self):
+        st = self.analysis
+        fit = st.fit
+        pos = {} if self.analysis_stale else {row: k for k, row in enumerate(st.active_idx)}
+        rows = []
+        for i, g in enumerate(self.gcps):
+            k = pos.get(i)
+            r = {"id": i + 1, "enabled": g.enabled, "ox": g.old_x, "oy": g.old_y, "rx": g.ref_x, "ry": g.ref_y}
+            if k is not None:
+                r.update(vx=float(fit.residuals[k, 0]), vy=float(fit.residuals[k, 1]), err=float(fit.errors[k]),
+                         loo=float(fit.loo_errors[k]), w=float(fit.std_residuals[k]))
+            rows.append(r)
+        return rows
+
+    def build_full_report_html(self, colors):
+        """Pełny raport: dane wejściowe, analiza, punkty, odwzorowanie (z hipotezami)."""
+        if self.analysis is None:
+            raise ValueError(self.tr("Brak wyników do eksportu – najpierw oblicz transformację."))
+        dpi = float(self.spin_dpi.value())
+        ctx = {**self.report_context(colors), "projection_html": None, "with_css": False}
+        parts = [report.meta_html(self.report_meta_rows()),
+                 report.analysis_html(ctx, colors),
+                 report.gcp_table_html(self.report_gcp_rows(), self.analysis.unit)]
+        est = self.projection
+        if est is not None and not self.projection_stale:
+            parts.append(report.projection_summary_html(est, dpi, colors))
+            shown = []
+            if est.best is not None:
+                shown.append(est.best)
+            shown += [c for c in est.candidates if c.is_hypothesis and c is not est.best]
+            for c in shown:
+                parts.append(report.candidate_html(c, est, dpi, colors, with_css=False, show_messages=False))
+        elif est is not None:
+            parts.append(f"<h3>{self.tr('Estymacja odwzorowania')}</h3><div class='warn'>"
+                         f"{self.tr('Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.')}</div>")
+        return report.full_report_html(parts, colors)
+
+    def export_report_pdf(self, path):
+        colors = dict(report.LIGHT, font_pt=8.5)
+        return ex.export_html_pdf(path, self.build_full_report_html(colors), self.report_title(), self.report_subtitle())
+
+    def export_report_txt(self, path):
+        body = report.html_to_text(self.build_full_report_html(dict(report.LIGHT)))
+        title = self.report_title()
+        head = f"{title}\n{'=' * len(title)}\n{self.report_subtitle()}\n"
+        return ex.write_text(path, head + "\n" + body)
+
+    def export_report_html(self, path):
+        return ex.write_html(path, self.build_full_report_html(dict(report.LIGHT)), self.report_title())
+
+    @guarded
+    def save_report_dialog(self):
+        if self.analysis is None:
+            self.set_status(self.tr("Brak wyników do eksportu – najpierw oblicz transformację."), "warn")
+            return
+        default = os.path.join(self.file_export_dir.filePath() or "", f"{self.export_basename()}_{self.tr('raport')}.pdf")
+        path, flt = QFileDialog.getSaveFileName(
+            self, self.tr("Zapisz raport analizy"), default,
+            self.tr("Raport PDF (*.pdf);;Tekst (*.txt);;Strona HTML (*.html)"))
+        if not path:
+            return
+        ext = os.path.splitext(path)[1].lower()
+        if ext not in (".pdf", ".txt", ".html", ".htm"):
+            ext = ".txt" if "txt" in flt else (".html" if "html" in flt else ".pdf")
+            path += ext
+        with self.busy(self.tr("Eksportowanie…")):
+            if ext == ".pdf":
+                self.export_report_pdf(path)
+            elif ext == ".txt":
+                self.export_report_txt(path)
+            else:
+                self.export_report_html(path)
+        self.set_status(self.tr("Zapisano raport: {p}").format(p=path), "ok")
+
+    def export_maps_pdf(self, path):
         base = self.old_raster_layer
         extent = QgsRectangle(base.extent()) if base is not None else self.old_canvas.extent()
         extent.scale(1.02)
-        return ex.export_report_pdf(path, pages, base, self.old_overlay_layers(), extent,
-                                    self.tr("Analiza kartometryczna"))
+        return ex.export_report_pdf(path, [], base, self.old_overlay_layers(), extent, self.report_title())
 
     def export_gcp_csv(self, path):
         st = self.analysis

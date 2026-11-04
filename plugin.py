@@ -1,6 +1,6 @@
 import os
 
-from qgis.PyQt.QtCore import QCoreApplication, QLocale, QSettings, Qt, QTranslator
+from qgis.PyQt.QtCore import QCoreApplication, Qt, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
@@ -18,10 +18,9 @@ class QMapAnalystPlugin:
         return QCoreApplication.translate("QMapAnalystPlugin", message)
 
     def init_translator(self):
-        """Ładuje plik .qm zgodny z językiem interfejsu QGIS (ustawienie locale/userLocale)."""
-        locale = QSettings().value("locale/userLocale", "") or QLocale().name()
-        locale = str(locale)[:2]
-        qm_path = os.path.join(self.plugin_dir, "i18n", f"QMapAnalyst_{locale}.qm")
+        """Ładuje tłumaczenie: polskie dla polskiego interfejsu QGIS, angielskie dla każdego innego."""
+        from .lang import ui_language
+        qm_path = os.path.join(self.plugin_dir, "i18n", f"QMapAnalyst_{ui_language()}.qm")
         if os.path.exists(qm_path):
             self.translator = QTranslator()
             if self.translator.load(qm_path):

@@ -48,6 +48,15 @@ def collect():
             if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
                 add(ctx, arg.value)
 
+    for fname in ("math_engine.py", "projections.py"):
+        tree = ast.parse(open(os.path.join(ROOT, fname), encoding="utf-8").read())
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "EngineError"
+                    and node.args and isinstance(node.args[0], ast.Constant)):
+                add("QMapAnalystEngine", node.args[0].value)
+    for m in __import__(f"{os.path.basename(ROOT)}.math_engine", fromlist=["*"]).MODELS.values():
+        add("QMapAnalystEngine", m["name"])
+
     pkg = os.path.basename(ROOT)
     me = __import__(f"{pkg}.math_engine", fromlist=["*"])
     pj = __import__(f"{pkg}.projections", fromlist=["*"])
