@@ -1,66 +1,71 @@
 # QMapAnalyst
 
-**QMapAnalyst** is a modern, advanced QGIS plugin designed for the cartometric analysis of historical maps. Inspired by the classic MapAnalyst software, this tool allows researchers, cartographers, and historians to evaluate local map distortions, calculate historical paper scales, and visualize spatial displacement errors entirely within the native QGIS environment.
+**QMapAnalyst** is a QGIS plugin for the cartometric analysis of historical maps. Inspired by the classic MapAnalyst software, it lets researchers, cartographers and historians measure the accuracy and local distortions of a historical map, estimate its paper scale and **the map projection it was most likely drawn in**, all inside QGIS.
 
-## 🌟 Key Features
+## 🌟 Key features
 
-* **Cartometric Analysis:** Comprehensive evaluation of historical map accuracy compared to modern reference systems (e.g., EPSG:2180 / PUWG 1992).
-* **Coordinate Transformations:** Supports both **Helmert** (4-parameter: scale, rotation, translation) and **Affine** (6-parameter, including shear) transformations.
-* **Error Visualization:** Generates scalable **displacement vectors** and **error circles** to highlight local deviations between the historical scan and modern ground truth.
-* **Distortion Grids (RBF):** Calculates and draws advanced distortion grids using Radial Basis Functions (Thin Plate Splines). The grids intelligently mask reliable areas vs. extrapolated zones based on a user-defined confidence radius.
-* **Scale and Rotation Isolines:** Generates continuous isolines representing local map scale variations and rotation angles, overlaid directly on the historical pixel space.
-* **Automatic Labeling:** Implements QGIS PAL engine (`QgsPalLayerSettings`) for automatic, cartographically readable labeling of scale denominators (e.g., `1 : 135 000`) and rotation angles (e.g., `-2.5°`).
-* **Clean Integration:** Automatically groups and cleans up generated temporary layers from the QGIS project to keep your workspace organized.
+* **Transformations:** Helmert (4 parameters), affine (6) and 2nd-order polynomial (12), all fitted by least squares.
+* **Statistics:**
+  * σ₀, mean position error, RMSE (total / X / Y), CE90/CE95 and error on paper (mm)
+  * standard errors of scale, rotation and shear
+  * **leave-one-out cross-validation** and the **Baarda outlier test**
+  * comparison of transformation models with **AICc**
+  * **Moran's I** spatial autocorrelation of residuals
+  * **Tissot-based local distortion** (scale variation, rotation, angular distortion 2ω)
+* **Map projection estimation:** fits 15 projections that matter for 15th–20th-century cartography to the control points and ranks them by AICc with Akaike weights. The projections are Plate carrée, equirectangular, Mercator, Cassini–Soldner, Gauss–Krüger, Sanson–Flamsteed, Bonne, trapezoidal, De l'Isle equidistant conic, Lambert conformal conic, Albers, Lambert azimuthal, stereographic, Postel and Hassler polyconic. Projection parameters (λ₀, φ₀, φ₁, φ₂) come with standard errors, and λ₀ is also given relative to the Ferro, Paris, Pulkovo and Warsaw meridians. The plugin can draw the estimated **graticule on the scan** for visual comparison.
+* **Visualisation:** displacement vectors (arrows) and error circles on both maps, a TPS distortion grid with reliable and extrapolated zones, a warped reference grid on the scan, isolines of scale, rotation and angular distortion with labels, and a GCP layer that carries all statistics as attributes.
+* **Export:** multi-page PDF report, TIFF view, CSV tables of points and projection ranking.
+* **Workflow:**
+  * continuous GCP capture and in-table coordinate editing
+  * zoom to a point and synchronised views
+  * the reference CRS is stored with the GCPs (`.points` / CSV)
+  * automatic recomputation that refreshes existing result layers
+* Works with QGIS 3.34+ (Qt5) and QGIS 4 (Qt6). The interface is available in Polish and English.
 
 ## 🚀 Installation
 
-### Option 1: Via QGIS Plugin Repository (Recommended)
-*Once published in the official repository:*
-1. Open QGIS.
-2. Go to **Plugins > Manage and Install Plugins...**
-3. Search for `QMapAnalyst` and click **Install Plugin**.
+**From the QGIS Plugin Repository:** *Plugins → Manage and Install Plugins…*, search for `QMapAnalyst`.
 
-### Option 2: Manual Installation from ZIP
-1. Download the latest `QMapAnalyst.zip` release from the GitHub repository.
-2. Open QGIS and navigate to **Plugins > Manage and Install Plugins...**
-3. Select the **Install from ZIP** tab.
-4. Browse to the downloaded `.zip` file and click **Install Plugin**.
+**From ZIP:**
+1. Run `python build.py` or download a release.
+2. Open *Plugins → Manage and Install Plugins… → Install from ZIP* in QGIS.
 
-## 📖 Usage & Workflow
+## 📖 Workflow
 
-The plugin operates via a dockable widget (docked on the right by default) and is divided into three main operational tabs.
+1. **Historical map:** load an ungeoreferenced scan into the plugin's own map view.
+2. **GCP tab:** capture point pairs by clicking on the scan and then on the QGIS main map, or load them from `.points` or CSV. The table shows the error, LOO error and standardized residual of each point.
+3. **Analysis tab:** pick a transformation and the scan DPI, then read the report: accuracy, parameters with errors, map scale, outliers, model comparison, local distortion and autocorrelation.
+4. **Projection tab:** estimate the map projection, inspect the ranking and its parameters, and draw the graticule on the scan.
+5. **Layers tab:** generate result layers on the main map and on the scan.
+6. **Export tab:** save a PDF report, TIFF and CSV files.
 
-### 1. GCP Points (Ground Control Points)
-Start by loading a raw, unreferenced historical map scan (pixels). Use this tab to capture point pairs between the historical map canvas and the main QGIS reference map. 
+A detailed manual (in Polish) is available in [docs/manual_qmapanalyst.md](docs/manual_qmapanalyst.md).
 
-> *![GCP Tab](docs/gcp_table.png)*  
+### Notes on projection estimation
 
-* Enable or disable specific GCPs on the fly to see how they affect the transformation.
-* Save and load GCP sets using standard CSV or QGIS `.points` formats.
+* Projections differ measurably only over larger areas. With points spanning less than about 2°, or with σ₀ differences under 10 %, the plugin warns that the result is only indicative.
+* Gross errors in GCPs bias the projection parameters. The plugin flags suspect points; disable them and run the estimation again.
+* The computations use a sphere. Geographic coordinates are derived from the project's reference CRS.
+* The method follows the approach of T. Bayer, *Estimation of an unknown cartographic projection and its parameters from the map* (GeoInformatica, 2014), and B. Jenny's MapAnalyst.
 
-### 2. Analysis & Transformation
-Once you have enough active GCPs (min. 2 for Helmert, 3 for Affine), navigate to the Analysis tab to compute the mathematical model.
+## 🧪 Development
 
-> *![Analysis Tab](docs/analysis.png)*  
+```bash
+# engine tests (no GUI) – OSGeo4W shell
+python-qgis.bat tests/test_engine.py
+# full offscreen smoke test of the panel
+set QT_QPA_PLATFORM=offscreen && python-qgis.bat tests/smoke_qgis.py
+# regenerate translations (.ts/.qm)
+python-qgis.bat i18n/build_translations.py
+```
 
-* Instantly view the RMSE (Root Mean Square Error), Min/Max errors, and global rotation angle.
-* Estimate the original paper scale based on standard scanning resolutions (150, 300, 600 DPI).
-
-### 3. Result Layers
-This tab is the core of the cartometric visualization. Set your grid step (in meters) and confidence radius, then generate analytical geometry.
-
-> *![Result Layers](docs/results.png)*  
-
-
-* **Main Map Generations:** Create displacement vectors, error circles, and RBF distortion grids that align with your modern reference CRS.
-* **Historical Map Generations:** Project warped modern grids (e.g., PUWG 1992) and automated scale/rotation isolines back onto the historical pixel space.
+Module layout: `math_engine.py` (transformations and statistics), `projections.py` (projection estimation), `report.py` (HTML reports), `layers.py` (result layer registry and styles), `export.py` (PDF/CSV), `dockwidget.py` (UI).
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+GNU General Public License v3.0 – see [LICENSE](LICENSE).
 
 ## 👤 Author
 
-**Tomasz Nycz**  
-[GitHub Profile](https://github.com/merkato)  
-*If you use this plugin in academic research, please consider citing it!*
+**Tomasz Nycz** – [GitHub](https://github.com/merkato)
+*If you use this plugin in academic research, please consider citing it.*

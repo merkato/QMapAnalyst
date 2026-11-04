@@ -2,17 +2,26 @@
 name=QMapAnalyst
 qgisMinimumVersion=3.34
 qgisMaximumVersion=4.99
-description=Analyze historical maps, calculate transformations (Helmert, Affine), error circles, RBF distortion grids, and cartographic grid on historical map.
-version=0.1.2
+description=Cartometric analysis of historical maps: Helmert, affine and polynomial transformations with full statistics, outlier detection, distortion grids and isolines, and estimation of the map projection the map was drawn in.
+version=0.2.0
 author=Tomasz Nycz
 email=tomasz@nycz.beskidy.pl
-about=Modern QGIS plugin inspired by MapAnalyst, built with Python, NumPy, SciPy, and PyQt6.
+about=Modern QGIS plugin inspired by MapAnalyst, built with Python, NumPy and SciPy (Qt5 and Qt6). Computes Helmert, affine and 2nd-order polynomial transformations between a historical map scan and a reference map with standard errors, cross-validation, Baarda outlier test, model comparison (AICc), spatial autocorrelation of residuals and Tissot-based local distortion analysis. Estimates the most likely map projection (Bonne, Cassini-Soldner, equidistant conic, Sanson-Flamsteed, trapezoidal, Mercator and more) and draws its graticule on the scan.
 repository=https://github.com/merkato/QMapAnalyst
 tracker=https://github.com/merkato/QMapAnalyst/issues
 homepage=https://github.com/merkato/QMapAnalyst
-tags=history,mapanalyst,transformation,helmert,affine,rbf,cartometry,georeferencing
+tags=history,historical maps,mapanalyst,transformation,helmert,affine,rbf,cartometry,georeferencing,map projection,accuracy
 category=Raster
 hasProcessingProvider=no
 supportsQt6=True
 experimental=False
 deprecated=False
+changelog=0.2.0
+    - New: map projection estimation (15 historical and modern projections, AICc ranking, graticule on the scan)
+    - New: extended statistics (sigma0, standard errors, LOO cross-validation, Baarda test, model comparison, Moran's I, Tissot distortion)
+    - New: 2nd-order polynomial transformation, angular distortion isolines, GCP layer with residuals, CSV export
+    - New: continuous GCP capture, coordinate editing, zoom to point, reference CRS stored with GCPs
+    - Redesigned panel (QGIS icons, status bar, HTML report, light/dark theme)
+    - Performance: vectorised grids and RBF, cached distortion grids, no matplotlib dependency
+    - Stability: fixed crash when unloading the plugin, safe layer tracking, guarded slots, fixed stale results after GCP changes
+    - Full English translation
