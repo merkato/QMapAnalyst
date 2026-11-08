@@ -21,6 +21,7 @@ changelog=0.2.1
     - Maps PDF: first page shows all visible overlays together, with report header and page numbers
     - Layers tab: icon buttons in rows (wrapping on narrow panels), trash button at the bottom
     - More room for the historical map: overlay list moved to a toolbar drop-down, scrollable tabs
+    - Dependency check: clear message with the install command for the platform when NumPy or SciPy is missing
     0.2.0
     - New: map projection estimation (15 historical and modern projections, AICc ranking, graticule on the scan)
     - New: extended statistics (sigma0, standard errors, LOO cross-validation, Baarda test, model comparison, Moran's I, Tissot distortion)

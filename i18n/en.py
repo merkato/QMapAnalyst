@@ -473,5 +473,13 @@ EN = {
     "Nie udało się zapisać obrazu: {p}": "Could not save the image: {p}",
     "Nie można utworzyć pliku PDF: {p}": "Cannot create the PDF file: {p}",
     "Strona {i} z {n}": "Page {i} of {n}",
+    "Wtyczka QMapAnalyst wymaga pakietu Python: {pkgs}.": "QMapAnalyst requires the Python package: {pkgs}.",
+    "Zainstaluj go i uruchom ponownie QGIS:": "Install it and restart QGIS:",
+    "Brak pakietu {pkgs} – niedostępne: {features}.": "Package {pkgs} is missing – unavailable: {features}.",
+    "Instalacja:": "Installation:",
+    "Izolinie wymagają interpolacji TPS (pakiet scipy) – niedostępne.": "Isolines require TPS interpolation (scipy package) – unavailable.",
+    "estymacja odwzorowania": "map projection estimation",
+    "lokalne zniekształcenia (TPS), izolinie, siatki zniekształceń": "local distortion (TPS), isolines, distortion grids",
+    "otoczka punktów (obszar wiarygodny)": "convex hull of the points (reliable area)",
     "Nie zapisano pliku georeferencji .tfw: {err}": "The .tfw world file was not saved: {err}",
 }

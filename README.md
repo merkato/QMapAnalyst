@@ -31,6 +31,18 @@
 
 ## 🚀 Installation
 
+**Requirements:** NumPy and SciPy. Both are bundled with the official QGIS installers (Windows standalone/OSGeo4W, macOS), so usually nothing has to be installed. If a package is missing, the plugin says so and shows the install command for your platform; without SciPy it still works, but projection estimation, TPS local distortion and isolines are unavailable.
+
+| Platform | Command |
+|---|---|
+| Windows – OSGeo4W | OSGeo4W Setup → *Advanced Install* → *Libs* → `python3-scipy` |
+| Debian / Ubuntu | `sudo apt install python3-scipy` |
+| Fedora | `sudo dnf install python3-scipy` |
+| Arch Linux | `sudo pacman -S python-scipy` |
+| Flatpak | `flatpak run --command=pip3 org.qgis.qgis install --user scipy` |
+| conda | `conda install -c conda-forge scipy` |
+
+
 **From the QGIS Plugin Repository:** *Plugins → Manage and Install Plugins…*, search for `QMapAnalyst`.
 
 **From ZIP:**

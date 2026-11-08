@@ -604,6 +604,10 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Computing the reference system grid on the historical map…</translation>
     </message>
     <message>
+        <source>Izolinie wymagają interpolacji TPS (pakiet scipy) – niedostępne.</source>
+        <translation>Isolines require TPS interpolation (scipy package) – unavailable.</translation>
+    </message>
+    <message>
         <source>Obliczanie izolinii…</source>
         <translation>Computing isolines…</translation>
     </message>
@@ -1213,6 +1217,34 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>&amp;Raster</source>
         <translation>&amp;Raster</translation>
+    </message>
+    <message>
+        <source>Wtyczka QMapAnalyst wymaga pakietu Python: {pkgs}.</source>
+        <translation>QMapAnalyst requires the Python package: {pkgs}.</translation>
+    </message>
+    <message>
+        <source>Zainstaluj go i uruchom ponownie QGIS:</source>
+        <translation>Install it and restart QGIS:</translation>
+    </message>
+    <message>
+        <source>Brak pakietu {pkgs} – niedostępne: {features}.</source>
+        <translation>Package {pkgs} is missing – unavailable: {features}.</translation>
+    </message>
+    <message>
+        <source>Instalacja:</source>
+        <translation>Installation:</translation>
+    </message>
+    <message>
+        <source>estymacja odwzorowania</source>
+        <translation>map projection estimation</translation>
+    </message>
+    <message>
+        <source>lokalne zniekształcenia (TPS), izolinie, siatki zniekształceń</source>
+        <translation>local distortion (TPS), isolines, distortion grids</translation>
+    </message>
+    <message>
+        <source>otoczka punktów (obszar wiarygodny)</source>
+        <translation>convex hull of the points (reliable area)</translation>
     </message>
 </context>
 <context>

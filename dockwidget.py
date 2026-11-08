@@ -1913,6 +1913,9 @@ class QMapAnalystDockWidget(QDockWidget):
         if not self._require(raster=True, min_pts=4):
             return
         st = self.analysis
+        if not st.warp.ok:
+            self.set_status(self.tr("Izolinie wymagają interpolacji TPS (pakiet scipy) – niedostępne."), "warn")
+            return
         with self.busy(self.tr("Obliczanie izolinii…")):
             grid = st.grid()
             dpi = float(self.spin_dpi.value())

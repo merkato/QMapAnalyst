@@ -75,6 +75,8 @@ def collect():
     for ctx in ("QMapAnalystDockWidget", "QMapAnalystReport"):
         for t in dynamic:
             add(ctx, t)
+    for t in __import__(f"{pkg}.deps", fromlist=["*"]).OPTIONAL.values():
+        add("QMapAnalystPlugin", t)
     return found
 
 

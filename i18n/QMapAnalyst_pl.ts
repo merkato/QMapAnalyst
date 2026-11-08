@@ -604,6 +604,10 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Obliczanie siatki układu odniesienia na mapie dawnej…</translation>
     </message>
     <message>
+        <source>Izolinie wymagają interpolacji TPS (pakiet scipy) – niedostępne.</source>
+        <translation>Izolinie wymagają interpolacji TPS (pakiet scipy) – niedostępne.</translation>
+    </message>
+    <message>
         <source>Obliczanie izolinii…</source>
         <translation>Obliczanie izolinii…</translation>
     </message>
@@ -1213,6 +1217,34 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>&amp;Raster</source>
         <translation>&amp;Raster</translation>
+    </message>
+    <message>
+        <source>Wtyczka QMapAnalyst wymaga pakietu Python: {pkgs}.</source>
+        <translation>Wtyczka QMapAnalyst wymaga pakietu Python: {pkgs}.</translation>
+    </message>
+    <message>
+        <source>Zainstaluj go i uruchom ponownie QGIS:</source>
+        <translation>Zainstaluj go i uruchom ponownie QGIS:</translation>
+    </message>
+    <message>
+        <source>Brak pakietu {pkgs} – niedostępne: {features}.</source>
+        <translation>Brak pakietu {pkgs} – niedostępne: {features}.</translation>
+    </message>
+    <message>
+        <source>Instalacja:</source>
+        <translation>Instalacja:</translation>
+    </message>
+    <message>
+        <source>estymacja odwzorowania</source>
+        <translation>estymacja odwzorowania</translation>
+    </message>
+    <message>
+        <source>lokalne zniekształcenia (TPS), izolinie, siatki zniekształceń</source>
+        <translation>lokalne zniekształcenia (TPS), izolinie, siatki zniekształceń</translation>
+    </message>
+    <message>
+        <source>otoczka punktów (obszar wiarygodny)</source>
+        <translation>otoczka punktów (obszar wiarygodny)</translation>
     </message>
 </context>
 <context>
