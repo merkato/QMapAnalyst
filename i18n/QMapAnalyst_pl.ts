@@ -88,6 +88,10 @@
         <translation>Usuń wszystkie nakładki z mapy dawnej</translation>
     </message>
     <message>
+        <source>Nakładki</source>
+        <translation>Nakładki</translation>
+    </message>
+    <message>
         <source>Widoczność nakładek na mapie dawnej</source>
         <translation>Widoczność nakładek na mapie dawnej</translation>
     </message>
@@ -236,88 +240,84 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Parametry</translation>
     </message>
     <message>
-        <source>Promień pewności:</source>
-        <translation>Promień pewności:</translation>
-    </message>
-    <message>
         <source>Obszar w tej odległości od punktów GCP uznawany jest za wiarygodny; poza nim siatki i izolinie są ekstrapolacją</source>
         <translation>Obszar w tej odległości od punktów GCP uznawany jest za wiarygodny; poza nim siatki i izolinie są ekstrapolacją</translation>
-    </message>
-    <message>
-        <source>Oczko siatek:</source>
-        <translation>Oczko siatek:</translation>
     </message>
     <message>
         <source>Powiększenie wektorów przesunięć i okręgów błędów</source>
         <translation>Powiększenie wektorów przesunięć i okręgów błędów</translation>
     </message>
     <message>
-        <source>Powiększenie wektorów:</source>
-        <translation>Powiększenie wektorów:</translation>
-    </message>
-    <message>
         <source>Przybliżona liczba poziomów izolinii</source>
         <translation>Przybliżona liczba poziomów izolinii</translation>
     </message>
     <message>
-        <source>Liczba izolinii:</source>
-        <translation>Liczba izolinii:</translation>
+        <source>Punkty</source>
+        <translation>Punkty</translation>
     </message>
     <message>
-        <source>Mapa główna (układ odniesienia)</source>
-        <translation>Mapa główna (układ odniesienia)</translation>
-    </message>
-    <message>
-        <source>Punkty z resztami</source>
-        <translation>Punkty z resztami</translation>
-    </message>
-    <message>
-        <source>Warstwa punktów GCP ze wszystkimi statystykami w atrybutach</source>
-        <translation>Warstwa punktów GCP ze wszystkimi statystykami w atrybutach</translation>
+        <source>Wektory</source>
+        <translation>Wektory</translation>
     </message>
     <message>
         <source>Wektory przesunięć</source>
         <translation>Wektory przesunięć</translation>
     </message>
     <message>
+        <source>Okręgi</source>
+        <translation>Okręgi</translation>
+    </message>
+    <message>
         <source>Okręgi błędów</source>
         <translation>Okręgi błędów</translation>
+    </message>
+    <message>
+        <source>Siatka TPS</source>
+        <translation>Siatka TPS</translation>
     </message>
     <message>
         <source>Siatka zniekształceń</source>
         <translation>Siatka zniekształceń</translation>
     </message>
     <message>
-        <source>Usuń warstwy</source>
-        <translation>Usuń warstwy</translation>
+        <source>Mapa główna (układ odniesienia)</source>
+        <translation>Mapa główna (układ odniesienia)</translation>
     </message>
     <message>
-        <source>Usuń z projektu warstwy wynikowe mapy głównej</source>
-        <translation>Usuń z projektu warstwy wynikowe mapy głównej</translation>
-    </message>
-    <message>
-        <source>Mapa dawna (podgląd powyżej)</source>
-        <translation>Mapa dawna (podgląd powyżej)</translation>
+        <source>Siatka układu</source>
+        <translation>Siatka układu</translation>
     </message>
     <message>
         <source>Siatka układu odniesienia</source>
         <translation>Siatka układu odniesienia</translation>
     </message>
     <message>
+        <source>Skala</source>
+        <translation>Skala</translation>
+    </message>
+    <message>
         <source>Izolinie skali</source>
         <translation>Izolinie skali</translation>
+    </message>
+    <message>
+        <source>Rotacja</source>
+        <translation>Rotacja</translation>
     </message>
     <message>
         <source>Izolinie rotacji</source>
         <translation>Izolinie rotacji</translation>
     </message>
     <message>
-        <source>Izolinie zniekształceń kątowych</source>
-        <translation>Izolinie zniekształceń kątowych</translation>
+        <source>Kąty 2ω</source>
+        <translation>Kąty 2ω</translation>
     </message>
     <message>
-        <source>Maksymalne zniekształcenie kąta 2ω z elipsy Tissota lokalnego odwzorowania</source>
-        <translation>Maksymalne zniekształcenie kąta 2ω z elipsy Tissota lokalnego odwzorowania</translation>
+        <source>Mapa dawna (podgląd powyżej)</source>
+        <translation>Mapa dawna (podgląd powyżej)</translation>
+    </message>
+    <message>
+        <source>Usuń z projektu warstwy wynikowe mapy głównej</source>
+        <translation>Usuń z projektu warstwy wynikowe mapy głównej</translation>
     </message>
     <message>
         <source>Eksport wyników i raportów</source>
@@ -496,16 +496,36 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Waga</translation>
     </message>
     <message>
-        <source>Skala</source>
-        <translation>Skala</translation>
-    </message>
-    <message>
         <source>Oczko:</source>
         <translation>Oczko:</translation>
     </message>
     <message>
         <source>Hipoteza {name}: σ₀ = {s} px, ΔAICc = {d}, miejsce w rankingu: {r}.</source>
         <translation>Hipoteza {name}: σ₀ = {s} px, ΔAICc = {d}, miejsce w rankingu: {r}.</translation>
+    </message>
+    <message>
+        <source>Promień pewności:</source>
+        <translation>Promień pewności:</translation>
+    </message>
+    <message>
+        <source>Oczko siatek:</source>
+        <translation>Oczko siatek:</translation>
+    </message>
+    <message>
+        <source>Powiększenie wektorów:</source>
+        <translation>Powiększenie wektorów:</translation>
+    </message>
+    <message>
+        <source>Liczba izolinii:</source>
+        <translation>Liczba izolinii:</translation>
+    </message>
+    <message>
+        <source>Warstwa punktów GCP ze wszystkimi statystykami w atrybutach</source>
+        <translation>Warstwa punktów GCP ze wszystkimi statystykami w atrybutach</translation>
+    </message>
+    <message>
+        <source>Maksymalne zniekształcenie kąta 2ω z elipsy Tissota lokalnego odwzorowania</source>
+        <translation>Maksymalne zniekształcenie kąta 2ω z elipsy Tissota lokalnego odwzorowania</translation>
     </message>
     <message>
         <source>Folder docelowy:</source>
@@ -660,6 +680,14 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Źródło parametrów: {src} Zweryfikuj z opisem konkretnego arkusza.</translation>
     </message>
     <message>
+        <source>Punkty z resztami</source>
+        <translation>Punkty z resztami</translation>
+    </message>
+    <message>
+        <source>Izolinie zniekształceń kątowych</source>
+        <translation>Izolinie zniekształceń kątowych</translation>
+    </message>
+    <message>
         <source>Skan wczytany: {w} × {h} px. Dodaj lub wczytaj punkty GCP.</source>
         <translation>Skan wczytany: {w} × {h} px. Dodaj lub wczytaj punkty GCP.</translation>
     </message>
@@ -670,6 +698,14 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
     <message>
         <source>Zapisano punkty do pliku (liczba: {n}).</source>
         <translation>Zapisano punkty do pliku (liczba: {n}).</translation>
+    </message>
+    <message>
+        <source>Zastąpić istniejące punkty ({n})?
+
+Nie – dopisz nowe punkty do istniejących.</source>
+        <translation>Zastąpić istniejące punkty ({n})?
+
+Nie – dopisz nowe punkty do istniejących.</translation>
     </message>
     <message>
         <source>Transformacja „{name}” wymaga co najmniej {k} aktywnych punktów (aktywne: {n} z {t}).</source>
@@ -736,12 +772,20 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Zapisano raport: {p}</translation>
     </message>
     <message>
+        <source>Wszystkie widoczne nakładki</source>
+        <translation>Wszystkie widoczne nakładki</translation>
+    </message>
+    <message>
         <source>od</source>
         <translation>od</translation>
     </message>
     <message>
         <source>Swobodne dopasowanie: σ₀ = {s} px.</source>
         <translation>Swobodne dopasowanie: σ₀ = {s} px.</translation>
+    </message>
+    <message>
+        <source>Nakładki ({n})</source>
+        <translation>Nakładki ({n})</translation>
     </message>
     <message>
         <source>Zakończono dodawanie punktów (liczba par: {n}).</source>
@@ -754,14 +798,6 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
     <message>
         <source>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</source>
         <translation>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</translation>
-    </message>
-    <message>
-        <source>Zastąpić istniejące punkty ({n})?
-
-Nie – dopisz nowe punkty do istniejących.</source>
-        <translation>Zastąpić istniejące punkty ({n})?
-
-Nie – dopisz nowe punkty do istniejących.</translation>
     </message>
     <message>
         <source>Współrzędne przeliczono z układu {crs}.</source>
@@ -1144,16 +1180,16 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Dane wykazują anizotropię skali (nierównomierny skurcz papieru, ΔAICc = {d}). W trybie Helmerta odwzorowania z parametrem zmieniającym proporcje siatki (np. walcowe z równoleżnikiem standardowym) mogą wygrywać pozornie – użyj dopasowania afinicznego.</translation>
     </message>
     <message>
-        <source>Mała liczba punktów (&lt; 15) – parametry odwzorowania mogą być słabo wyznaczone.</source>
-        <translation>Mała liczba punktów (&lt; 15) – parametry odwzorowania mogą być słabo wyznaczone.</translation>
-    </message>
-    <message>
         <source>Punkty o dużych resztach względem najlepszego odwzorowania: {ids}. Błędy grube silnie zniekształcają parametry odwzorowania – sprawdź je w zakładce Analiza i rozważ wyłączenie przed ponowną estymacją.</source>
         <translation>Punkty o dużych resztach względem najlepszego odwzorowania: {ids}. Błędy grube silnie zniekształcają parametry odwzorowania – sprawdź je w zakładce Analiza i rozważ wyłączenie przed ponowną estymacją.</translation>
     </message>
     <message>
         <source>Słabo wyznaczone parametry najlepszego kandydata: {params} (błąd &gt; 10°). Prawdopodobnie nie mają wpływu na geometrię w tym zasięgu.</source>
         <translation>Słabo wyznaczone parametry najlepszego kandydata: {params} (błąd &gt; 10°). Prawdopodobnie nie mają wpływu na geometrię w tym zasięgu.</translation>
+    </message>
+    <message>
+        <source>Mała liczba punktów (&lt; 15) – parametry odwzorowania mogą być słabo wyznaczone.</source>
+        <translation>Mała liczba punktów (&lt; 15) – parametry odwzorowania mogą być słabo wyznaczone.</translation>
     </message>
     <message>
         <source>układ odniesienia</source>
@@ -1222,6 +1258,22 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Kąt obrotu arkusza</translation>
     </message>
     <message>
+        <source>Zmienność skali (p95/p05)</source>
+        <translation>Zmienność skali (p95/p05)</translation>
+    </message>
+    <message>
+        <source>Zakres rotacji lokalnej (p05–p95)</source>
+        <translation>Zakres rotacji lokalnej (p05–p95)</translation>
+    </message>
+    <message>
+        <source>Zniekształcenie kątowe 2ω średnie / maks.</source>
+        <translation>Zniekształcenie kątowe 2ω średnie / maks.</translation>
+    </message>
+    <message>
+        <source>Anizotropia skali a/b średnia / maks.</source>
+        <translation>Anizotropia skali a/b średnia / maks.</translation>
+    </message>
+    <message>
         <source>Zasięg punktów</source>
         <translation>Zasięg punktów</translation>
     </message>
@@ -1238,20 +1290,16 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Skala w środku obszaru punktów</translation>
     </message>
     <message>
+        <source>Hipoteza wyraźnie gorsza od najlepszego modelu (ΔAICc ≥ 10).</source>
+        <translation>Hipoteza wyraźnie gorsza od najlepszego modelu (ΔAICc ≥ 10).</translation>
+    </message>
+    <message>
         <source>wysoka dokładność graficzna</source>
         <translation>wysoka dokładność graficzna</translation>
     </message>
     <message>
         <source>umiarkowana dokładność graficzna</source>
         <translation>umiarkowana dokładność graficzna</translation>
-    </message>
-    <message>
-        <source>Aktywne punkty</source>
-        <translation>Aktywne punkty</translation>
-    </message>
-    <message>
-        <source>układ odniesienia</source>
-        <translation>układ odniesienia</translation>
     </message>
     <message>
         <source>Dokładność dopasowania</source>
@@ -1298,20 +1346,44 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Punkty odstające</translation>
     </message>
     <message>
-        <source>Zmienność skali (p95/p05)</source>
-        <translation>Zmienność skali (p95/p05)</translation>
+        <source>Błąd</source>
+        <translation>Błąd</translation>
     </message>
     <message>
-        <source>Zakres rotacji lokalnej (p05–p95)</source>
-        <translation>Zakres rotacji lokalnej (p05–p95)</translation>
+        <source>Błąd LOO</source>
+        <translation>Błąd LOO</translation>
     </message>
     <message>
-        <source>Zniekształcenie kątowe 2ω średnie / maks.</source>
-        <translation>Zniekształcenie kątowe 2ω średnie / maks.</translation>
+        <source>nadwyżkowość</source>
+        <translation>nadwyżkowość</translation>
     </message>
     <message>
-        <source>Anizotropia skali a/b średnia / maks.</source>
-        <translation>Anizotropia skali a/b średnia / maks.</translation>
+        <source>Porównanie modeli transformacji</source>
+        <translation>Porównanie modeli transformacji</translation>
+    </message>
+    <message>
+        <source>Model</source>
+        <translation>Model</translation>
+    </message>
+    <message>
+        <source>Skala lokalna (5–95 percentyl)</source>
+        <translation>Skala lokalna (5–95 percentyl)</translation>
+    </message>
+    <message>
+        <source>Zniekształcenia lokalne (TPS, wewnątrz otoczki punktów)</source>
+        <translation>Zniekształcenia lokalne (TPS, wewnątrz otoczki punktów)</translation>
+    </message>
+    <message>
+        <source>Autokorelacja przestrzenna reszt (Moran I)</source>
+        <translation>Autokorelacja przestrzenna reszt (Moran I)</translation>
+    </message>
+    <message>
+        <source>Aktywne punkty</source>
+        <translation>Aktywne punkty</translation>
+    </message>
+    <message>
+        <source>układ odniesienia</source>
+        <translation>układ odniesienia</translation>
     </message>
     <message>
         <source>Estymacja odwzorowania kartograficznego</source>
@@ -1346,6 +1418,26 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Obrót siatki względem skanu</translation>
     </message>
     <message>
+        <source>Parametry odwzorowania</source>
+        <translation>Parametry odwzorowania</translation>
+    </message>
+    <message>
+        <source>σ₀ swobodnego dopasowania tego odwzorowania</source>
+        <translation>σ₀ swobodnego dopasowania tego odwzorowania</translation>
+    </message>
+    <message>
+        <source>ΔAICc hipoteza − swobodne dopasowanie</source>
+        <translation>ΔAICc hipoteza − swobodne dopasowanie</translation>
+    </message>
+    <message>
+        <source>Ocena hipotezy</source>
+        <translation>Ocena hipotezy</translation>
+    </message>
+    <message>
+        <source>Parametry ustalone – dopasowano tylko położenie, skalę i obrót siatki względem skanu. Porównaj siatkę hipotezy z podziałką ramki mapy.</source>
+        <translation>Parametry ustalone – dopasowano tylko położenie, skalę i obrót siatki względem skanu. Porównaj siatkę hipotezy z podziałką ramki mapy.</translation>
+    </message>
+    <message>
         <source>Obliczenia na sferze; współrzędne geograficzne punktów wyznaczone z układu odniesienia projektu.</source>
         <translation>Obliczenia na sferze; współrzędne geograficzne punktów wyznaczone z układu odniesienia projektu.</translation>
     </message>
@@ -1378,10 +1470,6 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Y ref.</translation>
     </message>
     <message>
-        <source>Błąd</source>
-        <translation>Błąd</translation>
-    </message>
-    <message>
         <source>Reszty v = współrzędne referencyjne − transformowane, w jednostkach układu odniesienia</source>
         <translation>Reszty v = współrzędne referencyjne − transformowane, w jednostkach układu odniesienia</translation>
     </message>
@@ -1390,72 +1478,12 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Za mało obserwacji nadliczbowych do testu.</translation>
     </message>
     <message>
-        <source>Porównanie modeli transformacji</source>
-        <translation>Porównanie modeli transformacji</translation>
-    </message>
-    <message>
-        <source>Model</source>
-        <translation>Model</translation>
-    </message>
-    <message>
-        <source>Zniekształcenia lokalne (TPS, wewnątrz otoczki punktów)</source>
-        <translation>Zniekształcenia lokalne (TPS, wewnątrz otoczki punktów)</translation>
-    </message>
-    <message>
-        <source>Skala lokalna (5–95 percentyl)</source>
-        <translation>Skala lokalna (5–95 percentyl)</translation>
-    </message>
-    <message>
-        <source>Autokorelacja przestrzenna reszt (Moran I)</source>
-        <translation>Autokorelacja przestrzenna reszt (Moran I)</translation>
-    </message>
-    <message>
-        <source>Nie udało się dopasować żadnego odwzorowania.</source>
-        <translation>Nie udało się dopasować żadnego odwzorowania.</translation>
-    </message>
-    <message>
-        <source>Najlepiej dopasowane</source>
-        <translation>Najlepiej dopasowane</translation>
-    </message>
-    <message>
-        <source>Kolejność w rankingu nie przesądza o odwzorowaniu. Proste odwzorowania bez dopasowywanych parametrów wygrywają, gdy dane nie wnoszą dodatkowej informacji. Porównaj siatkę geograficzną kandydatów z siatką (lub ramką z podziałką) narysowaną na mapie.</source>
-        <translation>Kolejność w rankingu nie przesądza o odwzorowaniu. Proste odwzorowania bez dopasowywanych parametrów wygrywają, gdy dane nie wnoszą dodatkowej informacji. Porównaj siatkę geograficzną kandydatów z siatką (lub ramką z podziałką) narysowaną na mapie.</translation>
-    </message>
-    <message>
-        <source>Parametry odwzorowania</source>
-        <translation>Parametry odwzorowania</translation>
-    </message>
-    <message>
-        <source>Ocena hipotezy</source>
-        <translation>Ocena hipotezy</translation>
-    </message>
-    <message>
-        <source>σ₀ swobodnego dopasowania tego odwzorowania</source>
-        <translation>σ₀ swobodnego dopasowania tego odwzorowania</translation>
-    </message>
-    <message>
-        <source>ΔAICc hipoteza − swobodne dopasowanie</source>
-        <translation>ΔAICc hipoteza − swobodne dopasowanie</translation>
-    </message>
-    <message>
-        <source>Parametry ustalone – dopasowano tylko położenie, skalę i obrót siatki względem skanu. Porównaj siatkę hipotezy z podziałką ramki mapy.</source>
-        <translation>Parametry ustalone – dopasowano tylko położenie, skalę i obrót siatki względem skanu. Porównaj siatkę hipotezy z podziałką ramki mapy.</translation>
-    </message>
-    <message>
-        <source>parametry liczone w centroidzie punktów</source>
-        <translation>parametry liczone w centroidzie punktów</translation>
-    </message>
-    <message>
         <source>Brak punktów odstających</source>
         <translation>Brak punktów odstających</translation>
     </message>
     <message>
-        <source>Błąd LOO</source>
-        <translation>Błąd LOO</translation>
-    </message>
-    <message>
-        <source>nadwyżkowość</source>
-        <translation>nadwyżkowość</translation>
+        <source>Test Baardy: reszta standaryzowana w &gt; 3,29 (α = 0,001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.</source>
+        <translation>Test Baardy: reszta standaryzowana w &gt; 3,29 (α = 0,001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.</translation>
     </message>
     <message>
         <source>ΔAICc &lt; 2 – modele równorzędne; &gt; 10 – model wyraźnie gorszy. Niższy błąd LOO oznacza lepszą zdolność predykcji.</source>
@@ -1470,16 +1498,16 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Brak istotnej autokorelacji – reszty mają charakter losowy.</translation>
     </message>
     <message>
-        <source>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2)</source>
-        <translation>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2)</translation>
+        <source>Nie udało się dopasować żadnego odwzorowania.</source>
+        <translation>Nie udało się dopasować żadnego odwzorowania.</translation>
     </message>
     <message>
-        <source>(hipoteza)</source>
-        <translation>(hipoteza)</translation>
+        <source>Najlepiej dopasowane</source>
+        <translation>Najlepiej dopasowane</translation>
     </message>
     <message>
-        <source>Skala główna odwzorowania</source>
-        <translation>Skala główna odwzorowania</translation>
+        <source>Kolejność w rankingu nie przesądza o odwzorowaniu. Proste odwzorowania bez dopasowywanych parametrów wygrywają, gdy dane nie wnoszą dodatkowej informacji. Porównaj siatkę geograficzną kandydatów z siatką (lub ramką z podziałką) narysowaną na mapie.</source>
+        <translation>Kolejność w rankingu nie przesądza o odwzorowaniu. Proste odwzorowania bez dopasowywanych parametrów wygrywają, gdy dane nie wnoszą dodatkowej informacji. Porównaj siatkę geograficzną kandydatów z siatką (lub ramką z podziałką) narysowaną na mapie.</translation>
     </message>
     <message>
         <source>ustalony</source>
@@ -1490,24 +1518,32 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>λ₀ względem historycznych południków zerowych</translation>
     </message>
     <message>
-        <source>Parametry swobodnego dopasowania</source>
-        <translation>Parametry swobodnego dopasowania</translation>
-    </message>
-    <message>
-        <source>Test Baardy: reszta standaryzowana w &gt; 3,29 (α = 0,001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.</source>
-        <translation>Test Baardy: reszta standaryzowana w &gt; 3,29 (α = 0,001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.</translation>
-    </message>
-    <message>
         <source>Hipoteza jest zgodna z danymi (ΔAICc &lt; 2 względem najlepszego modelu).</source>
         <translation>Hipoteza jest zgodna z danymi (ΔAICc &lt; 2 względem najlepszego modelu).</translation>
     </message>
     <message>
-        <source>Hipoteza wyraźnie gorsza od najlepszego modelu (ΔAICc ≥ 10).</source>
-        <translation>Hipoteza wyraźnie gorsza od najlepszego modelu (ΔAICc ≥ 10).</translation>
-    </message>
-    <message>
         <source>Hipoteza słabiej wspierana przez dane (2 ≤ ΔAICc &lt; 10) – sprawdź parametry i punkty odstające.</source>
         <translation>Hipoteza słabiej wspierana przez dane (2 ≤ ΔAICc &lt; 10) – sprawdź parametry i punkty odstające.</translation>
+    </message>
+    <message>
+        <source>Parametry swobodnego dopasowania</source>
+        <translation>Parametry swobodnego dopasowania</translation>
+    </message>
+    <message>
+        <source>parametry liczone w centroidzie punktów</source>
+        <translation>parametry liczone w centroidzie punktów</translation>
+    </message>
+    <message>
+        <source>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2)</source>
+        <translation>Wynik nierozstrzygnięty – odwzorowania równorzędne (ΔAICc &lt; 2)</translation>
+    </message>
+    <message>
+        <source>(hipoteza)</source>
+        <translation>(hipoteza)</translation>
+    </message>
+    <message>
+        <source>Skala główna odwzorowania</source>
+        <translation>Skala główna odwzorowania</translation>
     </message>
     <message>
         <source>Helmert (4 parametry)</source>
@@ -1798,16 +1834,16 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Dane wykazują anizotropię skali (nierównomierny skurcz papieru, ΔAICc = {d}). W trybie Helmerta odwzorowania z parametrem zmieniającym proporcje siatki (np. walcowe z równoleżnikiem standardowym) mogą wygrywać pozornie – użyj dopasowania afinicznego.</translation>
     </message>
     <message>
-        <source>Mała liczba punktów (&lt; 15) – parametry odwzorowania mogą być słabo wyznaczone.</source>
-        <translation>Mała liczba punktów (&lt; 15) – parametry odwzorowania mogą być słabo wyznaczone.</translation>
-    </message>
-    <message>
         <source>Punkty o dużych resztach względem najlepszego odwzorowania: {ids}. Błędy grube silnie zniekształcają parametry odwzorowania – sprawdź je w zakładce Analiza i rozważ wyłączenie przed ponowną estymacją.</source>
         <translation>Punkty o dużych resztach względem najlepszego odwzorowania: {ids}. Błędy grube silnie zniekształcają parametry odwzorowania – sprawdź je w zakładce Analiza i rozważ wyłączenie przed ponowną estymacją.</translation>
     </message>
     <message>
         <source>Słabo wyznaczone parametry najlepszego kandydata: {params} (błąd &gt; 10°). Prawdopodobnie nie mają wpływu na geometrię w tym zasięgu.</source>
         <translation>Słabo wyznaczone parametry najlepszego kandydata: {params} (błąd &gt; 10°). Prawdopodobnie nie mają wpływu na geometrię w tym zasięgu.</translation>
+    </message>
+    <message>
+        <source>Mała liczba punktów (&lt; 15) – parametry odwzorowania mogą być słabo wyznaczone.</source>
+        <translation>Mała liczba punktów (&lt; 15) – parametry odwzorowania mogą być słabo wyznaczone.</translation>
     </message>
     <message>
         <source>współczesny</source>
@@ -1829,24 +1865,20 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Nie udało się zapisać obrazu: {p}</translation>
     </message>
     <message>
-        <source>Nie można utworzyć pliku PDF: {p}</source>
-        <translation>Nie można utworzyć pliku PDF: {p}</translation>
-    </message>
-    <message>
         <source>Wygenerowano:</source>
         <translation>Wygenerowano:</translation>
     </message>
     <message>
-        <source>Nakładka:</source>
-        <translation>Nakładka:</translation>
-    </message>
-    <message>
-        <source>Eksport PDF nie powiódł się (kod {code}): {msg}</source>
-        <translation>Eksport PDF nie powiódł się (kod {code}): {msg}</translation>
-    </message>
-    <message>
         <source>Strona {i} z {n}</source>
         <translation>Strona {i} z {n}</translation>
+    </message>
+    <message>
+        <source>Nie zapisano pliku georeferencji .tfw: {err}</source>
+        <translation>Nie zapisano pliku georeferencji .tfw: {err}</translation>
+    </message>
+    <message>
+        <source>Nie można utworzyć pliku PDF: {p}</source>
+        <translation>Nie można utworzyć pliku PDF: {p}</translation>
     </message>
 </context>
 <context>
@@ -1895,6 +1927,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Układ równań jest osobliwy – punkty są współliniowe lub zdublowane.</translation>
     </message>
     <message>
+        <source>Brak scipy.optimize – estymacja odwzorowania niemożliwa.</source>
+        <translation>Brak scipy.optimize – estymacja odwzorowania niemożliwa.</translation>
+    </message>
+    <message>
         <source>Estymacja odwzorowania wymaga minimum {k} aktywnych punktów (zalecane &gt; 15).</source>
         <translation>Estymacja odwzorowania wymaga minimum {k} aktywnych punktów (zalecane &gt; 15).</translation>
     </message>
@@ -1909,10 +1945,6 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>Kandydat referencyjny nie ma odwzorowania geograficznego.</source>
         <translation>Kandydat referencyjny nie ma odwzorowania geograficznego.</translation>
-    </message>
-    <message>
-        <source>Brak scipy.optimize – estymacja odwzorowania niemożliwa.</source>
-        <translation>Brak scipy.optimize – estymacja odwzorowania niemożliwa.</translation>
     </message>
     <message>
         <source>Helmert (4 parametry)</source>

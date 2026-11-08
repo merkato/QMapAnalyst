@@ -2,6 +2,8 @@
 
 **QMapAnalyst** is a QGIS plugin for the cartometric analysis of historical maps. Inspired by the classic MapAnalyst software, it lets researchers, cartographers and historians measure the accuracy and local distortions of a historical map, estimate its paper scale and **the map projection it was most likely drawn in**, all inside QGIS.
 
+![QMapAnalyst panel: reference grid, scale isolines and displacement vectors on an Austrian cadastral sheet (1:2880)](docs/results_en.png)
+
 ## 🌟 Key features
 
 * **Transformations:** Helmert (4 parameters), affine (6) and 2nd-order polynomial (12), all fitted by least squares.
@@ -43,6 +45,12 @@
 4. **Projection tab:** estimate the map projection, inspect the ranking and its parameters, and draw the graticule on the scan.
 5. **Layers tab:** generate result layers on the main map and on the scan.
 6. **Export tab:** save a PDF report, TIFF and CSV files.
+
+| GCP table | Analysis report | Projection estimation |
+|---|---|---|
+| ![GCP tab](docs/gcp_table_en.png) | ![Analysis tab](docs/analysis_en.png) | ![Projection tab](docs/projection_en.png) |
+
+*Screenshots: sheet VI of the Austrian cadastral indication sketch of Milówka (1:2880, National Archives in Kraków); the GCPs are for demonstration only.*
 
 A detailed manual (in Polish) is available in [docs/manual_qmapanalyst.md](docs/manual_qmapanalyst.md).
 
