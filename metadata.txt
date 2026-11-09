@@ -3,7 +3,7 @@ name=QMapAnalyst
 qgisMinimumVersion=3.34
 qgisMaximumVersion=4.99
 description=Cartometric analysis of historical maps: Helmert, affine and polynomial transformations with full statistics, outlier detection, distortion grids and isolines, and estimation of the map projection the map was drawn in.
-version=0.2.0
+version=0.2.1
 author=Tomasz Nycz
 email=tomasz@nycz.beskidy.pl
 about=Modern QGIS plugin inspired by MapAnalyst, built with Python, NumPy and SciPy (Qt5 and Qt6). Computes Helmert, affine and 2nd-order polynomial transformations between a historical map scan and a reference map with standard errors, cross-validation, Baarda outlier test, model comparison (AICc), spatial autocorrelation of residuals and Tissot-based local distortion analysis. Estimates the most likely map projection (Bonne, Cassini-Soldner, equidistant conic, Sanson-Flamsteed, trapezoidal, Mercator and more) and draws its graticule on the scan.
@@ -16,7 +16,13 @@ hasProcessingProvider=no
 supportsQt6=True
 experimental=False
 deprecated=False
-changelog=0.2.0
+changelog=0.2.1
+    - Fix: overlays (isolines, grids, vectors) missing from the maps PDF for scans without georeferencing
+    - Maps PDF: first page shows all visible overlays together, with report header and page numbers
+    - Layers tab: icon buttons in rows (wrapping on narrow panels), trash button at the bottom
+    - More room for the historical map: overlay list moved to a toolbar drop-down, scrollable tabs
+    - Dependency check: clear message with the install command for the platform when NumPy or SciPy is missing
+    0.2.0
     - New: map projection estimation (15 historical and modern projections, AICc ranking, graticule on the scan)
     - New: extended statistics (sigma0, standard errors, LOO cross-validation, Baarda test, model comparison, Moran's I, Tissot distortion)
     - New: 2nd-order polynomial transformation, angular distortion isolines, GCP layer with residuals, CSV export

@@ -30,6 +30,9 @@ def build_plugin():
                     continue
                 if any(file.endswith(ext) for ext in EXCLUDE_EXTS):
                     continue
+                # ilustracje dokumentacji są dla GitHuba – w paczce zbędne (pliki binarne, ~2 MB)
+                if os.path.basename(root) == "docs" and file.lower().endswith(".png"):
+                    continue
                 
                 # Pełna ścieżka do pliku na dysku
                 file_path = os.path.join(root, file)

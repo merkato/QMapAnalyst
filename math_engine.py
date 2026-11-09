@@ -204,8 +204,7 @@ class FitResult:
         return J / self.src_scale
 
 
-def fit_transform(model: str, src: np.ndarray, dst: np.ndarray) -> FitResult:
-    """Wyrównanie transformacji metodą najmniejszych kwadratów wraz z pełną statystyką."""
+def _validated_points(model, src, dst):
     if model not in MODELS:
         raise EngineError("Nieznany model transformacji: {model}", model=model)
     src = np.asarray(src, dtype=float).reshape(-1, 2)
@@ -218,6 +217,62 @@ def fit_transform(model: str, src: np.ndarray, dst: np.ndarray) -> FitResult:
         raise EngineError("Transformacja „{name}” wymaga minimum {k} punktów.", name=MODELS[model]["name"], k=min_pts)
     if not (np.all(np.isfinite(src)) and np.all(np.isfinite(dst))):
         raise EngineError("Współrzędne punktów zawierają wartości nieliczbowe.")
+    return src, dst
+
+
+def _hat_diagnostics(res, A, N_inv, v, min_pts):
+    """Liczby nadwyżkowe, reszty standaryzowane (Baarda) i błędy LOO z bloków 2×2 macierzy kapeluszowej."""
+    n, p_count = v.shape[0], A.shape[1]
+    Ai = A.reshape(n, 2, p_count)
+    H_blocks = np.einsum("nip,pq,njq->nij", Ai, N_inv, Ai)
+    h_diag = np.stack([H_blocks[:, 0, 0], H_blocks[:, 1, 1]], axis=1)
+    red_nums = np.clip(1.0 - h_diag, 0.0, 1.0)
+    res.redundancy_numbers = red_nums.mean(axis=1)
+
+    res.std_residuals = np.full(n, np.nan)
+    if res.redundancy > 0 and res.sigma0 > 0:
+        with np.errstate(divide="ignore", invalid="ignore"):
+            w = np.abs(v) / (res.sigma0 * np.sqrt(red_nums))
+        w[~np.isfinite(w)] = np.nan
+        res.std_residuals = np.fmax(w[:, 0], w[:, 1])
+
+    loo = np.full(n, np.nan)
+    if n > min_pts:
+        eye = np.eye(2)
+        for i in range(n):
+            M = eye - H_blocks[i]
+            if np.linalg.cond(M) < 1e10:
+                loo[i] = float(np.linalg.norm(np.linalg.solve(M, v[i])))
+    res.loo_errors = loo
+
+
+def _derived_parameters(res, params):
+    """Skala, obrót i skos w centroidzie z propagacją błędów (pochodne numeryczne)."""
+    J0 = res.linear_jacobian_from_params(params)
+    derived = FitResult._derived_from_jacobian(J0)
+    derived_std = np.full(5, np.nan)
+    if res.cov is not None:
+        p_count = params.size
+        G = np.zeros((5, p_count))
+        for k in range(p_count):
+            h = 1e-7 * max(1.0, abs(params[k]))
+            dp = params.copy()
+            dp[k] += h
+            dk = FitResult._derived_from_jacobian(res.linear_jacobian_from_params(dp))
+            diff = dk - derived
+            diff[3] = (diff[3] + 180.0) % 360.0 - 180.0
+            G[:, k] = diff / h
+        derived_std = np.sqrt(np.clip(np.diag(G @ res.cov @ G.T), 0, None))
+    keys = ["scale_x", "scale_y", "scale", "rotation_deg", "shear_deg"]
+    res.derived = {k: float(derived[i]) for i, k in enumerate(keys)}
+    res.derived.update({k + "_std": float(derived_std[i]) for i, k in enumerate(keys)})
+
+
+def fit_transform(model: str, src: np.ndarray, dst: np.ndarray) -> FitResult:
+    """Wyrównanie transformacji metodą najmniejszych kwadratów wraz z pełną statystyką."""
+    src, dst = _validated_points(model, src, dst)
+    n = src.shape[0]
+    min_pts = MODELS[model]["min_pts"]
 
     sc, ss = _normalization(src)
     dc = dst.mean(axis=0)
@@ -248,48 +303,8 @@ def fit_transform(model: str, src: np.ndarray, dst: np.ndarray) -> FitResult:
     if r > 0:
         res.cov = (res.sigma0 ** 2) * N_inv
 
-    # --- liczby nadwyżkowe, reszty standaryzowane, LOO (bloki 2x2 macierzy kapeluszowej)
-    Ai = A.reshape(n, 2, p_count)
-    H_blocks = np.einsum("nip,pq,njq->nij", Ai, N_inv, Ai)
-    h_diag = np.stack([H_blocks[:, 0, 0], H_blocks[:, 1, 1]], axis=1)
-    red_nums = np.clip(1.0 - h_diag, 0.0, 1.0)
-    res.redundancy_numbers = red_nums.mean(axis=1)
-
-    if r > 0 and res.sigma0 > 0:
-        with np.errstate(divide="ignore", invalid="ignore"):
-            w = np.abs(v) / (res.sigma0 * np.sqrt(red_nums))
-        w[~np.isfinite(w)] = np.nan
-        res.std_residuals = np.fmax(w[:, 0], w[:, 1])
-    else:
-        res.std_residuals = np.full(n, np.nan)
-
-    loo = np.full(n, np.nan)
-    if n > min_pts:
-        eye = np.eye(2)
-        for i in range(n):
-            M = eye - H_blocks[i]
-            if np.linalg.cond(M) < 1e10:
-                loo[i] = float(np.linalg.norm(np.linalg.solve(M, v[i])))
-    res.loo_errors = loo
-
-    # --- parametry pochodne (skala, obrót, skos) z propagacją błędów
-    J0 = res.linear_jacobian_from_params(params)
-    derived = FitResult._derived_from_jacobian(J0)
-    derived_std = np.full(5, np.nan)
-    if res.cov is not None:
-        G = np.zeros((5, p_count))
-        for k in range(p_count):
-            h = 1e-7 * max(1.0, abs(params[k]))
-            dp = params.copy()
-            dp[k] += h
-            dk = FitResult._derived_from_jacobian(res.linear_jacobian_from_params(dp))
-            diff = dk - derived
-            diff[3] = (diff[3] + 180.0) % 360.0 - 180.0
-            G[:, k] = diff / h
-        derived_std = np.sqrt(np.clip(np.diag(G @ res.cov @ G.T), 0, None))
-    keys = ["scale_x", "scale_y", "scale", "rotation_deg", "shear_deg"]
-    res.derived = {k: float(derived[i]) for i, k in enumerate(keys)}
-    res.derived.update({k + "_std": float(derived_std[i]) for i, k in enumerate(keys)})
+    _hat_diagnostics(res, A, N_inv, v, min_pts)
+    _derived_parameters(res, params)
 
     res.stats = residual_statistics(v, res.sigma0, p_count)
     res.stats["aicc"] = aicc(vtv, 2 * n, p_count)
@@ -378,13 +393,13 @@ def morans_i(pts: np.ndarray, values: np.ndarray, permutations: int = 999, seed:
     zz = float(z @ z)
     if S0 <= 0 or zz <= 0:
         return None
-    I = n / S0 * float(z @ W @ z) / zz
+    moran = n / S0 * float(z @ W @ z) / zz
 
     rng = np.random.default_rng(seed)
     Z = np.array([rng.permutation(z) for _ in range(permutations)])
-    I_perm = n / S0 * np.einsum("ij,jk,ik->i", Z, W, Z) / zz
-    p = (np.sum(I_perm >= I) + 1) / (permutations + 1)
-    return float(I), -1.0 / (n - 1), float(p)
+    moran_perm = n / S0 * np.einsum("ij,jk,ik->i", Z, W, Z) / zz
+    p = (np.sum(moran_perm >= moran) + 1) / (permutations + 1)
+    return float(moran), -1.0 / (n - 1), float(p)
 
 
 # ---------------------------------------------------------------------------

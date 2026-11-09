@@ -113,7 +113,10 @@ def _eqdc(lam, phi, p):
 def _lcc(lam, phi, p):
     p1, p2 = p["lat1"], p["lat2"]
     d = _wrap(lam - p["lon0"])
-    t = lambda f: np.tan(_QPI + np.clip(f, -1.55, 1.55) / 2.0)
+
+    def t(f):
+        return np.tan(_QPI + np.clip(f, -1.55, 1.55) / 2.0)
+
     if abs(p1 - p2) < 1e-7:
         n = math.sin(p1)
     else:
@@ -428,89 +431,97 @@ def _bounds(free, lon_c, lat_c, lon_span):
     return np.array(lo), np.array(hi)
 
 
+def _fixed_params(proj: ProjectionDef, lon_c: float) -> dict:
+    fixed = {}
+    for k, v in proj.fixed.items():
+        fixed[k] = math.radians(lon_c if (k == "lon0" and v is None) else (v if v is not None else 0.0))
+    if proj.key == "plate":
+        fixed.setdefault("lat1", 0.0)
+    return fixed
+
+
+def _optimize(residuals, free, extent):
+    """Wielostartowe dopasowanie parametrów swobodnych. Zwraca (theta [°], jakobian lub None, sukces)."""
+    if least_squares is None:
+        raise EngineError("Brak scipy.optimize – estymacja odwzorowania niemożliwa.")
+    lon_c, lat_c, lat_min, lat_max, lon_span = extent
+    lo, hi = _bounds(free, lon_c, lat_c, lon_span)
+    guesses = _initial_guesses(free, lon_c, lat_c, lat_min, lat_max, lon_span)
+    best = None
+    for x0 in guesses:
+        x0 = np.clip(np.array(x0, float), lo + 1e-6, hi - 1e-6)
+        try:
+            sol = least_squares(residuals, x0, bounds=(lo, hi), x_scale=1.0,
+                                diff_step=1e-6, max_nfev=400)
+        except (ValueError, FloatingPointError, np.linalg.LinAlgError):
+            continue  # start nie prowadzi do rozwiązania – kolejny punkt startowy
+        if best is None or sol.cost < best.cost:
+            best = sol
+    if best is None:
+        return np.array(guesses[0], dtype=float), None, False
+    return best.x, best.jac, True
+
+
+def _param_std(jac, free, sigma0, dof) -> dict:
+    if jac is None or dof <= 0:
+        return {}
+    try:
+        cov = np.linalg.pinv(jac.T @ jac) * sigma0 ** 2
+    except np.linalg.LinAlgError:
+        return {}
+    return {k: float(math.sqrt(max(cov[i, i], 0.0))) for i, k in enumerate(free)}
+
+
+def _project(proj: ProjectionDef, lam, phi, p_rad):
+    with np.errstate(all="ignore"):
+        x, y = proj.func(lam, phi, p_rad)
+    return np.column_stack([np.broadcast_to(x, lam.shape), np.broadcast_to(y, lam.shape)])
+
+
 def fit_projection(proj: ProjectionDef, lonlat_deg: np.ndarray, pixels: np.ndarray,
                    mode: str = "helmert") -> Candidate:
     lam = np.radians(lonlat_deg[:, 0])
     phi = np.radians(lonlat_deg[:, 1])
     n = len(lam)
     lon_c = float(np.mean(lonlat_deg[:, 0]))
-    lat_c = float(np.mean(lonlat_deg[:, 1]))
-    lat_min, lat_max = float(lonlat_deg[:, 1].min()), float(lonlat_deg[:, 1].max())
-    lon_span = float(np.ptp(lonlat_deg[:, 0]))
-
-    fixed = {}
-    for k, v in proj.fixed.items():
-        fixed[k] = math.radians(lon_c if (k == "lon0" and v is None) else (v if v is not None else 0.0))
-    if proj.key == "plate":
-        fixed.setdefault("lat1", 0.0)
+    extent = (lon_c, float(np.mean(lonlat_deg[:, 1])), float(lonlat_deg[:, 1].min()),
+              float(lonlat_deg[:, 1].max()), float(np.ptp(lonlat_deg[:, 0])))
+    fixed = _fixed_params(proj, lon_c)
+    free = proj.free
 
     q_scale = float(np.sqrt(np.mean(np.sum((pixels - pixels.mean(0)) ** 2, axis=1)))) or 1.0
     penalty = np.full(2 * n, 10.0 * q_scale)
 
-    def residuals(theta_deg):
+    def params_rad(theta_deg):
         p = dict(fixed)
-        for k, v in zip(proj.free, theta_deg):
-            p[k] = math.radians(v)
-        with np.errstate(all="ignore"):
-            x, y = proj.func(lam, phi, p)
-        P = np.column_stack([np.broadcast_to(x, lam.shape), np.broadcast_to(y, lam.shape)])
+        for k, v in zip(free, theta_deg):
+            p[k] = math.radians(float(v))
+        return p
+
+    def residuals(theta_deg):
+        P = _project(proj, lam, phi, params_rad(theta_deg))
         if not np.all(np.isfinite(P)) or np.ptp(P, axis=0).max() <= 0:
             return penalty
         _, _, r = _fit_plane(P, pixels, mode)
         out = r.reshape(-1)
         return out if np.all(np.isfinite(out)) else penalty
 
-    free = proj.free
-    best_theta = np.array([], dtype=float)
-    std = {}
-    success = True
-    if free:
-        if least_squares is None:
-            raise EngineError("Brak scipy.optimize – estymacja odwzorowania niemożliwa.")
-        lo, hi = _bounds(free, lon_c, lat_c, lon_span)
-        best = None
-        for x0 in _initial_guesses(free, lon_c, lat_c, lat_min, lat_max, lon_span):
-            x0 = np.clip(np.array(x0, float), lo + 1e-6, hi - 1e-6)
-            try:
-                sol = least_squares(residuals, x0, bounds=(lo, hi), x_scale=1.0,
-                                    diff_step=1e-6, max_nfev=400)
-            except Exception:
-                continue
-            if best is None or sol.cost < best.cost:
-                best = sol
-        if best is None:
-            success = False
-            best_theta = np.array(_initial_guesses(free, lon_c, lat_c, lat_min, lat_max, lon_span)[0])
-            jac = None
-        else:
-            best_theta = best.x
-            jac = best.jac
-    else:
-        jac = None
+    best_theta, jac, success = (_optimize(residuals, free, extent) if free
+                                else (np.array([], dtype=float), None, True))
 
     r = residuals(best_theta)
     rss = float(r @ r)
     k_total = (6 if mode == "affine" else 4) + len(free)
     dof = 2 * n - k_total
     sigma0 = math.sqrt(rss / dof) if dof > 0 else float("nan")
+    std = _param_std(jac, free, sigma0, dof)
 
-    if jac is not None and dof > 0:
-        try:
-            cov = np.linalg.pinv(jac.T @ jac) * sigma0 ** 2
-            std = {k: float(math.sqrt(max(cov[i, i], 0.0))) for i, k in enumerate(free)}
-        except np.linalg.LinAlgError:
-            std = {}
-
-    p_rad = dict(fixed)
-    for k, v in zip(free, best_theta):
-        p_rad[k] = math.radians(float(v))
+    p_rad = params_rad(best_theta)
     params_deg = {k: math.degrees(v) for k, v in p_rad.items()}
     if "lon0" in params_deg:
         params_deg["lon0"] = (params_deg["lon0"] + 180.0) % 360.0 - 180.0
 
-    with np.errstate(all="ignore"):
-        x, y = proj.func(lam, phi, p_rad)
-    P = np.column_stack([np.broadcast_to(x, lam.shape), np.broadcast_to(y, lam.shape)])
+    P = _project(proj, lam, phi, p_rad)
     if np.all(np.isfinite(P)):
         A, t, res_px = _fit_plane(P, pixels, mode)
     else:
@@ -538,6 +549,51 @@ def reference_candidate(ref_xy: np.ndarray, pixels: np.ndarray, label: str, mode
         sigma0_px=math.sqrt(rss / dof) if dof > 0 else float("nan"),
         aicc=aicc(rss, 2 * n, k), residuals_px=r, A=A, t=t, is_reference=True,
     )
+
+
+def _discrimination_messages(ext, spread):
+    msgs = []
+    if ext < 2.0:
+        msgs.append(("Zasięg punktów to tylko ~{ext}°. Na tak małym obszarze różnice między odwzorowaniami "
+                     "są zwykle mniejsze niż błędy rysunku mapy – wynik ma charakter orientacyjny.",
+                     {"ext": num(ext, 1)}))
+    if spread < 0.10:
+        msgs.append(("Błędy σ₀ wszystkich kandydatów różnią się o mniej niż {pct}% – "
+                     "dane nie pozwalają wiarygodnie rozróżnić odwzorowań.", {"pct": f"{spread * 100:.0f}"}))
+    return msgs, not msgs
+
+
+def _anisotropy_messages(ref_xy, pixels):
+    """Anizotropia skali (skurcz papieru): czy afiniczne dopasowanie układu odniesienia jest wyraźnie lepsze?"""
+    n = len(pixels)
+    _, _, rh = _fit_plane(ref_xy, pixels, "helmert")
+    _, _, ra = _fit_plane(ref_xy, pixels, "affine")
+    a_h = aicc(float(np.sum(rh ** 2)), 2 * n, 4)
+    a_a = aicc(float(np.sum(ra ** 2)), 2 * n, 6)
+    msgs = []
+    if np.isfinite(a_h) and np.isfinite(a_a) and a_h - a_a > 10:
+        msgs.append(("Dane wykazują anizotropię skali (nierównomierny skurcz papieru, ΔAICc = {d}). W trybie Helmerta "
+                     "odwzorowania z parametrem zmieniającym proporcje siatki (np. walcowe z równoleżnikiem "
+                     "standardowym) mogą wygrywać pozornie – użyj dopasowania afinicznego.", {"d": num(a_h - a_a, 1)}))
+    return msgs
+
+
+def _best_candidate_messages(b, labels):
+    msgs = []
+    e = np.hypot(b.residuals_px[:, 0], b.residuals_px[:, 1])
+    if np.isfinite(b.sigma0_px) and b.sigma0_px > 0:
+        suspects = [i for i in np.argsort(-e) if e[i] / b.sigma0_px > 3.0]
+        if suspects:
+            ids = ", ".join(f"#{labels[i] if labels else i + 1}" for i in suspects[:5])
+            msgs.append(("Punkty o dużych resztach względem najlepszego odwzorowania: {ids}. "
+                         "Błędy grube silnie zniekształcają parametry odwzorowania – sprawdź je w zakładce Analiza "
+                         "i rozważ wyłączenie przed ponowną estymacją.", {"ids": ids}))
+    undetermined = [k for k, s in b.params_std_deg.items() if s > 10.0]
+    if undetermined:
+        msgs.append(("Słabo wyznaczone parametry najlepszego kandydata: {params} (błąd > 10°). "
+                     "Prawdopodobnie nie mają wpływu na geometrię w tym zasięgu.",
+                     {"params": [PARAM_LABELS.get(k, k) for k in undetermined]}))
+    return msgs
 
 
 def estimate_projections(lonlat_deg, pixels, ref_xy=None, ref_label=None,
@@ -571,45 +627,14 @@ def estimate_projections(lonlat_deg, pixels, ref_xy=None, ref_label=None,
     lon_rng = (float(lonlat_deg[:, 0].min()), float(lonlat_deg[:, 0].max()))
     lat_rng = (float(lonlat_deg[:, 1].min()), float(lonlat_deg[:, 1].max()))
     ext = max(lon_rng[1] - lon_rng[0], lat_rng[1] - lat_rng[0])
-    msgs = []
-    discriminable = True
-    if ext < 2.0:
-        discriminable = False
-        msgs.append(("Zasięg punktów to tylko ~{ext}°. Na tak małym obszarze różnice między odwzorowaniami "
-                     "są zwykle mniejsze niż błędy rysunku mapy – wynik ma charakter orientacyjny.",
-                     {"ext": num(ext, 1)}))
-    if spread < 0.10:
-        discriminable = False
-        msgs.append(("Błędy σ₀ wszystkich kandydatów różnią się o mniej niż {pct}% – "
-                     "dane nie pozwalają wiarygodnie rozróżnić odwzorowań.", {"pct": f"{spread * 100:.0f}"}))
+    msgs, discriminable = _discrimination_messages(ext, spread)
     if mode == "helmert" and ref_xy is not None and n >= 5:
-        # anizotropia skali (skurcz papieru): czy afiniczne dopasowanie układu odniesienia jest wyraźnie lepsze?
-        R = np.asarray(ref_xy, float)
-        _, _, rh = _fit_plane(R, pixels, "helmert")
-        _, _, ra = _fit_plane(R, pixels, "affine")
-        a_h = aicc(float(np.sum(rh ** 2)), 2 * n, 4)
-        a_a = aicc(float(np.sum(ra ** 2)), 2 * n, 6)
-        if np.isfinite(a_h) and np.isfinite(a_a) and a_h - a_a > 10:
-            msgs.append(("Dane wykazują anizotropię skali (nierównomierny skurcz papieru, ΔAICc = {d}). W trybie Helmerta "
-                         "odwzorowania z parametrem zmieniającym proporcje siatki (np. walcowe z równoleżnikiem "
-                         "standardowym) mogą wygrywać pozornie – użyj dopasowania afinicznego.", {"d": num(a_h - a_a, 1)}))
+        msgs += _anisotropy_messages(np.asarray(ref_xy, float), pixels)
     if n < 15:
         msgs.append(("Mała liczba punktów (< 15) – parametry odwzorowania mogą być słabo wyznaczone.", {}))
     b = next((c for c in cands if not c.is_reference and c.success), None)
     if b is not None:
-        undetermined = [k for k, s in b.params_std_deg.items() if s > 10.0]
-        e = np.hypot(b.residuals_px[:, 0], b.residuals_px[:, 1])
-        if np.isfinite(b.sigma0_px) and b.sigma0_px > 0:
-            suspects = [i for i in np.argsort(-e) if e[i] / b.sigma0_px > 3.0]
-            if suspects:
-                ids = ", ".join(f"#{labels[i] if labels else i + 1}" for i in suspects[:5])
-                msgs.append(("Punkty o dużych resztach względem najlepszego odwzorowania: {ids}. "
-                             "Błędy grube silnie zniekształcają parametry odwzorowania – sprawdź je w zakładce Analiza "
-                             "i rozważ wyłączenie przed ponowną estymacją.", {"ids": ids}))
-        if undetermined:
-            msgs.append(("Słabo wyznaczone parametry najlepszego kandydata: {params} (błąd > 10°). "
-                         "Prawdopodobnie nie mają wpływu na geometrię w tym zasięgu.",
-                         {"params": [PARAM_LABELS.get(k, k) for k in undetermined]}))
+        msgs += _best_candidate_messages(b, labels)
 
     return EstimationResult(cands, mode, n, lon_rng, lat_rng, discriminable, spread, msgs,
                             lonlat=lonlat_deg, pixels=pixels)

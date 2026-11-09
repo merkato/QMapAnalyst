@@ -112,29 +112,9 @@ def _quality_badge(sigma_mm):
     return f"<span class='bad'>{tr('niska dokładność graficzna')}</span>"
 
 
-def analysis_html(ctx: dict, colors: dict) -> str:
-    """ctx: fit, comparison, distortion, moran, n_total, crs_label, dpi, labels (id punktów)."""
-    fit = ctx["fit"]
+def _accuracy_section(fit, unit, labels, loo_rmse, dpi, sigma_mm, rmse_mm):
     st = fit.stats
-    d = fit.derived
-    dpi = ctx["dpi"]
-    labels = ctx["labels"]
-    unit = ctx.get("unit", "m")
-    is_helmert = fit.model == "helmert"
-
-    mpu = ctx.get("m_per_unit", 1.0)
-    M = scale_denominator(d["scale"] * mpu, dpi)
-    sigma_mm = st["sigma0"] / M * 1000.0 if np.isfinite(M) and M > 0 else float("nan")
-    rmse_mm = st["rmse"] / M * 1000.0 if np.isfinite(M) and M > 0 else float("nan")
-    loo_rmse = float(np.sqrt(np.nanmean(fit.loo_errors ** 2))) if np.any(np.isfinite(fit.loo_errors)) else float("nan")
-
-    h = [_css(colors)] if ctx.get("with_css", True) else []
-    h.append(f"<h2>{escape(tr(MODELS[fit.model]['name']))}</h2>")
-    h.append(f"<div class='muted'>{tr('Aktywne punkty')}: <b>{st['n']}</b> / {ctx['n_total']} · "
-             f"{tr('układ odniesienia')}: <b>{escape(ctx['crs_label'])}</b> · {_quality_badge(sigma_mm)}</div>")
-
-    # --- dokładność
-    h.append(f"<h3>{tr('Dokładność dopasowania')}</h3>")
+    h = [f"<h3>{tr('Dokładność dopasowania')}</h3>"]
     rows = [
         (tr("Liczba obserwacji nadliczbowych (r)"), f"{st['redundancy']}"),
         (tr("Błąd średni jednostkowy σ₀"), fmt(st["sigma0"], 2, unit)),
@@ -148,11 +128,14 @@ def analysis_html(ctx: dict, colors: dict) -> str:
         (tr("σ₀ / RMSE na papierze") + f" ({num(dpi, 0)} DPI)", f"{fmt(sigma_mm, 2)} / {fmt(rmse_mm, 2)} mm"),
     ]
     h.append(_kv(rows))
+    return h
 
-    # --- parametry
-    h.append(f"<h3>{tr('Parametry transformacji')} <span class='note'>({tr('wartość ± błąd średni')})</span></h3>")
+
+def _parameters_section(fit, unit):
+    d = fit.derived
+    h = [f"<h3>{tr('Parametry transformacji')} <span class='note'>({tr('wartość ± błąd średni')})</span></h3>"]
     rows = []
-    if is_helmert:
+    if fit.model == "helmert":
         rows.append((tr("Skala pikselowa"), fmt_pm(d["scale"], d["scale_std"], 4, f"{unit}/px")))
     else:
         rows.append((tr("Skala X / Y"), f"{fmt_pm(d['scale_x'], d['scale_x_std'], 4)} / "
@@ -165,8 +148,12 @@ def analysis_html(ctx: dict, colors: dict) -> str:
     if fit.model == "poly2":
         rows.append((tr("Uwaga"), f"<span class='muted'>{tr('parametry liczone w centroidzie punktów')}</span>"))
     h.append(_kv(rows))
+    return h
 
-    h.append(f"<h3>{tr('Szacowana skala mianowana mapy')}</h3>")
+
+def _scale_section(fit, dpi, mpu):
+    d = fit.derived
+    h = [f"<h3>{tr('Szacowana skala mianowana mapy')}</h3>"]
     rows = []
     for v in sorted({150, 300, 600, int(dpi)}):
         m = scale_denominator(d["scale"] * mpu, v)
@@ -174,82 +161,114 @@ def analysis_html(ctx: dict, colors: dict) -> str:
         mark = " ◂" if v == int(dpi) else ""
         rows.append((f"{v} DPI{mark}", f"{fmt_scale(m)} <span class='muted'>(± {fmt(ms, 0)})</span>"))
     h.append(_kv(rows))
+    return h
 
-    # --- punkty odstające
-    h.append(f"<h3>{tr('Punkty odstające')}</h3>")
+
+def _outliers_section(fit, unit, labels):
+    h = [f"<h3>{tr('Punkty odstające')}</h3>"]
     w = fit.std_residuals
     if w is None or not np.any(np.isfinite(w)):
         h.append(f"<div class='muted'>{tr('Za mało obserwacji nadliczbowych do testu.')}</div>")
+        return h
+    idx = [i for i in np.argsort(-np.nan_to_num(w, nan=-1)) if np.isfinite(w[i]) and w[i] > OUTLIER_THRESHOLD]
+    if not idx:
+        h.append(f"<div class='good'>{tr('Brak punktów odstających')} "
+                 f"<span class='muted'>(|w| ≤ {num(OUTLIER_THRESHOLD, 2)})</span></div>")
+        return h
+    h.append("<table width='100%'><tr>"
+             f"<th>#</th><th>{tr('Błąd')}</th><th>{tr('Błąd LOO')}</th><th>w</th><th>{tr('nadwyżkowość')}</th></tr>")
+    for i in idx[:15]:
+        h.append(f"<tr><td>{labels[i]}</td><td class='n'>{fmt(fit.errors[i], 2, unit)}</td>"
+                 f"<td class='n'>{fmt(fit.loo_errors[i], 2, unit)}</td>"
+                 f"<td class='n bad'>{fmt(w[i], 2)}</td>"
+                 f"<td class='n'>{fmt(fit.redundancy_numbers[i], 2)}</td></tr>")
+    h.append("</table>")
+    h.append(f"<div class='note'>{escape(tr('Test Baardy: reszta standaryzowana w > 3,29 (α = 0,001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.'))}</div>")
+    return h
+
+
+def _comparison_section(cmp):
+    if len(cmp) <= 1:
+        return []
+    h = [f"<h3>{tr('Porównanie modeli transformacji')}</h3>",
+         "<table width='100%'><tr>"
+         f"<th>{tr('Model')}</th><th>p</th><th>σ₀</th><th>RMSE</th><th>LOO</th><th>ΔAICc</th></tr>"]
+    for c in cmp:
+        best = np.isfinite(c["delta_aicc"]) and c["delta_aicc"] == 0
+        cls = " class='good'" if best else ""
+        h.append(f"<tr><td{cls}>{escape(tr(c['name']))}</td><td class='n'>{c['n_params']}</td>"
+                 f"<td class='n'>{fmt(c['sigma0'], 2)}</td><td class='n'>{fmt(c['rmse'], 2)}</td>"
+                 f"<td class='n'>{fmt(c['loo_rmse'], 2)}</td><td class='n'>{fmt(c['delta_aicc'], 1)}</td></tr>")
+    h.append("</table>")
+    h.append(f"<div class='note'>{escape(tr('ΔAICc < 2 – modele równorzędne; > 10 – model wyraźnie gorszy. Niższy błąd LOO oznacza lepszą zdolność predykcji.'))}</div>")
+    return h
+
+
+def _distortion_section(dist, dpi, mpu):
+    if not dist:
+        return []
+    a = dist["area_scale"]
+    rows = [
+        (tr("Skala lokalna (5–95 percentyl)") + f" @ {num(dpi, 0)} DPI",
+         f"{fmt_scale(scale_denominator(a['p05'] * mpu, dpi))} … {fmt_scale(scale_denominator(a['p95'] * mpu, dpi))}"),
+        (tr("Zmienność skali (p95/p05)"), fmt(dist["scale_variation_pct"], 1, "%")),
+        (tr("Zakres rotacji lokalnej (p05–p95)"), f"{fmt(dist['rotation_deg']['p05'], 2)}° … {fmt(dist['rotation_deg']['p95'], 2)}° "
+                                               f"<span class='muted'>(Δ {fmt(dist['rotation_range_deg'], 2)}°)</span>"),
+        (tr("Zniekształcenie kątowe 2ω średnie / maks."), f"{fmt(dist['omega_deg']['mean'], 2)}° / {fmt(dist['omega_deg']['max'], 2)}°"),
+        (tr("Anizotropia skali a/b średnia / maks."), f"{fmt(dist['anisotropy']['mean'], 3)} / {fmt(dist['anisotropy']['max'], 3)}"),
+    ]
+    return [f"<h3>{tr('Zniekształcenia lokalne (TPS, wewnątrz otoczki punktów)')}</h3>", _kv(rows)]
+
+
+def _moran_section(moran):
+    if not moran:
+        return []
+    rows = []
+    significant = False
+    for lab, res in (("vX", moran.get("x")), ("vY", moran.get("y")), ("|v|", moran.get("abs"))):
+        if not res:
+            continue
+        value, expected, p = res
+        sig = p < 0.05 and value > expected
+        significant |= sig
+        cls = "warn" if sig else "muted"
+        rows.append((f"I({lab})", f"{fmt(value, 3)} <span class='{cls}'>(E = {fmt(expected, 3)}, p = {fmt(p, 3)})</span>"))
+    h = [f"<h3>{tr('Autokorelacja przestrzenna reszt (Moran I)')}</h3>", _kv(rows)]
+    if significant:
+        h.append(f"<div class='note'>{tr('Reszty sąsiednich punktów są podobne – błędy mają charakter systematyczny (lokalne zniekształcenia, łączenie arkuszy, różne źródła pomiarów). Rozważ model wyższego rzędu lub analizę siatki zniekształceń.')}</div>")
     else:
-        idx = [i for i in np.argsort(-np.nan_to_num(w, nan=-1)) if np.isfinite(w[i]) and w[i] > OUTLIER_THRESHOLD]
-        if not idx:
-            h.append(f"<div class='good'>{tr('Brak punktów odstających')} "
-                     f"<span class='muted'>(|w| ≤ {num(OUTLIER_THRESHOLD, 2)})</span></div>")
-        else:
-            h.append("<table width='100%'><tr>"
-                     f"<th>#</th><th>{tr('Błąd')}</th><th>{tr('Błąd LOO')}</th><th>w</th><th>{tr('nadwyżkowość')}</th></tr>")
-            for i in idx[:15]:
-                h.append(f"<tr><td>{labels[i]}</td><td class='n'>{fmt(fit.errors[i], 2, unit)}</td>"
-                         f"<td class='n'>{fmt(fit.loo_errors[i], 2, unit)}</td>"
-                         f"<td class='n bad'>{fmt(w[i], 2)}</td>"
-                         f"<td class='n'>{fmt(fit.redundancy_numbers[i], 2)}</td></tr>")
-            h.append("</table>")
-            h.append(f"<div class='note'>{escape(tr('Test Baardy: reszta standaryzowana w > 3,29 (α = 0,001). Sprawdź identyfikację punktu lub wyłącz go i przelicz.'))}</div>")
+        h.append(f"<div class='note'>{tr('Brak istotnej autokorelacji – reszty mają charakter losowy.')}</div>")
+    return h
 
-    # --- porównanie modeli
-    cmp = ctx.get("comparison") or []
-    if len(cmp) > 1:
-        h.append(f"<h3>{tr('Porównanie modeli transformacji')}</h3>")
-        h.append("<table width='100%'><tr>"
-                 f"<th>{tr('Model')}</th><th>p</th><th>σ₀</th><th>RMSE</th><th>LOO</th><th>ΔAICc</th></tr>")
-        for c in cmp:
-            best = np.isfinite(c["delta_aicc"]) and c["delta_aicc"] == 0
-            cls = " class='good'" if best else ""
-            h.append(f"<tr><td{cls}>{escape(tr(c['name']))}</td><td class='n'>{c['n_params']}</td>"
-                     f"<td class='n'>{fmt(c['sigma0'], 2)}</td><td class='n'>{fmt(c['rmse'], 2)}</td>"
-                     f"<td class='n'>{fmt(c['loo_rmse'], 2)}</td><td class='n'>{fmt(c['delta_aicc'], 1)}</td></tr>")
-        h.append("</table>")
-        h.append(f"<div class='note'>{escape(tr('ΔAICc < 2 – modele równorzędne; > 10 – model wyraźnie gorszy. Niższy błąd LOO oznacza lepszą zdolność predykcji.'))}</div>")
 
-    # --- zniekształcenia lokalne
-    dist = ctx.get("distortion")
-    if dist:
-        a = dist["area_scale"]
-        h.append(f"<h3>{tr('Zniekształcenia lokalne (TPS, wewnątrz otoczki punktów)')}</h3>")
-        rows = [
-            (tr("Skala lokalna (5–95 percentyl)") + f" @ {num(dpi, 0)} DPI",
-             f"{fmt_scale(scale_denominator(a['p05'] * mpu, dpi))} … {fmt_scale(scale_denominator(a['p95'] * mpu, dpi))}"),
-            (tr("Zmienność skali (p95/p05)"), fmt(dist["scale_variation_pct"], 1, "%")),
-            (tr("Zakres rotacji lokalnej (p05–p95)"), f"{fmt(dist['rotation_deg']['p05'], 2)}° … {fmt(dist['rotation_deg']['p95'], 2)}° "
-                                                   f"<span class='muted'>(Δ {fmt(dist['rotation_range_deg'], 2)}°)</span>"),
-            (tr("Zniekształcenie kątowe 2ω średnie / maks."), f"{fmt(dist['omega_deg']['mean'], 2)}° / {fmt(dist['omega_deg']['max'], 2)}°"),
-            (tr("Anizotropia skali a/b średnia / maks."), f"{fmt(dist['anisotropy']['mean'], 3)} / {fmt(dist['anisotropy']['max'], 3)}"),
-        ]
-        h.append(_kv(rows))
+def analysis_html(ctx: dict, colors: dict) -> str:
+    """ctx: fit, comparison, distortion, moran, n_total, crs_label, dpi, labels (id punktów)."""
+    fit = ctx["fit"]
+    st = fit.stats
+    dpi = ctx["dpi"]
+    labels = ctx["labels"]
+    unit = ctx.get("unit", "m")
 
-    # --- autokorelacja
-    moran = ctx.get("moran")
-    if moran:
-        h.append(f"<h3>{tr('Autokorelacja przestrzenna reszt (Moran I)')}</h3>")
-        rows = []
-        significant = False
-        for lab, res in (("vX", moran.get("x")), ("vY", moran.get("y")), ("|v|", moran.get("abs"))):
-            if not res:
-                continue
-            I, E, p = res
-            sig = p < 0.05 and I > E
-            significant |= sig
-            cls = "warn" if sig else "muted"
-            rows.append((f"I({lab})", f"{fmt(I, 3)} <span class='{cls}'>(E = {fmt(E, 3)}, p = {fmt(p, 3)})</span>"))
-        h.append(_kv(rows))
-        if significant:
-            h.append(f"<div class='note'>{tr('Reszty sąsiednich punktów są podobne – błędy mają charakter systematyczny (lokalne zniekształcenia, łączenie arkuszy, różne źródła pomiarów). Rozważ model wyższego rzędu lub analizę siatki zniekształceń.')}</div>")
-        else:
-            h.append(f"<div class='note'>{tr('Brak istotnej autokorelacji – reszty mają charakter losowy.')}</div>")
+    mpu = ctx.get("m_per_unit", 1.0)
+    M = scale_denominator(fit.derived["scale"] * mpu, dpi)
+    ok_scale = np.isfinite(M) and M > 0
+    sigma_mm = st["sigma0"] / M * 1000.0 if ok_scale else float("nan")
+    rmse_mm = st["rmse"] / M * 1000.0 if ok_scale else float("nan")
+    loo_rmse = float(np.sqrt(np.nanmean(fit.loo_errors ** 2))) if np.any(np.isfinite(fit.loo_errors)) else float("nan")
 
-    proj = ctx.get("projection_html")
-    if proj:
-        h.append(proj)
+    h = [_css(colors)] if ctx.get("with_css", True) else []
+    h.append(f"<h2>{escape(tr(MODELS[fit.model]['name']))}</h2>")
+    h.append(f"<div class='muted'>{tr('Aktywne punkty')}: <b>{st['n']}</b> / {ctx['n_total']} · "
+             f"{tr('układ odniesienia')}: <b>{escape(ctx['crs_label'])}</b> · {_quality_badge(sigma_mm)}</div>")
+    h += _accuracy_section(fit, unit, labels, loo_rmse, dpi, sigma_mm, rmse_mm)
+    h += _parameters_section(fit, unit)
+    h += _scale_section(fit, dpi, mpu)
+    h += _outliers_section(fit, unit, labels)
+    h += _comparison_section(ctx.get("comparison") or [])
+    h += _distortion_section(ctx.get("distortion"), dpi, mpu)
+    h += _moran_section(ctx.get("moran"))
+    if ctx.get("projection_html"):
+        h.append(ctx["projection_html"])
     return "".join(h)
 
 
@@ -288,11 +307,7 @@ def projection_summary_html(est, dpi: float, colors: dict, with_css=False) -> st
     return "".join(h)
 
 
-def candidate_html(c, est, dpi: float, colors: dict, with_css=True, show_messages=True) -> str:
-    h = [_css(colors)] if with_css else []
-    h.append(f"<h2>{escape(tr(c.name))}" + (f" <i>{tr('(hipoteza)')}</i>" if c.is_hypothesis else "") + "</h2>")
-    h.append(f"<div class='muted'>{escape(tr(c.family))} · {escape(tr(c.era))}</div>")
-    h.append(f"<p>{escape(tr(c.note))}</p>")
+def _candidate_summary(c, dpi):
     sig_mm = c.sigma0_px * 25.4 / dpi if dpi > 0 else float("nan")
     rows = [
         (tr("Błąd średni σ₀"), f"{fmt(c.sigma0_px, 2)} px · {fmt(sig_mm, 2)} mm @ {num(dpi, 0)} DPI"),
@@ -304,56 +319,73 @@ def candidate_html(c, est, dpi: float, colors: dict, with_css=True, show_message
         if np.isfinite(k) and abs(k - 1.0) > 0.005:
             rows.append((tr("Skala główna odwzorowania") + f" <span class='muted'>(k = {fmt(k, 4)})</span>",
                          fmt_scale(c.principal_scale_denominator(dpi))))
-    if not c.is_reference:
         rot = math.degrees(math.atan2(c.A[1, 0], c.A[0, 0]))
         rows.append((tr("Obrót siatki względem skanu"), fmt(rot, 3, "°")))
-    h.append(_kv(rows))
+    return [_kv(rows)]
 
+
+def _param_value(k, v, s):
+    val = format_dms(v, "E", "W") if k == "lon0" else format_dms(v, "N", "S")
+    if s is not None and np.isfinite(s):
+        cls = "bad" if s > 10 else ("warn" if s > 2 else "muted")
+        val += f" <span class='{cls}'>± {fmt(s, 2)}°</span>"
+    return val
+
+
+def _candidate_params(c):
     # tylko parametry wpływające na kształt siatki: dopasowane albo ustalone w hipotezie
     keys = list(hypothesis_params(c.key)) if c.is_hypothesis else list(c.params_std_deg)
     shown = {k: c.params_deg[k] for k in keys if k in c.params_deg}
-    if shown:
-        h.append(f"<h3>{tr('Parametry odwzorowania')}</h3>")
-        rows = []
-        for k, v in shown.items():
-            s = c.params_std_deg.get(k)
-            label = tr(PARAM_LABELS.get(k, k))
-            if s is None:
-                label += f" <span class='muted'>({tr('ustalony')})</span>"
-            val = format_dms(v, "E", "W") if k == "lon0" else format_dms(v, "N", "S")
-            if s is not None and np.isfinite(s):
-                cls = "bad" if s > 10 else ("warn" if s > 2 else "muted")
-                val += f" <span class='{cls}'>± {fmt(s, 2)}°</span>"
-            rows.append((label, val))
-        h.append(_kv(rows))
-        if "lon0" in c.params_deg and ("lon0" in c.params_std_deg or c.is_hypothesis):
-            pm = prime_meridian_variants(c.params_deg["lon0"])
-            txt = ", ".join(f"{escape(tr(n))}: {fmt(v, 2)}°" for n, v in pm)
-            h.append(f"<div class='note'>{tr('λ₀ względem historycznych południków zerowych')}: {txt}</div>")
+    if not shown:
+        return []
+    rows = []
+    for k, v in shown.items():
+        s = c.params_std_deg.get(k)
+        label = tr(PARAM_LABELS.get(k, k))
+        if s is None:
+            label += f" <span class='muted'>({tr('ustalony')})</span>"
+        rows.append((label, _param_value(k, v, s)))
+    h = [f"<h3>{tr('Parametry odwzorowania')}</h3>", _kv(rows)]
+    if "lon0" in c.params_deg and ("lon0" in c.params_std_deg or c.is_hypothesis):
+        pm = prime_meridian_variants(c.params_deg["lon0"])
+        txt = ", ".join(f"{escape(tr(n))}: {fmt(v, 2)}°" for n, v in pm)
+        h.append(f"<div class='note'>{tr('λ₀ względem historycznych południków zerowych')}: {txt}</div>")
+    return h
 
+
+def _hypothesis_verdict(delta):
+    if np.isfinite(delta) and delta < 2:
+        return f"<div class='good'>{escape(tr('Hipoteza jest zgodna z danymi (ΔAICc < 2 względem najlepszego modelu).'))}</div>"
+    if np.isfinite(delta) and delta < 10:
+        return f"<div class='warn'>{escape(tr('Hipoteza słabiej wspierana przez dane (2 ≤ ΔAICc < 10) – sprawdź parametry i punkty odstające.'))}</div>"
+    return f"<div class='bad'>{tr('Hipoteza wyraźnie gorsza od najlepszego modelu (ΔAICc ≥ 10).')}</div>"
+
+
+def _hypothesis_section(c, est):
+    free = est.free_fit(c.key)
+    rows = []
+    if free is not None and np.isfinite(free.sigma0_px):
+        rows.append((tr("σ₀ swobodnego dopasowania tego odwzorowania"), f"{fmt(free.sigma0_px, 2)} px"))
+        rows.append((tr("ΔAICc hipoteza − swobodne dopasowanie"), fmt(c.aicc - free.aicc, 1)))
+        if free.params_deg:
+            txt = ", ".join(f"{escape(tr(PARAM_LABELS.get(k, k)))} = {_param_value(k, v, None)}"
+                            for k, v in free.params_deg.items() if k in free.params_std_deg)
+            rows.append((tr("Parametry swobodnego dopasowania"), txt or "–"))
+    return [f"<h3>{tr('Ocena hipotezy')}</h3>", _kv(rows), _hypothesis_verdict(c.delta_aicc),
+            f"<div class='note'>{tr('Parametry ustalone – dopasowano tylko położenie, skalę i obrót siatki względem skanu. Porównaj siatkę hipotezy z podziałką ramki mapy.')}</div>"]
+
+
+def candidate_html(c, est, dpi: float, colors: dict, with_css=True, show_messages=True) -> str:
+    h = [_css(colors)] if with_css else []
+    h.append(f"<h2>{escape(tr(c.name))}" + (f" <i>{tr('(hipoteza)')}</i>" if c.is_hypothesis else "") + "</h2>")
+    h.append(f"<div class='muted'>{escape(tr(c.family))} · {escape(tr(c.era))}</div>")
+    h.append(f"<p>{escape(tr(c.note))}</p>")
+    h += _candidate_summary(c, dpi)
+    h += _candidate_params(c)
     if c.is_hypothesis and est is not None:
-        h.append(f"<h3>{tr('Ocena hipotezy')}</h3>")
-        free = est.free_fit(c.key)
-        rows = []
-        if free is not None and np.isfinite(free.sigma0_px):
-            rows.append((tr("σ₀ swobodnego dopasowania tego odwzorowania"), f"{fmt(free.sigma0_px, 2)} px"))
-            rows.append((tr("ΔAICc hipoteza − swobodne dopasowanie"), fmt(c.aicc - free.aicc, 1)))
-            if free.params_deg:
-                txt = ", ".join(f"{escape(tr(PARAM_LABELS.get(k, k)))} = {format_dms(v, 'E', 'W') if k == 'lon0' else format_dms(v, 'N', 'S')}"
-                                for k, v in free.params_deg.items() if k in free.params_std_deg)
-                rows.append((tr("Parametry swobodnego dopasowania"), txt or "–"))
-        h.append(_kv(rows))
-        if np.isfinite(c.delta_aicc) and c.delta_aicc < 2:
-            h.append(f"<div class='good'>{escape(tr('Hipoteza jest zgodna z danymi (ΔAICc < 2 względem najlepszego modelu).'))}</div>")
-        elif np.isfinite(c.delta_aicc) and c.delta_aicc < 10:
-            h.append(f"<div class='warn'>{escape(tr('Hipoteza słabiej wspierana przez dane (2 ≤ ΔAICc < 10) – sprawdź parametry i punkty odstające.'))}</div>")
-        else:
-            h.append(f"<div class='bad'>{tr('Hipoteza wyraźnie gorsza od najlepszego modelu (ΔAICc ≥ 10).')}</div>")
-        h.append(f"<div class='note'>{tr('Parametry ustalone – dopasowano tylko położenie, skalę i obrót siatki względem skanu. Porównaj siatkę hipotezy z podziałką ramki mapy.')}</div>")
-
+        h += _hypothesis_section(c, est)
     if show_messages and est and est.messages and c is est.best:
-        for m in est.messages:
-            h.append(f"<div class='warn'>⚠ {escape(message_text(m))}</div>")
+        h += [f"<div class='warn'>⚠ {escape(message_text(m))}</div>" for m in est.messages]
     h.append(f"<div class='note'>{tr('Obliczenia na sferze; współrzędne geograficzne punktów wyznaczone z układu odniesienia projektu.')}</div>")
     return "".join(h)
 
@@ -474,6 +506,36 @@ def _clean(t: str) -> str:
     return re.sub(r"[ \t]+", " ", t).strip()
 
 
+def _kv_text(rows):
+    kw = min(max(len(r[0][0]) for r in rows), 56)
+    out = []
+    for r in rows:
+        key = r[0][0]
+        val = r[1][0] if len(r) > 1 else ""
+        if len(key) > kw:
+            out += [key, " " * (kw + 2) + val]
+        else:
+            out.append(key.ljust(kw) + "  " + val)
+    return out
+
+
+def _table_text(rows, ncol):
+    widths = [0] * ncol
+    for r in rows:
+        for i, c in enumerate(r):
+            widths[i] = max(widths[i], len(c[0]))
+    out = []
+    for r in rows:
+        cells = []
+        for i in range(ncol):
+            txt, numc, _head = r[i] if i < len(r) else ("", False, False)
+            cells.append(txt.rjust(widths[i]) if numc else txt.ljust(widths[i]))
+        out.append("  ".join(cells).rstrip())
+        if all(c[2] for c in r):
+            out.append("  ".join("-" * w for w in widths))
+    return out
+
+
 def html_to_text(html: str, width: int = 100) -> str:
     """Konwersja raportu HTML do tekstu z wyrównanymi kolumnami."""
     p = _TextParser()
@@ -485,38 +547,13 @@ def html_to_text(html: str, width: int = 100) -> str:
             t = _clean(content)
             out += ["", t, ("=" if kind == "h2" else "-") * len(t)]
         elif kind == "p":
-            t = _clean(content)
-            out += textwrap.wrap(t, width) or [""]
+            out += textwrap.wrap(_clean(content), width) or [""]
         else:
             rows = [[(_clean(c[0]), c[1], c[2]) for c in r] for r in content]
             ncol = max(len(r) for r in rows)
             is_kv = ncol == 2 and not any(c[2] for r in rows for c in r)
-            if is_kv:
-                kw = min(max(len(r[0][0]) for r in rows), 56)
-                for r in rows:
-                    key = r[0][0]
-                    val = r[1][0] if len(r) > 1 else ""
-                    if len(key) > kw:
-                        out.append(key)
-                        out.append(" " * (kw + 2) + val)
-                    else:
-                        out.append(key.ljust(kw) + "  " + val)
-            else:
-                widths = [0] * ncol
-                for r in rows:
-                    for i, c in enumerate(r):
-                        widths[i] = max(widths[i], len(c[0]))
-                for r in rows:
-                    cells = []
-                    for i in range(ncol):
-                        txt, numc, head = r[i] if i < len(r) else ("", False, False)
-                        cells.append(txt.rjust(widths[i]) if numc else txt.ljust(widths[i]))
-                    out.append("  ".join(cells).rstrip())
-                    if all(c[2] for c in r):
-                        out.append("  ".join("-" * w for w in widths))
+            out += _kv_text(rows) if is_kv else _table_text(rows, ncol)
             out.append("")
     # bez wielokrotnych pustych linii
-    text = "\n".join(out)
-    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", "\n".join(out))
     return text.strip() + "\n"
-

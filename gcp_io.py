@@ -26,32 +26,57 @@ def _is_num(s, comma_decimal=False):
         return False
 
 
-def parse_gcp_text(text, filename=""):
-    """Zwraca (definicja CRS lub None, lista (ox, oy, rx, ry, enabled), liczba pominiętych wierszy)."""
-    crs_def = None
-    lines = []
+def _split_comments(text):
+    """Oddziela linie danych od komentarzy; zwraca (definicja CRS z linii '#CRS:' lub None, linie danych)."""
+    crs_def, lines = None, []
     for line in text.splitlines():
         s = line.strip()
         if not s:
             continue
-        if s.startswith("#"):
-            if s.upper().startswith("#CRS:"):
-                d = s[5:].strip()
-                crs_def = d or None
-            continue
-        lines.append(line.rstrip("\r\n"))
+        if s.upper().startswith("#CRS:"):
+            crs_def = s[5:].strip() or None
+        elif not s.startswith("#"):
+            lines.append(line.rstrip("\r\n"))
+    return crs_def, lines
+
+
+def _delimiter(first):
+    if "\t" in first and "," not in first:
+        return "\t"
+    if first.count(";") > 0 and first.count(";") >= first.count(","):
+        return ";"
+    return ","
+
+
+def _column_indices(hl, is_points):
+    """Indeksy kolumn (x dawna, y dawna, x ref., y ref.) wg nagłówka lub kolejności formatu."""
+    if "mapx" in hl and ("sourcex" in hl or "pixelx" in hl):
+        sx = "sourcex" if "sourcex" in hl else "pixelx"
+        sy = "sourcey" if "sourcey" in hl else "pixely"
+        return [hl.index(sx), hl.index(sy), hl.index("mapx"), hl.index("mapy")]
+    if "x_old" in hl and "x_ref" in hl:
+        return [hl.index("x_old"), hl.index("y_old"), hl.index("x_ref"), hl.index("y_ref")]
+    if is_points:
+        return [2, 3, 0, 1]          # format Georeferencera: najpierw mapa, potem źródło
+    return [0, 1, 2, 3]              # CSV QMapAnalyst: najpierw mapa dawna
+
+
+def _parse_row(row, ix, ien, comma_decimal):
+    vals = [float(row[i].replace(",", ".") if comma_decimal else row[i]) for i in ix]
+    if any(v != v for v in vals):  # NaN
+        raise ValueError("NaN")
+    enabled = not (ien < len(row) and row[ien] != "" and row[ien].strip().lower() in _FALSE)
+    return (*vals, enabled)
+
+
+def parse_gcp_text(text, filename=""):
+    """Zwraca (definicja CRS lub None, lista (ox, oy, rx, ry, enabled), liczba pominiętych wierszy)."""
+    crs_def, lines = _split_comments(text)
     if not lines:
         return crs_def, [], 0
 
-    first = lines[0]
-    if "\t" in first and "," not in first:
-        delim = "\t"
-    elif first.count(";") > 0 and first.count(";") >= first.count(","):
-        delim = ";"
-    else:
-        delim = ","
+    delim = _delimiter(lines[0])
     comma_decimal = delim in (";", "\t")
-
     rows = [[c.strip().strip('"') for c in ln.split(delim)] for ln in lines]
     header = rows[0]
     has_header = not all(_is_num(h, comma_decimal) for h in header[:4]) if len(header) >= 4 else True
@@ -59,28 +84,13 @@ def parse_gcp_text(text, filename=""):
     data = rows[1:] if has_header else rows
 
     is_points = filename.lower().endswith(".points") or crs_def is not None or "mapx" in hl
-    if "mapx" in hl and ("sourcex" in hl or "pixelx" in hl):
-        sx = "sourcex" if "sourcex" in hl else "pixelx"
-        sy = "sourcey" if "sourcey" in hl else "pixely"
-        ix = [hl.index(sx), hl.index(sy), hl.index("mapx"), hl.index("mapy")]
-    elif "x_old" in hl and "x_ref" in hl:
-        ix = [hl.index("x_old"), hl.index("y_old"), hl.index("x_ref"), hl.index("y_ref")]
-    elif is_points:
-        ix = [2, 3, 0, 1]          # format Georeferencera: najpierw mapa, potem źródło
-    else:
-        ix = [0, 1, 2, 3]          # CSV QMapAnalyst: najpierw mapa dawna
+    ix = _column_indices(hl, is_points)
     ien = hl.index("enable") if "enable" in hl else 4
 
     out, skipped = [], 0
     for row in data:
         try:
-            vals = [float(row[i].replace(",", ".") if comma_decimal else row[i]) for i in ix]
-            if any(v != v for v in vals):  # NaN
-                raise ValueError
-            enabled = True
-            if ien < len(row) and row[ien] != "":
-                enabled = row[ien].strip().lower() not in _FALSE
-            out.append((*vals, enabled))
+            out.append(_parse_row(row, ix, ien, comma_decimal))
         except (ValueError, IndexError):
             skipped += 1
     return crs_def, out, skipped

@@ -14,14 +14,14 @@ from functools import cached_property
 
 import numpy as np
 
-from qgis.PyQt.QtCore import Qt, QCoreApplication, QTimer, QSize
+from qgis.PyQt.QtCore import Qt, QCoreApplication, QPoint, QRect, QTimer, QSize
 from qgis.PyQt.QtGui import QColor, QIcon
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView, QApplication, QCheckBox, QComboBox, QDockWidget, QDoubleSpinBox,
-    QFileDialog, QFormLayout, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
-    QListWidget, QListWidgetItem, QMessageBox, QProgressBar, QPushButton, QSizePolicy, QSlider,
-    QSpinBox, QSplitter, QTableWidget, QTableWidgetItem, QTabWidget, QTextBrowser, QToolButton,
-    QVBoxLayout, QWidget, QLineEdit,
+    QFileDialog, QFormLayout, QFrame, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
+    QLayout, QListWidget, QListWidgetItem, QMenu, QMessageBox, QProgressBar, QPushButton, QSizePolicy, QSlider,
+    QScrollArea, QSpinBox, QSplitter, QTableWidget, QTableWidgetItem, QTabWidget, QTextBrowser, QToolButton,
+    QVBoxLayout, QWidget, QWidgetAction, QLineEdit,
 )
 from qgis.core import (
     Qgis, QgsApplication, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsGeometry,
@@ -33,6 +33,7 @@ from qgis.gui import (
 
 from . import export as ex
 from . import gcp_io
+from . import icons
 from . import math_engine as me
 from . import projections as pj
 from . import report
@@ -156,6 +157,75 @@ def _button(text, icon_name=None, tip=None):
     return b
 
 
+class FlowLayout(QLayout):
+    """Układ przepływowy: przyciski układają się w wierszach i zawijają przy wąskim panelu."""
+
+    def __init__(self, parent=None, margin=0, spacing=4):
+        super().__init__(parent)
+        self._items = []
+        self.setContentsMargins(margin, margin, margin, margin)
+        self.setSpacing(spacing)
+
+    def addItem(self, item):
+        self._items.append(item)
+
+    def count(self):
+        return len(self._items)
+
+    def itemAt(self, i):
+        return self._items[i] if 0 <= i < len(self._items) else None
+
+    def takeAt(self, i):
+        return self._items.pop(i) if 0 <= i < len(self._items) else None
+
+    def expandingDirections(self):
+        return Qt.Orientation(0)
+
+    def hasHeightForWidth(self):
+        return True
+
+    def heightForWidth(self, width):
+        return self._do_layout(QRect(0, 0, width, 0), True)
+
+    def setGeometry(self, rect):
+        super().setGeometry(rect)
+        self._do_layout(rect, False)
+
+    def sizeHint(self):
+        return self.minimumSize()
+
+    def minimumSize(self):
+        size = QSize()
+        for it in self._items:
+            size = size.expandedTo(it.minimumSize())
+        m = self.contentsMargins()
+        return size + QSize(m.left() + m.right(), m.top() + m.bottom())
+
+    def _do_layout(self, rect, test_only):
+        m = self.contentsMargins()
+        r = rect.adjusted(m.left(), m.top(), -m.right(), -m.bottom())
+        x, y, line_h = r.x(), r.y(), 0
+        sp = self.spacing()
+        for it in self._items:
+            hint = it.sizeHint()
+            if x + hint.width() > r.right() + 1 and line_h > 0:
+                x, y, line_h = r.x(), y + line_h + sp, 0
+            if not test_only:
+                it.setGeometry(QRect(QPoint(x, y), hint))
+            x += hint.width() + sp
+            line_h = max(line_h, hint.height())
+        return y + line_h - rect.y() + m.bottom()
+
+
+def _scrollable(widget):
+    """Zawartość zakładki w obszarze przewijanym – dolny panel można zmniejszyć na rzecz mapy."""
+    area = QScrollArea()
+    area.setWidgetResizable(True)
+    area.setFrameShape(QFrame.Shape.NoFrame)
+    area.setWidget(widget)
+    return area
+
+
 def _num_item(value, digits=2, editable=False, color=None, tip=None):
     if value is None or (isinstance(value, float) and not math.isfinite(value)):
         it = QTableWidgetItem("–")
@@ -271,8 +341,11 @@ class QMapAnalystDockWidget(QDockWidget):
         self.tab_widget.addTab(self._build_layers_tab(), _icon("/mActionAddLayer.svg"), self.tr("Warstwy"))
         self.tab_widget.addTab(self._build_export_tab(), _icon("/mActionFileSave.svg"), self.tr("Eksport"))
         splitter.addWidget(self.tab_widget)
-        splitter.setStretchFactor(0, 3)
-        splitter.setStretchFactor(1, 4)
+        # mapa dawna dostaje większość wysokości; dolny panel jest przewijany i można go zmniejszyć
+        splitter.setStretchFactor(0, 5)
+        splitter.setStretchFactor(1, 2)
+        splitter.setSizes([640, 300])
+        self.tab_widget.setMinimumHeight(120)
         root.addWidget(splitter, 1)
 
         status = QHBoxLayout()
@@ -333,23 +406,34 @@ class QMapAnalystDockWidget(QDockWidget):
         self.lbl_coords = QLabel()
         self.lbl_coords.setStyleSheet("color: palette(placeholder-text);")
         bar.addWidget(self.lbl_coords)
+
+        # widoczność nakładek: lista w rozwijanym menu (nie zabiera wysokości mapy)
+        self.lst_old_layers = QListWidget()
+        self.lst_old_layers.setMinimumWidth(340)
+        self.lst_old_layers.setFrameShape(QFrame.Shape.NoFrame)
+        self.lst_old_layers.itemChanged.connect(self.refresh_old_canvas_layers)
+        self.btn_overlays = _tool_button("/mActionShowAllLayers.svg", self.tr("Nakładki"),
+                                         self.tr("Widoczność nakładek na mapie dawnej"), False, "☰")
+        self.btn_overlays.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.btn_overlays.setText(self.tr("Nakładki"))
+        self.btn_overlays.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        menu = QMenu(self.btn_overlays)
+        act = QWidgetAction(menu)
+        act.setDefaultWidget(self.lst_old_layers)
+        menu.addAction(act)
+        self.btn_overlays.setMenu(menu)
+        self.btn_overlays.setEnabled(False)
+        bar.addWidget(self.btn_overlays)
         bar.addWidget(self.btn_clear_overlays)
         lay.addLayout(bar)
 
         self.old_canvas = QgsMapCanvas()
         self.old_canvas.setCanvasColor(QColor(250, 250, 248))
-        self.old_canvas.setMinimumHeight(220)
+        self.old_canvas.setMinimumHeight(160)
         self.old_canvas.enableAntiAliasing(True)
         self.old_canvas.setParallelRenderingEnabled(True)
         self.old_canvas.setCachingEnabled(True)
         lay.addWidget(self.old_canvas, 1)
-
-        self.lst_old_layers = QListWidget()
-        self.lst_old_layers.setMaximumHeight(68)
-        self.lst_old_layers.setToolTip(self.tr("Widoczność nakładek na mapie dawnej"))
-        self.lst_old_layers.itemChanged.connect(self.refresh_old_canvas_layers)
-        self.lst_old_layers.hide()
-        lay.addWidget(self.lst_old_layers)
         return box
 
     # --- GCP ------------------------------------------------------------
@@ -412,7 +496,7 @@ class QMapAnalystDockWidget(QDockWidget):
         hint.setWordWrap(True)
         hint.setStyleSheet("color: palette(placeholder-text); font-size: 8pt;")
         lay.addWidget(hint)
-        return tab
+        return _scrollable(tab)
 
     # --- analiza --------------------------------------------------------
     def _build_analysis_tab(self):
@@ -458,7 +542,7 @@ class QMapAnalystDockWidget(QDockWidget):
         self.txt_report.setOpenExternalLinks(True)
         self.txt_report.setPlaceholderText(self.tr("Wyniki analizy pojawią się tutaj."))
         lay.addWidget(self.txt_report, 1)
-        return tab
+        return _scrollable(tab)
 
     # --- odwzorowanie ---------------------------------------------------
     def _build_projection_tab(self):
@@ -517,7 +601,7 @@ class QMapAnalystDockWidget(QDockWidget):
         row.addWidget(self.cmb_grat_step)
         row.addWidget(self.btn_graticule, 1)
         lay.addLayout(row)
-        return tab
+        return _scrollable(tab)
 
     def _build_hypothesis_box(self):
         box = QgsCollapsibleGroupBox(self.tr("Test hipotezy – znane parametry odwzorowania"))
@@ -649,13 +733,28 @@ class QMapAnalystDockWidget(QDockWidget):
         self.set_status(msg, "ok" if cand.delta_aicc < 2 else "warn")
 
     # --- warstwy --------------------------------------------------------
+    def _layer_button(self, icon, text, tip, slot):
+        b = QToolButton()
+        b.setIcon(icon)
+        b.setIconSize(QSize(32, 32))
+        b.setText(text)
+        b.setToolTip(tip)
+        b.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        b.setAutoRaise(True)
+        b.setMinimumWidth(78)
+        b.clicked.connect(slot)
+        return b
+
     def _build_layers_tab(self):
         tab = QWidget()
         lay = QVBoxLayout(tab)
+        lay.setContentsMargins(4, 4, 4, 4)
+        lay.setSpacing(4)
 
         conf = QGroupBox(self.tr("Parametry"))
-        form = QFormLayout(conf)
-        srow = QHBoxLayout()
+        grid = QVBoxLayout(conf)
+        grid.setContentsMargins(6, 4, 6, 4)
+        grid.setSpacing(3)
         self.sld_confidence = QSlider(Qt.Orientation.Horizontal)
         self.sld_confidence.setRange(100, 25000)
         self.sld_confidence.setSingleStep(250)
@@ -663,9 +762,6 @@ class QMapAnalystDockWidget(QDockWidget):
         self.sld_confidence.valueChanged.connect(self.on_slider_changed)
         self.lbl_slider_val = QLabel("3000 m")
         self.lbl_slider_val.setMinimumWidth(70)
-        srow.addWidget(self.sld_confidence)
-        srow.addWidget(self.lbl_slider_val)
-        form.addRow(self.tr("Promień pewności:"), srow)
         self.sld_confidence.setToolTip(self.tr("Obszar w tej odległości od punktów GCP uznawany jest za wiarygodny; "
                                                "poza nim siatki i izolinie są ekstrapolacją"))
 
@@ -674,7 +770,6 @@ class QMapAnalystDockWidget(QDockWidget):
         self.spin_grid_step.setSingleStep(100)
         self.spin_grid_step.setValue(1000)
         self.spin_grid_step.setSuffix(" m")
-        form.addRow(self.tr("Oczko siatek:"), self.spin_grid_step)
 
         self.spin_magnification = QDoubleSpinBox()
         self.spin_magnification.setRange(0.1, 10000)
@@ -682,57 +777,86 @@ class QMapAnalystDockWidget(QDockWidget):
         self.spin_magnification.setValue(1.0)
         self.spin_magnification.setPrefix("× ")
         self.spin_magnification.setToolTip(self.tr("Powiększenie wektorów przesunięć i okręgów błędów"))
-        form.addRow(self.tr("Powiększenie wektorów:"), self.spin_magnification)
 
         self.spin_iso_density = QSpinBox()
         self.spin_iso_density.setRange(4, 30)
         self.spin_iso_density.setValue(8)
         self.spin_iso_density.setToolTip(self.tr("Przybliżona liczba poziomów izolinii"))
-        form.addRow(self.tr("Liczba izolinii:"), self.spin_iso_density)
+
+        srow = QHBoxLayout()
+        srow.addWidget(QLabel(self.tr("Promień pewności:")))
+        srow.addWidget(self.sld_confidence, 1)
+        srow.addWidget(self.lbl_slider_val)
+        grid.addLayout(srow)
+        flow = FlowLayout(spacing=8)
+        for label, w in ((self.tr("Oczko siatek:"), self.spin_grid_step),
+                         (self.tr("Powiększenie wektorów:"), self.spin_magnification),
+                         (self.tr("Liczba izolinii:"), self.spin_iso_density)):
+            pair = QWidget()
+            h = QHBoxLayout(pair)
+            h.setContentsMargins(0, 0, 0, 0)
+            h.addWidget(QLabel(label))
+            w.setMinimumWidth(110)
+            h.addWidget(w)
+            flow.addWidget(pair)
+        grid.addLayout(flow)
         lay.addWidget(conf)
 
-        main_grp = QGroupBox(self.tr("Mapa główna (układ odniesienia)"))
-        g = QGridLayout(main_grp)
-        self.btn_gen_points = _button(self.tr("Punkty z resztami"), None, self.tr("Warstwa punktów GCP ze wszystkimi statystykami w atrybutach"))
-        self.btn_gen_points.clicked.connect(self.generate_gcp_points)
-        self.btn_gen_vectors = _button(self.tr("Wektory przesunięć"))
-        self.btn_gen_vectors.clicked.connect(self.generate_result_layers)
-        self.btn_gen_circles = _button(self.tr("Okręgi błędów"))
-        self.btn_gen_circles.clicked.connect(self.generate_error_circles)
-        self.btn_gen_grid = _button(self.tr("Siatka zniekształceń"))
-        self.btn_gen_grid.clicked.connect(self.generate_distortion_grid)
-        self.btn_clear_main = _button(self.tr("Usuń warstwy"), "/mActionRemoveLayer.svg",
-                                      self.tr("Usuń z projektu warstwy wynikowe mapy głównej"))
-        self.btn_clear_main.clicked.connect(self.clear_main_layers)
-        g.addWidget(self.btn_gen_points, 0, 0)
-        g.addWidget(self.btn_gen_vectors, 0, 1)
-        g.addWidget(self.btn_gen_circles, 1, 0)
-        g.addWidget(self.btn_gen_grid, 1, 1)
-        g.addWidget(self.btn_clear_main, 2, 0, 1, 2)
-        lay.addWidget(main_grp)
+        def group(title, buttons):
+            box = QGroupBox(title)
+            flow = FlowLayout(box, margin=4, spacing=2)
+            for b in buttons:
+                flow.addWidget(b)
+            return box
 
-        old_grp = QGroupBox(self.tr("Mapa dawna (podgląd powyżej)"))
-        g = QGridLayout(old_grp)
-        self.btn_gen_old_vectors = _button(self.tr("Wektory przesunięć"))
-        self.btn_gen_old_vectors.clicked.connect(self.generate_old_vectors)
-        self.btn_gen_old_circles = _button(self.tr("Okręgi błędów"))
-        self.btn_gen_old_circles.clicked.connect(self.generate_old_circles)
-        self.btn_gen_historic_grid = _button(self.tr("Siatka układu odniesienia"))
-        self.btn_gen_historic_grid.clicked.connect(self.generate_historic_grid)
-        self.btn_gen_iso_scale = _button(self.tr("Izolinie skali"))
-        self.btn_gen_iso_scale.clicked.connect(lambda: self.generate_isolines("scale"))
-        self.btn_gen_iso_rot = _button(self.tr("Izolinie rotacji"))
-        self.btn_gen_iso_rot.clicked.connect(lambda: self.generate_isolines("rot"))
-        self.btn_gen_iso_omega = _button(self.tr("Izolinie zniekształceń kątowych"))
-        self.btn_gen_iso_omega.setToolTip(self.tr("Maksymalne zniekształcenie kąta 2ω z elipsy Tissota lokalnego odwzorowania"))
-        self.btn_gen_iso_omega.clicked.connect(lambda: self.generate_isolines("omega"))
-        g.addWidget(self.btn_gen_old_vectors, 0, 0)
-        g.addWidget(self.btn_gen_old_circles, 0, 1)
-        g.addWidget(self.btn_gen_historic_grid, 1, 0, 1, 2)
-        g.addWidget(self.btn_gen_iso_scale, 2, 0)
-        g.addWidget(self.btn_gen_iso_rot, 2, 1)
-        g.addWidget(self.btn_gen_iso_omega, 3, 0, 1, 2)
-        lay.addWidget(old_grp)
+        B = self._layer_button
+        self.btn_gen_points = B(icons.points(), self.tr("Punkty"),
+                                self.tr("Punkty z resztami") + " – " +
+                                self.tr("Warstwa punktów GCP ze wszystkimi statystykami w atrybutach"),
+                                self.generate_gcp_points)
+        self.btn_gen_vectors = B(icons.vectors(), self.tr("Wektory"), self.tr("Wektory przesunięć"),
+                                 self.generate_result_layers)
+        self.btn_gen_circles = B(icons.circles(), self.tr("Okręgi"), self.tr("Okręgi błędów"),
+                                 self.generate_error_circles)
+        self.btn_gen_grid = B(icons.distortion_grid(), self.tr("Siatka TPS"), self.tr("Siatka zniekształceń"),
+                              self.generate_distortion_grid)
+        main_grp = group(self.tr("Mapa główna (układ odniesienia)"),
+                         [self.btn_gen_points, self.btn_gen_vectors, self.btn_gen_circles, self.btn_gen_grid])
+
+        self.btn_gen_old_vectors = B(icons.vectors(), self.tr("Wektory"), self.tr("Wektory przesunięć"),
+                                     self.generate_old_vectors)
+        self.btn_gen_old_circles = B(icons.circles(), self.tr("Okręgi"), self.tr("Okręgi błędów"),
+                                     self.generate_old_circles)
+        self.btn_gen_historic_grid = B(icons.reference_grid(), self.tr("Siatka układu"),
+                                       self.tr("Siatka układu odniesienia"), self.generate_historic_grid)
+        self.btn_gen_iso_scale = B(icons.iso_scale(), self.tr("Skala"), self.tr("Izolinie skali"),
+                                   lambda: self.generate_isolines("scale"))
+        self.btn_gen_iso_rot = B(icons.iso_rotation(), self.tr("Rotacja"), self.tr("Izolinie rotacji"),
+                                 lambda: self.generate_isolines("rot"))
+        self.btn_gen_iso_omega = B(icons.iso_omega(), self.tr("Kąty 2ω"),
+                                   self.tr("Izolinie zniekształceń kątowych") + " – " +
+                                   self.tr("Maksymalne zniekształcenie kąta 2ω z elipsy Tissota lokalnego odwzorowania"),
+                                   lambda: self.generate_isolines("omega"))
+        old_grp = group(self.tr("Mapa dawna (podgląd powyżej)"),
+                        [self.btn_gen_old_vectors, self.btn_gen_old_circles, self.btn_gen_historic_grid,
+                         self.btn_gen_iso_scale, self.btn_gen_iso_rot, self.btn_gen_iso_omega])
+
+        row = QHBoxLayout()
+        row.setSpacing(4)
+        row.addWidget(main_grp, 4)
+        row.addWidget(old_grp, 6)
+        lay.addLayout(row)
+
+        bottom = QHBoxLayout()
+        bottom.addStretch()
+        self.btn_clear_main = QToolButton()
+        self.btn_clear_main.setIcon(icons.trash())
+        self.btn_clear_main.setIconSize(QSize(22, 22))
+        self.btn_clear_main.setAutoRaise(True)
+        self.btn_clear_main.setToolTip(self.tr("Usuń z projektu warstwy wynikowe mapy głównej"))
+        self.btn_clear_main.clicked.connect(self.clear_main_layers)
+        bottom.addWidget(self.btn_clear_main)
+        lay.addLayout(bottom)
         lay.addStretch()
 
         self._result_buttons = [
@@ -740,7 +864,7 @@ class QMapAnalystDockWidget(QDockWidget):
             self.btn_gen_old_vectors, self.btn_gen_old_circles, self.btn_gen_historic_grid,
             self.btn_gen_iso_scale, self.btn_gen_iso_rot, self.btn_gen_iso_omega,
         ]
-        return tab
+        return _scrollable(tab)
 
     # --- eksport --------------------------------------------------------
     def _build_export_tab(self):
@@ -773,7 +897,7 @@ class QMapAnalystDockWidget(QDockWidget):
         v.addWidget(self.btn_execute_export)
         lay.addWidget(grp)
         lay.addStretch()
-        return tab
+        return _scrollable(tab)
 
     # ------------------------------------------------------------------
     #  Narzędzia map
@@ -930,7 +1054,11 @@ class QMapAnalystDockWidget(QDockWidget):
             it.setData(Qt.ItemDataRole.UserRole, lyr.id())
             self.lst_old_layers.addItem(it)
         self.lst_old_layers.blockSignals(False)
-        self.lst_old_layers.setVisible(self.lst_old_layers.count() > 0)
+        n = self.lst_old_layers.count()
+        self.btn_overlays.setEnabled(n > 0)
+        self.btn_overlays.setText(self.tr("Nakładki ({n})").format(n=n) if n else self.tr("Nakładki"))
+        row_h = self.lst_old_layers.sizeHintForRow(0) if n else 20
+        self.lst_old_layers.setFixedHeight(min(360, max(1, n) * row_h + 6))
         self.refresh_old_canvas_layers()
 
     def refresh_old_canvas_layers(self, *args):
@@ -1370,32 +1498,14 @@ class QMapAnalystDockWidget(QDockWidget):
         path, _ = QFileDialog.getOpenFileName(
             self, self.tr("Wczytaj punkty GCP"), "",
             self.tr("Pliki GCP (*.points *.csv *.txt);;Wszystkie pliki (*.*)"))
-        if not path:
+        if not path or not self._confirm_replace_gcps():
             return
-        if self.gcps:
-            ans = QMessageBox.question(
-                self, "QMapAnalyst", self.tr("Zastąpić istniejące punkty ({n})?\n\nNie – dopisz nowe punkty do istniejących.").format(n=len(self.gcps)),
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel)
-            if ans == QMessageBox.StandardButton.Cancel:
-                return
-            if ans == QMessageBox.StandardButton.Yes:
-                self.clear_all_gcp()
-                self.ref_crs = None
 
         crs_def, rows, skipped = gcp_io.read_file(path)
         if not rows:
             raise ValueError(self.tr("Plik nie zawiera punktów."))
         file_crs = self._parse_crs(crs_def) if crs_def else None
-
-        ct = None
-        if file_crs is not None:
-            if self.ref_crs is not None and self.gcps and self.ref_crs != file_crs:
-                # dopisywanie punktów z innego układu – przeliczenie do układu istniejących punktów
-                ct = QgsCoordinateTransform(file_crs, self.ref_crs, self.project)
-            else:
-                self.ref_crs = file_crs
-        else:
-            self._ensure_ref_crs()
+        ct = self._adopt_file_crs(file_crs)
 
         for ox, oy, rx, ry, en in rows:
             if ct is not None:
@@ -1411,6 +1521,31 @@ class QMapAnalystDockWidget(QDockWidget):
         if skipped:
             msg += " " + self.tr("Pominięto niepoprawne wiersze (liczba: {n}).").format(n=skipped)
         self.set_status(msg, "ok" if not skipped else "warn")
+
+    def _confirm_replace_gcps(self):
+        """Pyta o zastąpienie lub dopisanie punktów. False – użytkownik anulował."""
+        if not self.gcps:
+            return True
+        ans = QMessageBox.question(
+            self, "QMapAnalyst", self.tr("Zastąpić istniejące punkty ({n})?\n\nNie – dopisz nowe punkty do istniejących.").format(n=len(self.gcps)),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel)
+        if ans == QMessageBox.StandardButton.Cancel:
+            return False
+        if ans == QMessageBox.StandardButton.Yes:
+            self.clear_all_gcp()
+            self.ref_crs = None
+        return True
+
+    def _adopt_file_crs(self, file_crs):
+        """Ustala układ punktów z pliku. Zwraca transformację do układu istniejących punktów lub None."""
+        if file_crs is None:
+            self._ensure_ref_crs()
+            return None
+        if self.ref_crs is not None and self.gcps and self.ref_crs != file_crs:
+            # dopisywanie punktów z innego układu – przeliczenie do układu istniejących punktów
+            return QgsCoordinateTransform(file_crs, self.ref_crs, self.project)
+        self.ref_crs = file_crs
+        return None
 
     # ------------------------------------------------------------------
     #  Analiza
@@ -1778,6 +1913,9 @@ class QMapAnalystDockWidget(QDockWidget):
         if not self._require(raster=True, min_pts=4):
             return
         st = self.analysis
+        if not st.warp.ok:
+            self.set_status(self.tr("Izolinie wymagają interpolacji TPS (pakiet scipy) – niedostępne."), "warn")
+            return
         with self.busy(self.tr("Obliczanie izolinii…")):
             grid = st.grid()
             dpi = float(self.spin_dpi.value())
@@ -1935,8 +2073,9 @@ class QMapAnalystDockWidget(QDockWidget):
                 ll = self._lonlat(self.analysis.fit.predict(border))
                 lon_r = [min(lon_r[0], ll[:, 0].min()), max(lon_r[1], ll[:, 0].max())]
                 lat_r = [min(lat_r[0], ll[:, 1].min()), max(lat_r[1], ll[:, 1].max())]
-            except Exception:  # noqa: BLE001
-                pass
+            except (ValueError, RuntimeError, np.linalg.LinAlgError) as e:
+                # zasięg samych punktów GCP wystarcza; skan tylko go poszerza
+                QgsMessageLog.logMessage(f"graticule extent: {e}", LOG_TAG, Qgis.MessageLevel.Info)
         pad_lon = (lon_r[1] - lon_r[0]) * 0.05 + 0.02
         pad_lat = (lat_r[1] - lat_r[0]) * 0.05 + 0.02
         return (lon_r[0] - pad_lon, lon_r[1] + pad_lon), (lat_r[0] - pad_lat, lat_r[1] + pad_lat)
@@ -2138,7 +2277,12 @@ class QMapAnalystDockWidget(QDockWidget):
         base = self.old_raster_layer
         extent = QgsRectangle(base.extent()) if base is not None else self.old_canvas.extent()
         extent.scale(1.02)
-        return ex.export_report_pdf(path, [], base, self.old_overlay_layers(), extent, self.report_title())
+        overlays = self.old_overlay_layers()
+        pages = [(lyr.name(), [lyr]) for lyr in overlays]
+        if len(overlays) > 1:  # pierwsza strona: wszystkie widoczne nakładki razem, jak w podglądzie
+            pages.insert(0, (self.tr("Wszystkie widoczne nakładki"), list(reversed(overlays))))
+        return ex.export_maps_pdf(path, self.old_canvas.mapSettings(), pages, base, extent,
+                                  self.report_title(), self.report_subtitle())
 
     def export_gcp_csv(self, path):
         st = self.analysis

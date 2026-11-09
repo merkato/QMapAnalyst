@@ -2,7 +2,10 @@ import os
 
 from qgis.PyQt.QtCore import QCoreApplication, Qt, QTranslator
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QMessageBox
+from qgis.core import Qgis, QgsMessageLog
+
+from . import deps
 
 
 class QMapAnalystPlugin:
@@ -12,6 +15,7 @@ class QMapAnalystPlugin:
         self.translator = None
         self.dockwidget = None
         self.action = None
+        self._deps_warned = False
         self.init_translator()
 
     def tr(self, message):
@@ -50,7 +54,37 @@ class QMapAnalystPlugin:
             QCoreApplication.removeTranslator(self.translator)
             self.translator = None
 
+    def _install_hint(self, packages):
+        lines = [f"{label}:\n    {cmd}" for label, cmd in deps.install_commands(packages)]
+        return "\n\n".join(lines)
+
+    def check_dependencies(self):
+        """False, gdy brakuje numpy (panel nie może działać). Brak scipy – ostrzeżenie, funkcje okrojone."""
+        required, optional = deps.check()
+        if required:
+            text = self.tr("Wtyczka QMapAnalyst wymaga pakietu Python: {pkgs}.").format(pkgs=", ".join(required))
+            hint = self._install_hint(required)
+            QgsMessageLog.logMessage(f"{text}\n{hint}", "QMapAnalyst", Qgis.MessageLevel.Critical)
+            box = QMessageBox(QMessageBox.Icon.Warning, "QMapAnalyst",
+                              text + "\n\n" + self.tr("Zainstaluj go i uruchom ponownie QGIS:"),
+                              QMessageBox.StandardButton.Ok, self.iface.mainWindow())
+            box.setInformativeText(hint)
+            box.exec()
+            return False
+        if optional and not self._deps_warned:
+            self._deps_warned = True
+            pkgs = deps.packages_of(optional)
+            features = "; ".join(self.tr(deps.OPTIONAL[m]) for m in optional)
+            text = self.tr("Brak pakietu {pkgs} – niedostępne: {features}.").format(pkgs=", ".join(pkgs), features=features)
+            hint = self.tr("Instalacja:") + "\n\n" + self._install_hint(pkgs)
+            QgsMessageLog.logMessage(f"{text}\n{hint}", "QMapAnalyst", Qgis.MessageLevel.Warning)
+            self.iface.messageBar().pushMessage("QMapAnalyst", text, hint, Qgis.MessageLevel.Warning, 0)
+        return True
+
     def run(self, checked=True):
+        if not self.check_dependencies():
+            self.action.setChecked(False)
+            return
         # Import leniwy – błędy w module panelu nie blokują ładowania wtyczki
         from .dockwidget import QMapAnalystDockWidget
 

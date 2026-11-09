@@ -4,15 +4,15 @@ Eksport wyników: obraz mapy dawnej, wielostronicowy raport PDF, tabele CSV.
 
 import csv
 import os
-import traceback
 from datetime import datetime
 
-from qgis.PyQt.QtCore import QCoreApplication
-from qgis.PyQt.QtGui import QFont
+from qgis.PyQt.QtCore import QCoreApplication, QMarginsF, QRectF, QSize, QSizeF, Qt
+from qgis.PyQt.QtGui import (
+    QAbstractTextDocumentLayout, QColor, QFont, QImage, QPageLayout, QPageSize, QPainter, QPalette,
+    QPdfWriter, QPen, QTextDocument,
+)
 from qgis.core import (
-    Qgis, QgsProject, QgsPrintLayout, QgsLayoutExporter, QgsLayoutItemMap, QgsLayoutItemLabel,
-    QgsLayoutItemPicture, QgsLayoutItemPage, QgsLayoutPoint, QgsLayoutSize, QgsTextFormat,
-    QgsMessageLog, QgsRectangle,
+    Qgis, QgsMapRendererCustomPainterJob, QgsMapSettings, QgsMessageLog, QgsRectangle,
 )
 
 LOG_TAG = "QMapAnalyst"
@@ -31,8 +31,7 @@ def export_canvas_image(canvas, path, scale=2):
 
     QgsMapCanvas.saveAsImage() renderuje asynchronicznie – obraz mógł nie zostać zapisany.
     """
-    from qgis.core import QgsMapRendererParallelJob, QgsMapSettings, QgsMapSettingsUtils
-    from qgis.PyQt.QtCore import QSize
+    from qgis.core import QgsMapRendererParallelJob, QgsMapSettingsUtils
     src = canvas.mapSettings()
     settings = QgsMapSettings(src)
     size = src.outputSize()
@@ -49,115 +48,9 @@ def export_canvas_image(canvas, path, scale=2):
         world = QgsMapSettingsUtils.worldFileContent(settings)
         with open(os.path.splitext(path)[0] + ".tfw", "w", encoding="ascii") as f:
             f.write(world)
-    except Exception:  # noqa: BLE001 – plik georeferencji jest opcjonalny
-        pass
+    except OSError as e:  # plik georeferencji jest opcjonalny – obraz już zapisano
+        log(tr("Nie zapisano pliku georeferencji .tfw: {err}").format(err=e), Qgis.MessageLevel.Warning)
     return path
-
-
-def _label(layout, text, size, page, x, y, w=None, h=None, bold=False, html=False):
-    item = QgsLayoutItemLabel(layout)
-    fmt = QgsTextFormat()
-    font = QFont("Arial", int(size))
-    if bold:
-        font.setWeight(QFont.Weight.Bold)
-    fmt.setFont(font)
-    fmt.setSize(size)
-    item.setTextFormat(fmt)
-    if html:
-        try:
-            item.setMode(QgsLayoutItemLabel.Mode.ModeHtml)
-        except AttributeError:  # starsze wiązania PyQt5
-            item.setMode(QgsLayoutItemLabel.ModeHtml)
-    item.setText(text)
-    layout.addLayoutItem(item)
-    if w is None:
-        item.adjustSizeToText()
-    else:
-        item.attemptResize(QgsLayoutSize(w, h))
-    item.attemptMove(QgsLayoutPoint(x, y), page=page)
-    return item
-
-
-def _logo(layout, path, page, x, y, size):
-    if not os.path.exists(path):
-        return
-    pic = QgsLayoutItemPicture(layout)
-    pic.setPicturePath(path)
-    layout.addLayoutItem(pic)
-    pic.attemptResize(QgsLayoutSize(size, size))
-    pic.attemptMove(QgsLayoutPoint(x, y), page=page)
-
-
-def _add_page(layout, orientation):
-    page = QgsLayoutItemPage(layout)
-    page.setPageSize("A4", orientation)
-    layout.pageCollection().addPage(page)
-    return layout.pageCollection().pageCount() - 1
-
-
-def export_report_pdf(path, html_pages, base_layer, overlays, extent: QgsRectangle, title):
-    """html_pages: lista (tytuł, html) – każda pozycja na osobnej stronie A4 pionowej.
-    overlays: lista warstw – każda na osobnej stronie A4 poziomej, na tle skanu."""
-    project = QgsProject.instance()
-    layout = QgsPrintLayout(project)
-    layout.initializeDefaults()
-    layout.setName("QMapAnalyst_Export_Temp")
-    logo_path = os.path.join(os.path.dirname(__file__), "icon.png")
-    stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    P = QgsLayoutItemPage.Orientation.Portrait
-    L = QgsLayoutItemPage.Orientation.Landscape
-
-    try:
-        project.layoutManager().addLayout(layout)
-        layout.pageCollection().page(0).setPageSize("A4", P)
-
-        for i, (page_title, html) in enumerate(html_pages):
-            idx = 0 if i == 0 else _add_page(layout, P)
-            _logo(layout, logo_path, idx, 15, 12, 16)
-            _label(layout, title if i == 0 else page_title, 18 if i == 0 else 14, idx, 35, 12, bold=True)
-            _label(layout, f"{tr('Wygenerowano:')} {stamp}", 9, idx, 35, 22)
-            _label(layout, html, 9, idx, 15, 34, 180, 250, html=True)
-
-        if not html_pages and not overlays:
-            raise RuntimeError(tr("Brak widocznych nakładek mapy dawnej do eksportu."))
-        for n_ov, lyr in enumerate(overlays):
-            if not html_pages and n_ov == 0:
-                layout.pageCollection().page(0).setPageSize("A4", L)
-                idx = 0
-            else:
-                idx = _add_page(layout, L)
-            _logo(layout, logo_path, idx, 10, 8, 12)
-            _label(layout, f"{title} | {tr('Nakładka:')} {lyr.name()}", 13, idx, 25, 9, bold=True)
-            item = QgsLayoutItemMap(layout)
-            layout.addLayoutItem(item)
-            item.attemptResize(QgsLayoutSize(277, 172))
-            item.attemptMove(QgsLayoutPoint(10, 27), page=idx)
-            layers = [lyr] + ([base_layer] if base_layer is not None and base_layer.isValid() else [])
-            item.setLayers(layers)
-            item.setKeepLayerSet(True)
-            if base_layer is not None:
-                item.setCrs(base_layer.crs())
-            item.setFrameEnabled(True)
-            item.zoomToExtent(extent)
-
-        exporter = QgsLayoutExporter(layout)
-        settings = QgsLayoutExporter.PdfExportSettings()
-        settings.dpi = 200
-        result = exporter.exportToPdf(path, settings)
-        try:
-            success = QgsLayoutExporter.ExportResult.Success
-        except AttributeError:  # PyQt5
-            success = QgsLayoutExporter.Success
-        if result != success:
-            raise RuntimeError(tr("Eksport PDF nie powiódł się (kod {code}): {msg}").format(
-                code=int(result), msg=exporter.errorMessage()))
-        log(f"PDF: {path}")
-        return path
-    except Exception:
-        log(traceback.format_exc(), Qgis.MessageLevel.Critical)
-        raise
-    finally:
-        project.layoutManager().removeLayout(layout)
 
 
 def write_csv(path, header, rows):
@@ -183,28 +76,86 @@ def write_html(path, body_html, title):
     return write_text(path, doc)
 
 
+_ACCENT = QColor(43, 87, 154)
+_MUTED = QColor(89, 99, 110)
+_RULE = QColor(208, 215, 222)
+_ALIGN_L = int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+_ALIGN_R = int(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+
+
+class _PdfPages:
+    """Wspólna oprawa stron PDF A4: nagłówek (logo, tytuł, podtytuł) i stopka z numeracją."""
+
+    DPI = 300
+
+    def __init__(self, path, title, subtitle, landscape=False, margins=(16, 12, 16, 12)):
+        self.mm = self.DPI / 25.4
+        self.writer = QPdfWriter(path)
+        self.writer.setResolution(self.DPI)
+        self.writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+        self.writer.setPageOrientation(QPageLayout.Orientation.Landscape if landscape
+                                       else QPageLayout.Orientation.Portrait)
+        self.writer.setPageMargins(QMarginsF(*margins), QPageLayout.Unit.Millimeter)
+        self.writer.setTitle(title)
+        self.writer.setCreator("QMapAnalyst")
+        area = self.writer.pageLayout().paintRectPixels(self.DPI)
+        self.width, self.height = float(area.width()), float(area.height())
+        self.header_h, self.footer_h = 15 * self.mm, 9 * self.mm
+        self.body_h = self.height - self.header_h - self.footer_h
+        self.title, self.subtitle = title, subtitle
+        self.logo = QImage(os.path.join(os.path.dirname(__file__), "icon.png"))
+        self.stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+        self.path = path
+
+    def body_rect(self):
+        return QRectF(0, self.header_h, self.width, self.body_h)
+
+    def _font(self, size, bold=False):
+        f = QFont("Arial")
+        f.setPointSizeF(size)
+        f.setBold(bold)
+        return f
+
+    def _rule(self, painter, y):
+        painter.setPen(QPen(_RULE, 0.3 * self.mm))
+        painter.drawLine(QRectF(0, y, self.width, 0).topLeft(), QRectF(0, y, self.width, 0).topRight())
+
+    def frame(self, painter, i, n, caption=""):
+        mm = self.mm
+        if not self.logo.isNull():
+            painter.drawImage(QRectF(0, 0, 9 * mm, 9 * mm), self.logo)
+        painter.setFont(self._font(12, True))
+        painter.setPen(_ACCENT)
+        painter.drawText(QRectF(12 * mm, 0, self.width - 12 * mm, 6 * mm), _ALIGN_L, self.title)
+        painter.setFont(self._font(8))
+        painter.setPen(_MUTED)
+        sub = f"{self.subtitle}  ·  {caption}" if caption and self.subtitle else (caption or self.subtitle)
+        painter.drawText(QRectF(12 * mm, 5.5 * mm, self.width - 12 * mm, 5 * mm), _ALIGN_L, sub)
+        self._rule(painter, self.header_h - 3 * mm)
+
+        y = self.height - self.footer_h + 3 * mm
+        self._rule(painter, y)
+        painter.setFont(self._font(8))
+        painter.setPen(_MUTED)
+        painter.drawText(QRectF(0, y + 1 * mm, self.width / 2, 5 * mm), _ALIGN_L,
+                         f"QMapAnalyst · {tr('Wygenerowano:')} {self.stamp}")
+        painter.drawText(QRectF(self.width / 2, y + 1 * mm, self.width / 2, 5 * mm), _ALIGN_R,
+                         tr("Strona {i} z {n}").format(i=i + 1, n=n))
+
+    def begin(self):
+        painter = QPainter()
+        if not painter.begin(self.writer):
+            raise RuntimeError(tr("Nie można utworzyć pliku PDF: {p}").format(p=self.path))
+        return painter
+
+
 def export_html_pdf(path, body_html, title, subtitle=""):
     """Wielostronicowy PDF A4 z raportem HTML: nagłówek, stopka z numeracją stron, automatyczne łamanie."""
-    from qgis.PyQt.QtCore import QMarginsF, QRectF, QSizeF, Qt
-    from qgis.PyQt.QtGui import (QAbstractTextDocumentLayout, QColor, QImage, QPageLayout, QPageSize, QPainter,
-                                 QPalette, QPdfWriter, QPen, QTextDocument)
-
-    dpi = 300
-    mm = dpi / 25.4
-    writer = QPdfWriter(path)
-    writer.setResolution(dpi)
-    writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
-    writer.setPageMargins(QMarginsF(16, 12, 16, 12), QPageLayout.Unit.Millimeter)
-    writer.setTitle(title)
-    writer.setCreator("QMapAnalyst")
-
-    area = writer.pageLayout().paintRectPixels(dpi)
-    width, height = float(area.width()), float(area.height())
-    header_h, footer_h = 15 * mm, 9 * mm
-    body_h = height - header_h - footer_h
+    pdf = _PdfPages(path, title, subtitle)
+    width, body_h = pdf.width, pdf.body_h
 
     doc = QTextDocument()
-    doc.documentLayout().setPaintDevice(writer)
+    doc.documentLayout().setPaintDevice(pdf.writer)
     font = QFont("Arial")
     font.setPointSizeF(9)
     doc.setDefaultFont(font)
@@ -213,41 +164,15 @@ def export_html_pdf(path, body_html, title, subtitle=""):
     doc.setPageSize(QSizeF(width, body_h))
     pages = max(1, doc.pageCount())
 
-    logo = QImage(os.path.join(os.path.dirname(__file__), "icon.png"))
-    stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    accent = QColor(43, 87, 154)
-    muted = QColor(89, 99, 110)
-
-    painter = QPainter()
-    if not painter.begin(writer):
-        raise RuntimeError(tr("Nie można utworzyć pliku PDF: {p}").format(p=path))
+    painter = pdf.begin()
     try:
         for i in range(pages):
             if i:
-                writer.newPage()
-            # nagłówek
-            if not logo.isNull():
-                painter.drawImage(QRectF(0, 0, 9 * mm, 9 * mm), logo)
-            f = QFont("Arial")
-            f.setPointSizeF(12)
-            f.setBold(True)
-            painter.setFont(f)
-            painter.setPen(accent)
-            painter.drawText(QRectF(12 * mm, 0, width - 12 * mm, 6 * mm),
-                             int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), title)
-            f.setBold(False)
-            f.setPointSizeF(8)
-            painter.setFont(f)
-            painter.setPen(muted)
-            painter.drawText(QRectF(12 * mm, 5.5 * mm, width - 12 * mm, 5 * mm),
-                             int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), subtitle)
-            painter.setPen(QPen(QColor(208, 215, 222), 0.3 * mm))
-            painter.drawLine(QRectF(0, header_h - 3 * mm, width, 0).topLeft(), QRectF(0, header_h - 3 * mm, width, 0).topRight())
-
-            # treść strony
+                pdf.writer.newPage()
+            pdf.frame(painter, i, pages)
             # treść rysowana z jawną paletą (czarny tekst) – niezależnie od motywu systemu/QGIS
             painter.save()
-            painter.translate(0, header_h - i * body_h)
+            painter.translate(0, pdf.header_h - i * body_h)
             clip = QRectF(0, i * body_h, width, body_h)
             painter.setClipRect(clip)
             ctx = QAbstractTextDocumentLayout.PaintContext()
@@ -258,21 +183,53 @@ def export_html_pdf(path, body_html, title, subtitle=""):
             ctx.clip = clip
             doc.documentLayout().draw(painter, ctx)
             painter.restore()
-
-            # stopka
-            y = height - footer_h + 3 * mm
-            painter.setPen(QPen(QColor(208, 215, 222), 0.3 * mm))
-            painter.drawLine(QRectF(0, y, width, 0).topLeft(), QRectF(0, y, width, 0).topRight())
-            painter.setFont(f)
-            painter.setPen(muted)
-            painter.drawText(QRectF(0, y + 1 * mm, width / 2, 5 * mm),
-                             int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-                             f"QMapAnalyst · {tr('Wygenerowano:')} {stamp}")
-            painter.drawText(QRectF(width / 2, y + 1 * mm, width / 2, 5 * mm),
-                             int(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter),
-                             tr("Strona {i} z {n}").format(i=i + 1, n=pages))
     finally:
         painter.end()
     log(f"PDF ({pages} str.): {path}")
     return path
 
+
+def export_maps_pdf(path, base_settings: QgsMapSettings, pages, base_layer, extent: QgsRectangle,
+                    title, subtitle="", dpi=250):
+    """PDF A4 poziomy – jedna strona na pozycję `pages` = [(podpis, [warstwy…]), …], każda na tle skanu.
+
+    Renderowane bezpośrednio z ustawień kanwy mapy dawnej (QgsMapSettings), a nie przez układ wydruku:
+    skan bez georeferencji ma nieokreślony układ współrzędnych, a mapa układu wydruku zastępuje go
+    układem projektu i przelicza nakładki poza arkusz (stąd puste strony w wersji 0.2.0).
+    """
+    if not pages:
+        raise RuntimeError(tr("Brak widocznych nakładek mapy dawnej do eksportu."))
+    pdf = _PdfPages(path, title, subtitle, landscape=True, margins=(10, 8, 10, 8))
+    rect = pdf.body_rect().adjusted(0, 0, 0, -1 * pdf.mm)
+    scale = dpi / pdf.DPI  # mapa renderowana w dpi, potem skalowana do rozdzielczości PDF
+    out = QSize(max(1, int(rect.width() * scale)), max(1, int(rect.height() * scale)))
+    base = [base_layer] if base_layer is not None and base_layer.isValid() else []
+
+    painter = pdf.begin()
+    try:
+        for i, (caption, layers) in enumerate(pages):
+            if i:
+                pdf.writer.newPage()
+            pdf.frame(painter, i, len(pages), caption)
+            settings = QgsMapSettings(base_settings)
+            settings.setLayers(list(layers) + base)
+            settings.setOutputSize(out)
+            settings.setOutputDpi(dpi)
+            settings.setDevicePixelRatio(1.0)
+            settings.setBackgroundColor(QColor(255, 255, 255))
+            settings.setExtent(extent)
+            painter.save()
+            painter.translate(rect.topLeft())
+            painter.scale(1 / scale, 1 / scale)
+            painter.setClipRect(QRectF(0, 0, out.width(), out.height()))
+            job = QgsMapRendererCustomPainterJob(settings, painter)
+            job.start()
+            job.waitForFinished()
+            painter.restore()
+            painter.setPen(QPen(_RULE, 0.3 * pdf.mm))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawRect(rect)
+    finally:
+        painter.end()
+    log(f"PDF ({len(pages)} str.): {path}")
+    return path

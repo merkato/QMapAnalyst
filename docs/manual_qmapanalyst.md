@@ -2,7 +2,7 @@
 
 **QMapAnalyst** to wtyczka QGIS do kartometrycznej analizy dawnych map. Inspirowana programem MapAnalyst pozwala badać dokładność i lokalne zniekształcenia mapy, szacować jej skalę papierową oraz **odwzorowanie kartograficzne, w jakim została wykonana** – w całości w środowisku QGIS.
 
-> Zrzuty ekranu w katalogu `docs/` pochodzą z wersji 0.1 i różnią się nieco od obecnego interfejsu.
+> Ilustracje przedstawiają arkusz VI szkicu indykacyjnego katastru austriackiego gminy Milówka (skala 1:2880, Archiwum Narodowe w Krakowie). Punkty GCP na ilustracjach są demonstracyjne – służą pokazaniu interfejsu, a nie są georeferencją arkusza.
 
 ---
 
@@ -16,13 +16,16 @@ Panel wtyczki (domyślnie po prawej stronie) zawiera u góry podgląd skanu mapy
 | Przesuwanie / powiększanie / pomniejszanie / pełny widok | nawigacja po skanie (pod podglądem widać współrzędne kursora w pikselach) |
 | Dodaj GCP | tryb dodawania par punktów (patrz niżej) |
 | Synchronizuj | po obliczeniu transformacji mapa główna QGIS podąża za widokiem skanu |
-| Wyczyść | usuwa wszystkie nakładki z podglądu mapy dawnej |
+| Nakładki (n) | rozwija listę nakładek wygenerowanych na mapie dawnej – zaznaczenie decyduje o ich widoczności (także na stronach PDF z mapami) |
+| Kosz (u góry) | usuwa wszystkie nakładki z podglądu mapy dawnej |
 
-Pod podglądem pojawia się lista nakładek wygenerowanych na mapie dawnej – zaznaczenie decyduje o ich widoczności (także na stronach raportu PDF). Nakładki te żyją w przestrzeni pikseli skanu, dlatego **nie są dodawane do drzewa warstw** mapy głównej.
+Dolny panel z zakładkami można zmniejszyć, przeciągając uchwyt między nim a podglądem – zawartość zakładek jest wtedy przewijana. Nakładki te żyją w przestrzeni pikseli skanu, dlatego **nie są dodawane do drzewa warstw** mapy głównej.
 
 ---
 
 ## 2. Zakładka GCP
+
+![Zakładka GCP: punkty na skanie i tabela z błędami, LOO i resztą standaryzowaną w](gcp_table.png)
 
 1. Włącz **Dodaj pary** (lub przycisk na pasku mapy dawnej).
 2. Kliknij punkt na skanie (żółty znacznik), a potem odpowiadający mu punkt na mapie głównej QGIS.
@@ -53,6 +56,8 @@ Zapis/odczyt: format Georeferencera QGIS (`.points`) oraz CSV (separator `,` lub
 
 ## 3. Zakładka Analiza
 
+![Zakładka Analiza: raport dokładności transformacji afinicznej](analysis.png)
+
 Wybierz **transformację**:
 
 * **Helmert (4 parametry)** – skala, obrót, przesunięcie; zachowuje kształty (min. 2 punkty),
@@ -74,6 +79,8 @@ Raport zawiera:
 ---
 
 ## 4. Zakładka Odwzorowanie
+
+![Zakładka Odwzorowanie: ranking kandydatów i siatka geograficzna najlepszego z nich na skanie](projection.png)
 
 Wtyczka dopasowuje do punktów GCP 15 odwzorowań istotnych dla kartografii XV–XX w. Współrzędne punktów referencyjnych są przeliczane na długość i szerokość geograficzną, rzutowane w każdym odwzorowaniu (na sferze), a następnie dopasowywane do pikseli skanu. Parametry kształtu (południk osiowy λ₀, środek φ₀, równoleżniki standardowe φ₁, φ₂) są optymalizowane. Kandydaci są szeregowani kryterium **AICc**, które karze za liczbę dopasowanych parametrów.
 
@@ -114,6 +121,10 @@ Panel szczegółów porównuje hipotezę ze swobodnym dopasowaniem tego samego o
 
 ## 5. Zakładka Warstwy
 
+![Zakładka Warstwy: siatka PUWG 1992 (oczko 200 m), izolinie skali i wektory przesunięć na skanie](results.png)
+
+Przyciski z ikonami (wyglądającymi jak legenda tworzonej warstwy) układają się w wierszach i zawijają przy wąskim panelu; pełny opis pokazuje podpowiedź po najechaniu kursorem. Ikona kosza na dole zakładki usuwa warstwy wynikowe mapy głównej.
+
 **Parametry:** promień pewności (strefa wokół punktów uznawana za wiarygodną), oczko siatek (w jednostkach układu odniesienia), powiększenie wektorów i okręgów, liczba izolinii.
 
 **Mapa główna** (warstwy w grupie *QMapAnalyst* drzewa warstw):
@@ -138,7 +149,7 @@ Wybierz folder i zaznacz, co zapisać. Nazwy plików zaczynają się od nazwy sk
 
 * **Raport analizy – PDF** – wielostronicowy raport A4 z nagłówkiem (tytuł, model, układ, DPI) i numeracją stron: dane wejściowe, dokładność, parametry z błędami, skala, punkty odstające, porównanie modeli, zniekształcenia lokalne, autokorelacja, **tabela wszystkich punktów z resztami**, ranking odwzorowań oraz szczegóły najlepszego kandydata i testowanych hipotez,
 * **Raport analizy – TXT** – ta sama treść jako tekst z wyrównanymi kolumnami (UTF-8) – do archiwizacji, wklejenia do publikacji lub porównań,
-* **Mapy z nakładkami – PDF** – po jednej stronie A4 (poziomo) na każdą widoczną nakładkę mapy dawnej,
+* **Mapy z nakładkami – PDF** – strona A4 (poziomo) ze wszystkimi widocznymi nakładkami razem, a następnie po jednej stronie na każdą nakładkę, na tle skanu,
 * **TIFF** – bieżący widok mapy dawnej z nakładkami (podwójna rozdzielczość ekranu, z plikiem `.tfw`),
 * **CSV punktów** – współrzędne, punkty transformowane, reszty, LOO i w,
 * **CSV odwzorowań** – pełny ranking z parametrami.
@@ -151,6 +162,6 @@ Raport można też zapisać bezpośrednio z zakładki **Analiza** przyciskiem **
 
 * **Język:** interfejs, raport analizy (w panelu i w PDF), komunikaty, nazwy warstw i legendy są po polsku albo po angielsku – zgodnie z językiem interfejsu QGIS (każdy język inny niż polski → angielski). W wersji polskiej liczby w raporcie i tabelach mają przecinek dziesiętny; pliki CSV zawsze używają kropki.
 
-* Obliczenia wykorzystują NumPy i SciPy (dostarczane z QGIS); matplotlib nie jest już wymagany.
+* Obliczenia wykorzystują NumPy i SciPy – oba są w oficjalnych instalatorach QGIS (Windows, macOS); matplotlib nie jest już wymagany. Gdy pakietu brakuje (minimalna instalacja OSGeo4W, niektóre dystrybucje Linuksa), wtyczka pokazuje polecenie instalacji dla danej platformy, np. OSGeo4W Setup → *Advanced Install* → *Libs* → `python3-scipy`, `sudo apt install python3-scipy` (Debian/Ubuntu), `sudo dnf install python3-scipy` (Fedora). Bez NumPy panel się nie otworzy; bez SciPy działa, ale bez estymacji odwzorowania, lokalnych zniekształceń TPS i izolinii.
 * Błędy w trakcie działania są zapisywane w panelu *Komunikaty dziennika* (zakładka *QMapAnalyst*), a pasek stanu wtyczki pokazuje ich krótki opis.
 * Silnik obliczeniowy można testować poza QGIS: `python-qgis.bat tests/test_engine.py`.

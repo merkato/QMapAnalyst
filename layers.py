@@ -9,10 +9,10 @@ a usunięcie warstwy z projektu jest bezpiecznie wykrywane.
 from qgis.PyQt.QtCore import QCoreApplication, QMetaType, QObject, pyqtSignal
 from qgis.PyQt.QtGui import QColor
 from qgis.core import (
-    Qgis, QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry, QgsPointXY,
-    QgsSymbol, QgsSingleSymbolRenderer, QgsCategorizedSymbolRenderer, QgsRendererCategory,
+    Qgis, QgsCoordinateReferenceSystem, QgsProject, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry, QgsPointXY,
+    QgsSingleSymbolRenderer, QgsCategorizedSymbolRenderer, QgsRendererCategory,
     QgsPalLayerSettings, QgsVectorLayerSimpleLabeling, QgsTextFormat, QgsTextBufferSettings,
-    QgsWkbTypes, QgsMarkerSymbol, QgsFillSymbol, QgsLineSymbol,
+    QgsMarkerSymbol, QgsFillSymbol, QgsLineSymbol,
 )
 
 try:
@@ -147,8 +147,9 @@ def _qtype(name):
 def memory_layer(geom_type: str, crs, name: str, fields) -> QgsVectorLayer:
     """fields: lista (nazwa, typ) gdzie typ to int / double / string."""
     lyr = QgsVectorLayer(f"{geom_type}?index=yes", name, "memory")
-    if crs is not None and crs.isValid():
-        lyr.setCrs(crs)
+    # Skan bez georeferencji ma nieokreślony CRS – warstwa musi go dziedziczyć (domyślny EPSG:4326
+    # warstwy pamięciowej powodowałby przeliczanie nakładek przy renderowaniu poza kanwą).
+    lyr.setCrs(crs if crs is not None else QgsCoordinateReferenceSystem())
     prov = lyr.dataProvider()
     prov.addAttributes([QgsField(n, _qtype(t)) for n, t in fields])
     lyr.updateFields()
@@ -272,10 +273,7 @@ def set_labels(layer, expression: str, color: QColor, on_line=False, size=8.0):
     s.setFormat(fmt)
     if on_line:
         s.placement = Qgis.LabelPlacement.Line
-        try:
-            s.lineSettings().setPlacementFlags(Qgis.LabelLinePlacementFlag.OnLine)
-        except Exception:
-            pass
+        s.lineSettings().setPlacementFlags(Qgis.LabelLinePlacementFlag.OnLine)
         s.repeatDistance = 60
         s.repeatDistanceUnit = Qgis.RenderUnit.Millimeters
     else:

@@ -12,18 +12,11 @@ _LANG = None
 
 
 def detect_language() -> str:
-    loc = ""
-    try:
-        from qgis.core import QgsApplication
-        loc = QgsApplication.locale() or ""
-    except Exception:  # noqa: BLE001
-        pass
+    from qgis.core import QgsApplication
+    from qgis.PyQt.QtCore import QLocale, QSettings
+    loc = QgsApplication.locale() or ""
     if not loc:
-        try:
-            from qgis.PyQt.QtCore import QLocale, QSettings
-            loc = QSettings().value("locale/userLocale", "") or QLocale().name()
-        except Exception:  # noqa: BLE001
-            loc = ""
+        loc = QSettings().value("locale/userLocale", "") or QLocale().name()
     return "pl" if str(loc).lower().startswith("pl") else "en"
 
 
