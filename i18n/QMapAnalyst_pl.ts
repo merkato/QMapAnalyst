@@ -128,6 +128,14 @@
         <translation>Zapisz GCP (CSV / .points)…</translation>
     </message>
     <message>
+        <source>Nazwy punktów</source>
+        <translation>Nazwy punktów</translation>
+    </message>
+    <message>
+        <source>Po wskazaniu pary pytaj o nazwę punktu i pokaż kolumnę nazw. Nazwy zapisywane są w CSV (kolumna name) lub – dla pliku .points – w pliku towarzyszącym .points.names.csv, dzięki czemu plik .points pozostaje zgodny z Georeferencerem QGIS.</source>
+        <translation>Po wskazaniu pary pytaj o nazwę punktu i pokaż kolumnę nazw. Nazwy zapisywane są w CSV (kolumna name) lub – dla pliku .points – w pliku towarzyszącym .points.names.csv, dzięki czemu plik .points pozostaje zgodny z Georeferencerem QGIS.</translation>
+    </message>
+    <message>
         <source>Dwuklik w numer wiersza – pokaż punkt na obu mapach. Dwuklik w komórkę – edycja współrzędnej.</source>
         <translation>Dwuklik w numer wiersza – pokaż punkt na obu mapach. Dwuklik w komórkę – edycja współrzędnej.</translation>
     </message>
@@ -440,6 +448,14 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Punkt aktywny w obliczeniach</translation>
     </message>
     <message>
+        <source>Nazwa</source>
+        <translation>Nazwa</translation>
+    </message>
+    <message>
+        <source>Nazwa punktu (dwuklik – edycja)</source>
+        <translation>Nazwa punktu (dwuklik – edycja)</translation>
+    </message>
+    <message>
         <source>X dawna</source>
         <translation>X dawna</translation>
     </message>
@@ -548,12 +564,20 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>KROK 2/2: kliknij odpowiadający punkt na MAPIE GŁÓWNEJ QGIS…</translation>
     </message>
     <message>
+        <source>Nazwa punktu</source>
+        <translation>Nazwa punktu</translation>
+    </message>
+    <message>
         <source>Zaznacz wiersze do usunięcia.</source>
         <translation>Zaznacz wiersze do usunięcia.</translation>
     </message>
     <message>
         <source>Brak punktów do zapisania.</source>
         <translation>Brak punktów do zapisania.</translation>
+    </message>
+    <message>
+        <source>Zapisano punkty do pliku (liczba: {n}).</source>
+        <translation>Zapisano punkty do pliku (liczba: {n}).</translation>
     </message>
     <message>
         <source>Plik nie zawiera punktów.</source>
@@ -696,12 +720,16 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Skan wczytany: {w} × {h} px. Dodaj lub wczytaj punkty GCP.</translation>
     </message>
     <message>
-        <source>Usunięto punkty (liczba: {n}).</source>
-        <translation>Usunięto punkty (liczba: {n}).</translation>
+        <source>Anulowano dodawanie pary. KROK 1/2: kliknij punkt na mapie dawnej.</source>
+        <translation>Anulowano dodawanie pary. KROK 1/2: kliknij punkt na mapie dawnej.</translation>
     </message>
     <message>
-        <source>Zapisano punkty do pliku (liczba: {n}).</source>
-        <translation>Zapisano punkty do pliku (liczba: {n}).</translation>
+        <source>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</source>
+        <translation>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</translation>
+    </message>
+    <message>
+        <source>Usunięto punkty (liczba: {n}).</source>
+        <translation>Usunięto punkty (liczba: {n}).</translation>
     </message>
     <message>
         <source>Zastąpić istniejące punkty ({n})?
@@ -796,12 +824,12 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Zakończono dodawanie punktów (liczba par: {n}).</translation>
     </message>
     <message>
-        <source>Dodano parę #{n}. KROK 1/2: kliknij kolejny punkt na mapie dawnej (lub wyłącz tryb dodawania).</source>
-        <translation>Dodano parę #{n}. KROK 1/2: kliknij kolejny punkt na mapie dawnej (lub wyłącz tryb dodawania).</translation>
+        <source>Nazwa punktu #{n} (może być pusta):</source>
+        <translation>Nazwa punktu #{n} (może być pusta):</translation>
     </message>
     <message>
-        <source>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</source>
-        <translation>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</translation>
+        <source>Dodano parę #{n}. KROK 1/2: kliknij kolejny punkt na mapie dawnej (lub wyłącz tryb dodawania).</source>
+        <translation>Dodano parę #{n}. KROK 1/2: kliknij kolejny punkt na mapie dawnej (lub wyłącz tryb dodawania).</translation>
     </message>
     <message>
         <source>Współrzędne przeliczono z układu {crs}.</source>
@@ -848,8 +876,8 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Podaj wartość parametru: {p}</translation>
     </message>
     <message>
-        <source>Niepoprawna wartość liczbowa – przywrócono poprzednią.</source>
-        <translation>Niepoprawna wartość liczbowa – przywrócono poprzednią.</translation>
+        <source>Nazwy punktów zapisano w pliku {f}.</source>
+        <translation>Nazwy punktów zapisano w pliku {f}.</translation>
     </message>
     <message>
         <source>Zbyt gęsta siatka (linie: {n}) – zwiększ oczko siatki.</source>
@@ -878,6 +906,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>wył.</source>
         <translation>wył.</translation>
+    </message>
+    <message>
+        <source>Niepoprawna wartość liczbowa – przywrócono poprzednią.</source>
+        <translation>Niepoprawna wartość liczbowa – przywrócono poprzednią.</translation>
     </message>
     <message>
         <source>punkty</source>
@@ -1476,6 +1508,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>Dane wejściowe</source>
         <translation>Dane wejściowe</translation>
+    </message>
+    <message>
+        <source>Nazwa</source>
+        <translation>Nazwa</translation>
     </message>
     <message>
         <source>Punkty kontrolne i reszty</source>

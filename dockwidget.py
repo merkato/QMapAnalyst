@@ -11,21 +11,22 @@ from datetime import datetime
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import cached_property
+from html import escape
 
 import numpy as np
 
-from qgis.PyQt.QtCore import Qt, QCoreApplication, QPoint, QRect, QTimer, QSize
-from qgis.PyQt.QtGui import QColor, QIcon
+from qgis.PyQt.QtCore import Qt, QCoreApplication, QEvent, QPoint, QRect, QTimer, QSize
+from qgis.PyQt.QtGui import QColor, QIcon, QPalette
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView, QApplication, QCheckBox, QComboBox, QDockWidget, QDoubleSpinBox,
-    QFileDialog, QFormLayout, QFrame, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
+    QFileDialog, QFormLayout, QFrame, QGroupBox, QHBoxLayout, QHeaderView, QInputDialog, QLabel,
     QLayout, QListWidget, QListWidgetItem, QMenu, QMessageBox, QProgressBar, QPushButton, QSizePolicy, QSlider,
     QScrollArea, QSpinBox, QSplitter, QTableWidget, QTableWidgetItem, QTabWidget, QTextBrowser, QToolButton,
     QVBoxLayout, QWidget, QWidgetAction, QLineEdit,
 )
 from qgis.core import (
     Qgis, QgsApplication, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsGeometry,
-    QgsMessageLog, QgsPointXY, QgsProject, QgsRasterLayer, QgsRectangle, QgsUnitTypes,
+    QgsMessageLog, QgsPointXY, QgsProject, QgsRasterLayer, QgsRectangle, QgsSettings, QgsUnitTypes,
 )
 from qgis.gui import (
     QgsCollapsibleGroupBox, QgsFileWidget, QgsMapCanvas, QgsMapToolEmitPoint, QgsMapToolPan, QgsMapToolZoom, QgsVertexMarker,
@@ -37,6 +38,7 @@ from . import icons
 from . import math_engine as me
 from . import projections as pj
 from . import report
+from . import theme
 from .lang import num
 from .layers import (
     LayerRegistry, add_features, memory_layer, merge_segments, polyline, set_labels, split_lines,
@@ -45,7 +47,8 @@ from .layers import (
 
 LOG_TAG = "QMapAnalyst"
 
-COL_ACT, COL_OX, COL_OY, COL_RX, COL_RY, COL_ERR, COL_LOO, COL_W = range(8)
+COL_ACT, COL_NAME, COL_OX, COL_OY, COL_RX, COL_RY, COL_ERR, COL_LOO, COL_W = range(9)
+SETTINGS_NAMES = "QMapAnalyst/gcp_names"
 
 C_OLD = QColor(220, 40, 40)
 C_REF = QColor(0, 160, 60)
@@ -84,6 +87,7 @@ class GCP:
     ref_x: float
     ref_y: float
     enabled: bool = True
+    name: str = ""
     old_marker: object = None
     ref_marker: object = None
 
@@ -226,6 +230,27 @@ def _scrollable(widget):
     return area
 
 
+def _backgrounds(widget, *roles):
+    """Rzeczywiste kolory tła widżetu (po zastosowaniu arkusza stylów motywu QGIS)."""
+    roles = roles or (QPalette.ColorRole.Base, QPalette.ColorRole.AlternateBase)
+    out = []
+    for role in roles:
+        w, col = widget, None
+        while w is not None:  # motywy ustawiają "background: transparent" – tło daje dopiero rodzic
+            w.ensurePolished()
+            col = w.palette().color(role)
+            if col.alpha() > 0:
+                break
+            w = w.parentWidget()
+        out.append(col.name() if col is not None else "#ffffff")
+    return out
+
+
+def fg_color(widget, key, *roles):
+    """QColor semantyczny (klucz theme.BASE lub #rrggbb) czytelny na tle widżetu."""
+    return QColor(theme.foreground(key, *_backgrounds(widget, *roles)))
+
+
 def _num_item(value, digits=2, editable=False, color=None, tip=None):
     if value is None or (isinstance(value, float) and not math.isfinite(value)):
         it = QTableWidgetItem("–")
@@ -271,6 +296,8 @@ class QMapAnalystDockWidget(QDockWidget):
         self._sync_lock = False
         self._pred_marker = None
 
+        self._hints = []
+        self._theme_busy = False
         self.registry = LayerRegistry(self)
         self.registry.oldLayersChanged.connect(self.rebuild_overlay_list)
 
@@ -290,10 +317,35 @@ class QMapAnalystDockWidget(QDockWidget):
     #  Statusy i obsługa błędów
     # ------------------------------------------------------------------
     def set_status(self, text, level="info"):
-        colors = {"info": "palette(text)", "ok": "#1a7f37", "warn": "#9a6700", "error": "#cf222e"}
-        self.lbl_status.setStyleSheet(f"color: {colors.get(level, colors['info'])};")
+        key = {"ok": "good", "warn": "warn", "error": "bad"}.get(level)
+        if key is None:
+            self.lbl_status.setStyleSheet("color: palette(text);")
+        else:
+            col = fg_color(self.lbl_status, key, QPalette.ColorRole.Window).name()
+            self.lbl_status.setStyleSheet(f"color: {col};")
         self.lbl_status.setText(text)
         self.lbl_status.setToolTip(text)
+
+    def _hint(self, label, small=False):
+        """Etykieta pomocnicza (przygaszona); kolor dobierany do tła w apply_theme_colors()."""
+        label.setProperty("qma_small", small)
+        label.setStyleSheet("color: palette(placeholder-text);" + (" font-size: 8pt;" if small else ""))
+        self._hints.append(label)
+
+    def apply_theme_colors(self):
+        """Kolory zależne od tła motywu – liczone, gdy widżety są już osadzone w panelu."""
+        for lbl in self._hints:
+            bg = _backgrounds(lbl, QPalette.ColorRole.Window)[0]
+            text = self.palette().color(QPalette.ColorRole.WindowText).name()
+            col = theme.ensure_contrast(theme.mix(theme.ensure_contrast(text, bg, ratio=theme.TEXT_MIN), bg, 0.35),
+                                        bg, ratio=theme.SEMANTIC_MIN)
+            size = " font-size: 8pt;" if lbl.property("qma_small") else ""
+            lbl.setStyleSheet(f"color: {col};{size}")
+
+    @staticmethod
+    def colored_html(widget, key, text):
+        col = fg_color(widget, key, QPalette.ColorRole.Base).name()
+        return f"<p style='color:{col}'>{escape(text)}</p>"
 
     @staticmethod
     def error_text(exc):
@@ -404,7 +456,7 @@ class QMapAnalystDockWidget(QDockWidget):
                 bar.addWidget(w)
         bar.addStretch()
         self.lbl_coords = QLabel()
-        self.lbl_coords.setStyleSheet("color: palette(placeholder-text);")
+        self._hint(self.lbl_coords)
         bar.addWidget(self.lbl_coords)
 
         # widoczność nakładek: lista w rozwijanym menu (nie zabiera wysokości mapy)
@@ -456,14 +508,23 @@ class QMapAnalystDockWidget(QDockWidget):
         self.btn_save_gcp.clicked.connect(self.save_gcp_to_file)
         for b in (self.btn_add_gcp, self.btn_remove_gcp, self.btn_toggle_gcp):
             row.addWidget(b)
+        self.chk_names = QCheckBox(self.tr("Nazwy punktów"))
+        self.chk_names.setToolTip(self.tr(
+            "Po wskazaniu pary pytaj o nazwę punktu i pokaż kolumnę nazw. Nazwy zapisywane są w CSV "
+            "(kolumna name) lub – dla pliku .points – w pliku towarzyszącym .points.names.csv, "
+            "dzięki czemu plik .points pozostaje zgodny z Georeferencerem QGIS."))
+        self.chk_names.setChecked(QgsSettings().value(SETTINGS_NAMES, False, type=bool))
+        self.chk_names.toggled.connect(self.on_names_toggled)
+        row.addWidget(self.chk_names)
         row.addStretch()
         row.addWidget(self.btn_load_gcp)
         row.addWidget(self.btn_save_gcp)
         lay.addLayout(row)
 
-        self.tbl_gcp = QTableWidget(0, 8)
+        self.tbl_gcp = QTableWidget(0, 9)
         headers = [
             (self.tr("Akt."), self.tr("Punkt aktywny w obliczeniach")),
+            (self.tr("Nazwa"), self.tr("Nazwa punktu (dwuklik – edycja)")),
             (self.tr("X dawna"), self.tr("Współrzędna X na skanie [px]")),
             (self.tr("Y dawna"), self.tr("Współrzędna Y na skanie [px]")),
             (self.tr("X ref."), self.tr("Współrzędna X w układzie odniesienia")),
@@ -480,8 +541,9 @@ class QMapAnalystDockWidget(QDockWidget):
         hh.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         hh.setSectionResizeMode(COL_ACT, QHeaderView.ResizeMode.ResizeToContents)
         hh.setStretchLastSection(True)
-        for c, w in ((COL_OX, 66), (COL_OY, 66), (COL_RX, 82), (COL_RY, 82), (COL_ERR, 58), (COL_LOO, 58)):
+        for c, w in ((COL_NAME, 90), (COL_OX, 66), (COL_OY, 66), (COL_RX, 82), (COL_RY, 82), (COL_ERR, 58), (COL_LOO, 58)):
             self.tbl_gcp.setColumnWidth(c, w)
+        self.tbl_gcp.setColumnHidden(COL_NAME, not self.chk_names.isChecked())
         self.tbl_gcp.verticalHeader().setDefaultSectionSize(22)
         self.tbl_gcp.setAlternatingRowColors(True)
         self.tbl_gcp.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -494,7 +556,7 @@ class QMapAnalystDockWidget(QDockWidget):
 
         hint = QLabel(self.tr("Dwuklik w numer wiersza – pokaż punkt na obu mapach. Dwuklik w komórkę – edycja współrzędnej."))
         hint.setWordWrap(True)
-        hint.setStyleSheet("color: palette(placeholder-text); font-size: 8pt;")
+        self._hint(hint, small=True)
         lay.addWidget(hint)
         return _scrollable(tab)
 
@@ -551,7 +613,7 @@ class QMapAnalystDockWidget(QDockWidget):
         info = QLabel(self.tr("Dopasowanie historycznych odwzorowań kartograficznych do punktów GCP. "
                               "Wymaga ≥ 5 punktów rozłożonych na możliwie dużym obszarze (najlepiej > 2°)."))
         info.setWordWrap(True)
-        info.setStyleSheet("color: palette(placeholder-text);")
+        self._hint(info)
         lay.addWidget(info)
 
         row = QHBoxLayout()
@@ -654,7 +716,7 @@ class QMapAnalystDockWidget(QDockWidget):
 
         self.lbl_hyp_source = QLabel()
         self.lbl_hyp_source.setWordWrap(True)
-        self.lbl_hyp_source.setStyleSheet("color: palette(placeholder-text); font-size: 8pt;")
+        self._hint(self.lbl_hyp_source, small=True)
         form.addRow(self.lbl_hyp_source)
         self.btn_hypothesis = _button(self.tr("Testuj hipotezę i rysuj siatkę"), "/mIconGlobe.svg")
         self.btn_hypothesis.clicked.connect(self.run_hypothesis)
@@ -1255,9 +1317,20 @@ class QMapAnalystDockWidget(QDockWidget):
         ref = self._canvas_to_ref(point)
         old = self._temp_old_point
         self._temp_old_point = None
+        name = ""
+        if self.chk_names.isChecked():
+            name, ok = QInputDialog.getText(self, self.tr("Nazwa punktu"),
+                                            self.tr("Nazwa punktu #{n} (może być pusta):").format(n=len(self.gcps) + 1))
+            if not ok:
+                self._remove_temp_marker()
+                self._remove_pred_marker()
+                self.set_status(self.tr("Anulowano dodawanie pary. KROK 1/2: kliknij punkt na mapie dawnej."), "warn")
+                if not self.btn_capture.isChecked():
+                    self._restore_main_tool()
+                return
         self._remove_temp_marker()
         self._remove_pred_marker()
-        self.add_gcp(old.x(), old.y(), ref.x(), ref.y())
+        self.add_gcp(old.x(), old.y(), ref.x(), ref.y(), name=name.strip())
         self.gcps_changed()
         if self.btn_capture.isChecked():
             self.set_status(self.tr("Dodano parę #{n}. KROK 1/2: kliknij kolejny punkt na mapie dawnej (lub wyłącz tryb dodawania).")
@@ -1277,9 +1350,9 @@ class QMapAnalystDockWidget(QDockWidget):
         m.setPenWidth(2)
         return m
 
-    def add_gcp(self, ox, oy, rx, ry, enabled=True):
+    def add_gcp(self, ox, oy, rx, ry, enabled=True, name=""):
         self._ensure_ref_crs()
-        g = GCP(float(ox), float(oy), float(rx), float(ry), bool(enabled))
+        g = GCP(float(ox), float(oy), float(rx), float(ry), bool(enabled), str(name or ""))
         g.old_marker = self.create_marker(self.old_canvas, QgsPointXY(g.old_x, g.old_y), C_OLD if enabled else C_OFF)
         g.ref_marker = self.create_marker(self.main_canvas, self._ref_to_canvas(g.ref_x, g.ref_y), C_REF if enabled else C_OFF)
         self.gcps.append(g)
@@ -1325,7 +1398,7 @@ class QMapAnalystDockWidget(QDockWidget):
             self.analysis_stale = True
         if self.projection is not None:
             self.projection_stale = True
-            self.txt_proj.setHtml(f"<p style='color:#9a6700'>{self.tr('Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.')}</p>")
+            self.txt_proj.setHtml(self.colored_html(self.txt_proj, "warn", self.tr('Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.')))
         self.refresh_table()
         self.update_markers()
         self.update_enabled_state()
@@ -1347,11 +1420,15 @@ class QMapAnalystDockWidget(QDockWidget):
                 fit = self.analysis.fit
                 res = {row: k for k, row in enumerate(self.analysis.active_idx)}
             unit = self.analysis.unit if self.analysis else ""
+            bad, off = fg_color(t, "bad"), fg_color(t, "off")
             for r, g in enumerate(self.gcps):
                 chk = QTableWidgetItem()
                 chk.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
                 chk.setCheckState(Qt.CheckState.Checked if g.enabled else Qt.CheckState.Unchecked)
                 t.setItem(r, COL_ACT, chk)
+                nm = QTableWidgetItem(g.name)
+                nm.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable)
+                t.setItem(r, COL_NAME, nm)
                 t.setItem(r, COL_OX, _num_item(g.old_x, 2, True))
                 t.setItem(r, COL_OY, _num_item(g.old_y, 2, True))
                 t.setItem(r, COL_RX, _num_item(g.ref_x, 2, True))
@@ -1361,17 +1438,17 @@ class QMapAnalystDockWidget(QDockWidget):
                     w = fit.std_residuals[k]
                     out = np.isfinite(w) and w > me.OUTLIER_THRESHOLD
                     is_max = k == fit.stats["max_index"]
-                    col = QColor(207, 34, 46) if (out or is_max) else None
+                    col = bad if (out or is_max) else None
                     t.setItem(r, COL_ERR, _num_item(float(fit.errors[k]), 2, color=col,
                                                     tip=f"vX = {fit.residuals[k, 0]:.2f}, vY = {fit.residuals[k, 1]:.2f} {unit}"))
                     t.setItem(r, COL_LOO, _num_item(float(fit.loo_errors[k]), 2))
-                    t.setItem(r, COL_W, _num_item(float(w), 2, color=QColor(207, 34, 46) if out else None))
+                    t.setItem(r, COL_W, _num_item(float(w), 2, color=bad if out else None))
                 else:
                     for c in (COL_ERR, COL_LOO, COL_W):
                         it = _num_item(None)
                         if not g.enabled:
                             it.setText(self.tr("wył."))
-                            it.setForeground(C_OFF)
+                            it.setForeground(off)
                         t.setItem(r, c, it)
         finally:
             t.setUpdatesEnabled(True)
@@ -1385,6 +1462,10 @@ class QMapAnalystDockWidget(QDockWidget):
         g = self.gcps[r]
         if c == COL_ACT:
             g.enabled = item.checkState() == Qt.CheckState.Checked
+        elif c == COL_NAME:
+            g.name = item.text().strip()
+            self.names_changed()
+            return
         elif c in (COL_OX, COL_OY, COL_RX, COL_RY):
             attr = {COL_OX: "old_x", COL_OY: "old_y", COL_RX: "ref_x", COL_RY: "ref_y"}[c]
             try:
@@ -1401,6 +1482,23 @@ class QMapAnalystDockWidget(QDockWidget):
         else:
             return
         self.gcps_changed()
+
+    def point_label(self, i):
+        """Etykieta punktu w raportach: numer, a gdy jest nazwa – numer i nazwa."""
+        name = self.gcps[i].name if 0 <= i < len(self.gcps) else ""
+        return f"{i + 1} {name}" if name else str(i + 1)
+
+    def on_names_toggled(self, checked):
+        QgsSettings().setValue(SETTINGS_NAMES, bool(checked))
+        self.tbl_gcp.setColumnHidden(COL_NAME, not checked)
+
+    def names_changed(self):
+        """Zmiana nazw nie wpływa na obliczenia – odśwież tylko etykiety."""
+        if self.analysis is not None:
+            self.analysis.labels = [self.point_label(i) for i in self.analysis.active_idx]
+            self.render_report()
+        if self.analysis is not None and self.registry.has("main.points"):
+            self.generate_gcp_points()
 
     def on_table_selection_changed(self):
         self.update_markers()
@@ -1462,12 +1560,19 @@ class QMapAnalystDockWidget(QDockWidget):
         if is_points and not path.lower().endswith(".points"):
             path += ".points"
         crs = self._ensure_ref_crs()
-        rows = [(g.old_x, g.old_y, g.ref_x, g.ref_y, g.enabled) for g in self.gcps]
+        rows = [(g.old_x, g.old_y, g.ref_x, g.ref_y, g.enabled, g.name) for g in self.gcps]
+        msg = self.tr("Zapisano punkty do pliku (liczba: {n}).").format(n=len(self.gcps))
         if is_points:
             gcp_io.write_file(path, gcp_io.format_points(rows, self._crs_definition(crs)))
+            names = gcp_io.names_path(path)
+            if gcp_io.has_names(rows):
+                gcp_io.write_file(names, gcp_io.format_names(rows))
+                msg += " " + self.tr("Nazwy punktów zapisano w pliku {f}.").format(f=os.path.basename(names))
+            elif os.path.isfile(names):
+                os.remove(names)  # nieaktualny plik nazw z poprzedniego zapisu
         else:
             gcp_io.write_file(path, gcp_io.format_csv(rows))
-        self.set_status(self.tr("Zapisano punkty do pliku (liczba: {n}).").format(n=len(self.gcps)), "ok")
+        self.set_status(msg, "ok")
 
     @staticmethod
     def _crs_definition(crs):
@@ -1504,15 +1609,19 @@ class QMapAnalystDockWidget(QDockWidget):
         crs_def, rows, skipped = gcp_io.read_file(path)
         if not rows:
             raise ValueError(self.tr("Plik nie zawiera punktów."))
+        if path.lower().endswith(".points"):
+            rows = gcp_io.assign_names(rows, gcp_io.read_names(path))
         file_crs = self._parse_crs(crs_def) if crs_def else None
         ct = self._adopt_file_crs(file_crs)
 
-        for ox, oy, rx, ry, en in rows:
+        for ox, oy, rx, ry, en, name in rows:
             if ct is not None:
                 p = ct.transform(QgsPointXY(rx, ry))
                 rx, ry = p.x(), p.y()
-            self.add_gcp(ox, oy, rx, ry, enabled=en)
+            self.add_gcp(ox, oy, rx, ry, enabled=en, name=name)
         added = len(rows)
+        if gcp_io.has_names(rows) and not self.chk_names.isChecked():
+            self.chk_names.setChecked(True)
         self.gcps_changed()
         self.update_ref_markers()
         msg = self.tr("Wczytano punkty (liczba: {n}, układ: {crs}).").format(n=added, crs=self.crs_short(self.ref_crs))
@@ -1572,7 +1681,7 @@ class QMapAnalystDockWidget(QDockWidget):
         if len(idx) < meta["min_pts"]:
             msg = self.tr("Transformacja „{name}” wymaga co najmniej {k} aktywnych punktów (aktywne: {n} z {t}).").format(
                 name=self.tr(meta["name"]), k=meta["min_pts"], n=len(idx), t=len(self.gcps))
-            self.txt_report.setHtml(f"<p style='color:#cf222e'>{msg}</p>")
+            self.txt_report.setHtml(self.colored_html(self.txt_report, "bad", msg))
             if not auto:
                 self.set_status(msg, "warn")
             self.analysis = None
@@ -1584,7 +1693,7 @@ class QMapAnalystDockWidget(QDockWidget):
         with self.busy(self.tr("Obliczanie transformacji…")):
             fit = me.fit_transform(model, old, ref)
             m_per_unit, unit = self.ref_units()
-            st = AnalysisState(fit, idx, self._ensure_ref_crs(), [i + 1 for i in idx], m_per_unit, unit)
+            st = AnalysisState(fit, idx, self._ensure_ref_crs(), [self.point_label(i) for i in idx], m_per_unit, unit)
             st.comparison = me.compare_models(old, ref)
             if len(idx) >= 5:
                 v = fit.residuals
@@ -1699,7 +1808,7 @@ class QMapAnalystDockWidget(QDockWidget):
         fit = st.fit
         pos = {row: k for k, row in enumerate(st.active_idx)}
         lyr = memory_layer("Point", st.ref_crs, self.tr("QMapAnalyst – Punkty GCP"), [
-            ("id", "int"), ("active", "int"), ("x_old", "double"), ("y_old", "double"),
+            ("id", "int"), ("name", "string"), ("active", "int"), ("x_old", "double"), ("y_old", "double"),
             ("x_ref", "double"), ("y_ref", "double"), ("vx", "double"), ("vy", "double"),
             ("error", "double"), ("loo", "double"), ("w", "double"), ("outlier", "int"),
         ])
@@ -1715,10 +1824,10 @@ class QMapAnalystDockWidget(QDockWidget):
             else:
                 vals = [None, None, None, None, None, 2]
             items.append((QgsGeometry.fromPointXY(QgsPointXY(g.ref_x, g.ref_y)),
-                          [i + 1, int(g.enabled), g.old_x, g.old_y, g.ref_x, g.ref_y] + vals))
+                          [i + 1, g.name or None, int(g.enabled), g.old_x, g.old_y, g.ref_x, g.ref_y] + vals))
         add_features(lyr, items)
         style_points(lyr)
-        set_labels(lyr, '"id"', QColor(30, 30, 30))
+        set_labels(lyr, "concat(\"id\", if(coalesce(\"name\", '') = '', '', ' ' || \"name\"))", QColor(30, 30, 30))
         self.registry.set_main("main.points", lyr)
         self.set_status(self.tr("Wygenerowano warstwę punktów GCP z resztami."), "ok")
 
@@ -1990,7 +2099,7 @@ class QMapAnalystDockWidget(QDockWidget):
                 ref_label = self.tr("Układ odniesienia ({crs})").format(crs=self.crs_short(self.ref_crs))
                 self.projection = pj.estimate_projections(ll, old, ref_xy=ref, ref_label=ref_label,
                                                           mode=mode, progress=progress,
-                                                          labels=[i + 1 for i in idx])
+                                                          labels=[self.point_label(i) for i in idx])
             finally:
                 self.progress.hide()
         self.projection_stale = False
@@ -2016,6 +2125,7 @@ class QMapAnalystDockWidget(QDockWidget):
         dpi = float(self.spin_dpi.value())
         best = est.best
         highlight = [best] if est.conclusive else est.equivalent()
+        hyp_col, off_col, bad_col = fg_color(t, "hypothesis"), fg_color(t, "off"), fg_color(t, "bad")
         t.setRowCount(len(est.candidates))
         for r, c in enumerate(est.candidates):
             name = QTableWidgetItem(self.tr(c.name) + (self.tr(" (hipoteza)") if c.is_hypothesis else ""))
@@ -2024,15 +2134,15 @@ class QMapAnalystDockWidget(QDockWidget):
                 f = name.font()
                 f.setItalic(True)
                 name.setFont(f)
-                name.setForeground(QColor(200, 0, 120))
+                name.setForeground(hyp_col)
             if any(c is h for h in highlight):
                 f = name.font()
                 f.setBold(True)
                 name.setFont(f)
             if c.is_reference:
-                name.setForeground(C_OFF)
+                name.setForeground(off_col)
             if not c.success:
-                name.setForeground(QColor(207, 34, 46))
+                name.setForeground(bad_col)
             t.setItem(r, 0, name)
             t.setItem(r, 1, _num_item(c.sigma0_px, 2))
             t.setItem(r, 2, _num_item(c.delta_aicc, 1))
@@ -2206,7 +2316,7 @@ class QMapAnalystDockWidget(QDockWidget):
         rows = []
         for i, g in enumerate(self.gcps):
             k = pos.get(i)
-            r = {"id": i + 1, "enabled": g.enabled, "ox": g.old_x, "oy": g.old_y, "rx": g.ref_x, "ry": g.ref_y}
+            r = {"id": i + 1, "name": g.name, "enabled": g.enabled, "ox": g.old_x, "oy": g.old_y, "rx": g.ref_x, "ry": g.ref_y}
             if k is not None:
                 r.update(vx=float(fit.residuals[k, 0]), vy=float(fit.residuals[k, 1]), err=float(fit.errors[k]),
                          loo=float(fit.loo_errors[k]), w=float(fit.std_residuals[k]))
@@ -2291,14 +2401,14 @@ class QMapAnalystDockWidget(QDockWidget):
         rows = []
         for i, g in enumerate(self.gcps):
             k = pos.get(i)
-            base = [i + 1, int(g.enabled), g.old_x, g.old_y, g.ref_x, g.ref_y]
+            base = [i + 1, g.name, int(g.enabled), g.old_x, g.old_y, g.ref_x, g.ref_y]
             if k is None or self.analysis_stale:
                 rows.append(base + [""] * 7)
             else:
                 rows.append(base + [float(v) for v in (
                     fit.pts_transformed[k, 0], fit.pts_transformed[k, 1], fit.residuals[k, 0],
                     fit.residuals[k, 1], fit.errors[k], fit.loo_errors[k], fit.std_residuals[k])])
-        header = ["id", "enable", "x_old", "y_old", "x_ref", "y_ref", "x_trans", "y_trans", "vx", "vy",
+        header = ["id", "name", "enable", "x_old", "y_old", "x_ref", "y_ref", "x_trans", "y_trans", "vx", "vy",
                   "error", "loo", "w"]
         return ex.write_csv(path, header, rows)
 
@@ -2324,6 +2434,19 @@ class QMapAnalystDockWidget(QDockWidget):
     def showEvent(self, event):
         self._set_markers_visible(True)
         super().showEvent(event)
+        self.apply_theme_colors()
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() in (QEvent.Type.StyleChange, QEvent.Type.PaletteChange) and not self._theme_busy:
+            self._theme_busy = True  # setStyleSheet etykiet sam wywołuje StyleChange
+            try:
+                self.apply_theme_colors()
+                self.render_report()
+                if self.projection is not None and not self.projection_stale:
+                    self.fill_projection_table()
+            finally:
+                self._theme_busy = False
 
     def closeEvent(self, event):
         if self.btn_capture.isChecked():

@@ -128,6 +128,14 @@
         <translation>Save GCPs (CSV / .points)…</translation>
     </message>
     <message>
+        <source>Nazwy punktów</source>
+        <translation>Point names</translation>
+    </message>
+    <message>
+        <source>Po wskazaniu pary pytaj o nazwę punktu i pokaż kolumnę nazw. Nazwy zapisywane są w CSV (kolumna name) lub – dla pliku .points – w pliku towarzyszącym .points.names.csv, dzięki czemu plik .points pozostaje zgodny z Georeferencerem QGIS.</source>
+        <translation>Ask for a point name after each pair is picked and show the name column. Names are saved in CSV (name column) or – for a .points file – in a companion .points.names.csv file, so the .points file stays compatible with the QGIS Georeferencer.</translation>
+    </message>
+    <message>
         <source>Dwuklik w numer wiersza – pokaż punkt na obu mapach. Dwuklik w komórkę – edycja współrzędnej.</source>
         <translation>Double-click a row number to show the point on both maps. Double-click a cell to edit a coordinate.</translation>
     </message>
@@ -440,6 +448,14 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Point used in computations</translation>
     </message>
     <message>
+        <source>Nazwa</source>
+        <translation>Name</translation>
+    </message>
+    <message>
+        <source>Nazwa punktu (dwuklik – edycja)</source>
+        <translation>Point name (double-click to edit)</translation>
+    </message>
+    <message>
         <source>X dawna</source>
         <translation>X old</translation>
     </message>
@@ -548,12 +564,20 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>STEP 2/2: click the corresponding point on the QGIS MAIN MAP…</translation>
     </message>
     <message>
+        <source>Nazwa punktu</source>
+        <translation>Point name</translation>
+    </message>
+    <message>
         <source>Zaznacz wiersze do usunięcia.</source>
         <translation>Select the rows to remove.</translation>
     </message>
     <message>
         <source>Brak punktów do zapisania.</source>
         <translation>No points to save.</translation>
+    </message>
+    <message>
+        <source>Zapisano punkty do pliku (liczba: {n}).</source>
+        <translation>Saved {n} points to the file.</translation>
     </message>
     <message>
         <source>Plik nie zawiera punktów.</source>
@@ -696,12 +720,16 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Scan loaded: {w} × {h} px. Add or load GCPs.</translation>
     </message>
     <message>
-        <source>Usunięto punkty (liczba: {n}).</source>
-        <translation>Removed {n} points.</translation>
+        <source>Anulowano dodawanie pary. KROK 1/2: kliknij punkt na mapie dawnej.</source>
+        <translation>Pair cancelled. STEP 1/2: click a point on the historical map.</translation>
     </message>
     <message>
-        <source>Zapisano punkty do pliku (liczba: {n}).</source>
-        <translation>Saved {n} points to the file.</translation>
+        <source>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</source>
+        <translation>The GCPs have changed – the estimation result is out of date. Run it again.</translation>
+    </message>
+    <message>
+        <source>Usunięto punkty (liczba: {n}).</source>
+        <translation>Removed {n} points.</translation>
     </message>
     <message>
         <source>Zastąpić istniejące punkty ({n})?
@@ -796,12 +824,12 @@ No – append the new points to the existing ones.</translation>
         <translation>Point capture finished. Number of pairs: {n}.</translation>
     </message>
     <message>
-        <source>Dodano parę #{n}. KROK 1/2: kliknij kolejny punkt na mapie dawnej (lub wyłącz tryb dodawania).</source>
-        <translation>Pair #{n} added. STEP 1/2: click the next point on the historical map (or turn off capture mode).</translation>
+        <source>Nazwa punktu #{n} (może być pusta):</source>
+        <translation>Name of point #{n} (may be empty):</translation>
     </message>
     <message>
-        <source>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</source>
-        <translation>The GCPs have changed – the estimation result is out of date. Run it again.</translation>
+        <source>Dodano parę #{n}. KROK 1/2: kliknij kolejny punkt na mapie dawnej (lub wyłącz tryb dodawania).</source>
+        <translation>Pair #{n} added. STEP 1/2: click the next point on the historical map (or turn off capture mode).</translation>
     </message>
     <message>
         <source>Współrzędne przeliczono z układu {crs}.</source>
@@ -848,8 +876,8 @@ No – append the new points to the existing ones.</translation>
         <translation>Enter a value for: {p}</translation>
     </message>
     <message>
-        <source>Niepoprawna wartość liczbowa – przywrócono poprzednią.</source>
-        <translation>Invalid number – the previous value was restored.</translation>
+        <source>Nazwy punktów zapisano w pliku {f}.</source>
+        <translation>Point names were saved to {f}.</translation>
     </message>
     <message>
         <source>Zbyt gęsta siatka (linie: {n}) – zwiększ oczko siatki.</source>
@@ -878,6 +906,10 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>wył.</source>
         <translation>off</translation>
+    </message>
+    <message>
+        <source>Niepoprawna wartość liczbowa – przywrócono poprzednią.</source>
+        <translation>Invalid number – the previous value was restored.</translation>
     </message>
     <message>
         <source>punkty</source>
@@ -1476,6 +1508,10 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>Dane wejściowe</source>
         <translation>Input data</translation>
+    </message>
+    <message>
+        <source>Nazwa</source>
+        <translation>Name</translation>
     </message>
     <message>
         <source>Punkty kontrolne i reszty</source>

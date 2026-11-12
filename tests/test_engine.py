@@ -18,6 +18,7 @@ PKG = os.path.basename(PLUGIN_DIR)
 math_engine = __import__(f"{PKG}.math_engine", fromlist=["*"])
 projections = __import__(f"{PKG}.projections", fromlist=["*"])
 gcp_io = __import__(f"{PKG}.gcp_io", fromlist=["*"])
+theme = __import__(f"{PKG}.theme", fromlist=["*"])
 
 
 def _synthetic(n=40, seed=3):
@@ -247,20 +248,20 @@ def test_points_qgis_written_file():
             "641000,480000.25,2210.5,-2800.125,0,0,0,0\n")
     crs, rows, skipped = gcp_io.parse_gcp_text(text, "mapa.tif.points")
     assert crs == WKT and skipped == 0
-    assert rows[0] == (1534.25, -1022.75, 637012.123456789, 486514.5, True)
+    assert rows[0] == (1534.25, -1022.75, 637012.123456789, 486514.5, True, "")
     assert rows[1][4] is False
 
 
 def test_points_legacy_and_headerless():
     legacy = "mapX\tmapY\tpixelX\tpixelY\tenable\n500000\t300000\t10.5\t-20.5\t1\n"
     _, rows, _ = gcp_io.parse_gcp_text(legacy, "a.points")
-    assert rows == [(10.5, -20.5, 500000.0, 300000.0, True)]
+    assert rows == [(10.5, -20.5, 500000.0, 300000.0, True, "")]
     noheader = "500000,300000,10.5,-20.5,1\n500100,300100,11.5,-21.5,0\n"
     _, rows, _ = gcp_io.parse_gcp_text(noheader, "b.points")
     assert rows[0][:4] == (10.5, -20.5, 500000.0, 300000.0) and rows[1][4] is False
     csv_pl = "x_old;y_old;x_ref;y_ref;enable\n10,5;-20,5;500000,25;300000;1\nzly;wiersz;;;\n"
     _, rows, skipped = gcp_io.parse_gcp_text(csv_pl, "c.csv")
-    assert rows == [(10.5, -20.5, 500000.25, 300000.0, True)] and skipped == 1
+    assert rows == [(10.5, -20.5, 500000.25, 300000.0, True, "")] and skipped == 1
 
 
 def test_points_roundtrip_readable_by_qgis():
@@ -270,9 +271,59 @@ def test_points_roundtrip_readable_by_qgis():
     crs, rows = _qgis_load(text)
     assert crs == WKT and rows == gcps
     crs2, rows2, _ = gcp_io.parse_gcp_text(text, "x.points")
-    assert crs2 == WKT and rows2 == gcps
+    assert crs2 == WKT and [r[:5] for r in rows2] == gcps
     _, rows3, _ = gcp_io.parse_gcp_text(gcp_io.format_csv(gcps), "x.csv")
-    assert rows3 == gcps
+    assert [r[:5] for r in rows3] == gcps
+
+
+NAMED = [(1534.25, -1022.75, 637012.1, 486514.5, True, "Kościół, wieża"),
+         (2210.5, -2800.125, 641000.0, 480000.25, False, ""),
+         (900.0, -400.0, 630000.0, 490000.0, True, 'Młyn "Dolny"')]
+
+
+def test_points_with_names_stay_qgis_compatible():
+    text = gcp_io.format_points(NAMED, WKT)
+    assert "Kości" not in text and "Młyn" not in text
+    _, rows = _qgis_load(text)
+    assert rows == [g[:5] for g in NAMED]
+
+
+def test_names_sidecar_roundtrip_and_matching():
+    names = gcp_io.parse_names(gcp_io.format_names(NAMED))
+    assert [n[1] for n in names] == ["Kościół, wieża", "", 'Młyn "Dolny"']
+    plain = [g[:5] for g in NAMED]
+    assert gcp_io.assign_names(plain, names) == NAMED
+    # Georeferencer: kolejność zmieniona, jeden punkt usunięty, jeden dodany
+    edited = [plain[2], (5.0, -5.0, 1.0, 1.0, True), plain[0]]
+    got = gcp_io.assign_names(edited, names)
+    assert [g[5] for g in got] == ['Młyn "Dolny"', "", "Kościół, wieża"]
+    # współrzędne poprawione, liczba punktów ta sama – dopasowanie po numerze
+    moved = [(g[0] + 3.0,) + g[1:5] for g in plain]
+    assert [g[5] for g in gcp_io.assign_names(moved, names)] == [g[5] for g in NAMED]
+    # plik nazw da się wczytać jako lista GCP
+    _, rows, skipped = gcp_io.parse_gcp_text(gcp_io.format_names(NAMED), "a.points.names.csv")
+    assert skipped == 0 and [r[:4] for r in rows] == [g[:4] for g in NAMED] and rows[0][5] == "Kościół, wieża"
+
+
+def test_csv_with_names():
+    text = gcp_io.format_csv(NAMED)
+    assert text.splitlines()[0] == "x_old,y_old,x_ref,y_ref,enable,name"
+    _, rows, skipped = gcp_io.parse_gcp_text(text, "x.csv")
+    assert skipped == 0 and rows == NAMED
+    assert "name" not in gcp_io.format_csv([g[:5] for g in NAMED])
+
+
+def test_theme_contrast_on_qgis_backgrounds():
+    # tła QTextBrowser: domyślne, Night Mapping, Blend of Gray, ciemny systemowy
+    for bg, text in (("#ffffff", "#000000"), ("#535353", "#aaaaaa"), ("#b2b2b2", "#0e0e0e"), ("#1e1e1e", "#dddddd")):
+        pal = theme.report_palette(bg, text)
+        assert theme.contrast(pal["text"], bg) >= theme.TEXT_MIN - 1e-6, (bg, pal["text"])
+        assert theme.contrast(pal["text"], pal["head"]) >= theme.SEMANTIC_MIN, (bg, pal["head"])
+        for k in ("muted", "accent", "good", "warn", "bad"):
+            assert theme.contrast(pal[k], bg) >= theme.SEMANTIC_MIN - 1e-6, (bg, k, pal[k])
+    # kolor czytelny na obu tłach naprzemiennych wierszy tabeli
+    c = theme.foreground("bad", "#202020", "#323232")
+    assert min(theme.contrast(c, "#202020"), theme.contrast(c, "#323232")) >= theme.SEMANTIC_MIN
 
 
 if __name__ == "__main__":

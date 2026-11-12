@@ -52,6 +52,10 @@ Dwuklik w numer wiersza centruje oba widoki na punkcie; zaznaczone punkty są wy
 
 Zapis/odczyt: format Georeferencera QGIS (`.points`) oraz CSV (separator `,` lub `;`). Przy wczytywaniu możesz zastąpić istniejące punkty albo je uzupełnić; niepoprawne wiersze są pomijane z informacją.
 
+**Nazwy punktów.** Po zaznaczeniu przełącznika *Nazwy punktów* wtyczka po wskazaniu każdej pary pyta o nazwę (Anuluj – para nie zostanie dodana) i pokazuje kolumnę *Nazwa* (dwuklik – edycja). Nazwy pojawiają się w raporcie (np. „#5 Kościół”), w warstwie punktów GCP i w eksporcie CSV.
+* CSV – nazwa jest dodatkową kolumną `name`.
+* `.points` – plik pozostaje dokładnie w formacie Georeferencera QGIS, a nazwy trafiają do pliku towarzyszącego `<plik>.points.names.csv` (`id,name,sourceX,sourceY,mapX,mapY`). Przy wczytywaniu nazwy są przypisywane po współrzędnych skanu, więc przetrwają zmianę kolejności, dodanie lub usunięcie punktów w Georeferencerze; gdy liczba punktów się zgadza, punkty o poprawionych współrzędnych dostają nazwę po numerze. Zapis bez nazw usuwa nieaktualny plik towarzyszący.
+
 ---
 
 ## 3. Zakładka Analiza
