@@ -482,4 +482,13 @@ EN = {
     "lokalne zniekształcenia (TPS), izolinie, siatki zniekształceń": "local distortion (TPS), isolines, distortion grids",
     "otoczka punktów (obszar wiarygodny)": "convex hull of the points (reliable area)",
     "Nie zapisano pliku georeferencji .tfw: {err}": "The .tfw world file was not saved: {err}",
+    "Nazwy punktów": "Point names",
+    "Po wskazaniu pary pytaj o nazwę punktu i pokaż kolumnę nazw. Nazwy zapisywane są w CSV (kolumna name) lub – dla pliku .points – w pliku towarzyszącym .points.names.csv, dzięki czemu plik .points pozostaje zgodny z Georeferencerem QGIS.":
+        "Ask for a point name after each pair is picked and show the name column. Names are saved in CSV (name column) or – for a .points file – in a companion .points.names.csv file, so the .points file stays compatible with the QGIS Georeferencer.",
+    "Nazwa": "Name",
+    "Nazwa punktu (dwuklik – edycja)": "Point name (double-click to edit)",
+    "Nazwa punktu": "Point name",
+    "Anulowano dodawanie pary. KROK 1/2: kliknij punkt na mapie dawnej.": "Pair cancelled. STEP 1/2: click a point on the historical map.",
+    "Nazwa punktu #{n} (może być pusta):": "Name of point #{n} (may be empty):",
+    "Nazwy punktów zapisano w pliku {f}.": "Point names were saved to {f}.",
 }

@@ -12,6 +12,7 @@ import numpy as np
 from qgis.PyQt.QtCore import QCoreApplication
 
 from .lang import num
+from . import theme
 from .math_engine import MODELS, OUTLIER_THRESHOLD, scale_denominator
 from .projections import PARAM_LABELS, format_dms, hypothesis_params, prime_meridian_variants
 
@@ -37,17 +38,12 @@ def message_text(msg) -> str:
 
 
 def palette_colors(widget):
-    """Kolory raportu dopasowane do motywu QGIS (jasny / ciemny)."""
+    """Kolory raportu dopasowane do rzeczywistego tła widżetu (motyw jasny / ciemny / szary)."""
+    widget.ensurePolished()
     pal = widget.palette()
-    text = pal.color(pal.ColorRole.Text)
-    base = pal.color(pal.ColorRole.Base)
-    dark = base.lightness() < 128
-    if not dark:
-        return dict(LIGHT)
-    return {
-        "text": text.name(), "muted": "#9aa4ae", "accent": "#6cb6ff", "border": "#444c56",
-        "head": "#2d333b", "good": "#57ab5a", "warn": "#c69026", "bad": "#f47067",
-    }
+    bg = pal.color(pal.ColorRole.Base).name()
+    text = pal.color(pal.ColorRole.Text).name()
+    return theme.report_palette(bg, text, LIGHT["font_pt"])
 
 
 def fmt(v, digits=2, unit=""):
@@ -82,7 +78,6 @@ def _css(c):
       table {{ border-collapse:collapse; margin:2px 0; }}
       td, th {{ padding:2px 6px; border-bottom:1px solid {c['border']}; vertical-align:top; color:{c['text']}; }}
       th {{ background:{c['head']}; color:{c['text']}; text-align:left; font-weight:600; }}
-      p, div, span, b {{ color:inherit; }}
       td.k {{ color:{c['muted']}; }}
       td.n {{ text-align:right; white-space:nowrap; }}
       .muted {{ color:{c['muted']}; }}
@@ -122,7 +117,7 @@ def _accuracy_section(fit, unit, labels, loo_rmse, dpi, sigma_mm, rmse_mm):
         (tr("RMSE całkowity / X / Y"), f"{fmt(st['rmse'], 2)} / {fmt(st['rmse_x'], 2)} / {fmt(st['rmse_y'], 2)} {unit}"),
         (tr("Błąd średni / mediana / odch. std."), f"{fmt(st['mean'], 2)} / {fmt(st['median'], 2)} / {fmt(st['std'], 2)} {unit}"),
         (tr("Błąd min / max"), f"{fmt(st['min'], 2)} / {fmt(st['max'], 2)} {unit} "
-                                f"<span class='muted'>(#{labels[st['max_index']]})</span>"),
+                                f"<span class='muted'>(#{escape(str(labels[st['max_index']]))})</span>"),
         (tr("CE90 / CE95 (percentyle błędu)"), f"{fmt(st['p90'], 2)} / {fmt(st['p95'], 2)} {unit}"),
         (tr("RMSE walidacji krzyżowej (LOO)"), fmt(loo_rmse, 2, unit)),
         (tr("σ₀ / RMSE na papierze") + f" ({num(dpi, 0)} DPI)", f"{fmt(sigma_mm, 2)} / {fmt(rmse_mm, 2)} mm"),
@@ -178,7 +173,7 @@ def _outliers_section(fit, unit, labels):
     h.append("<table width='100%'><tr>"
              f"<th>#</th><th>{tr('Błąd')}</th><th>{tr('Błąd LOO')}</th><th>w</th><th>{tr('nadwyżkowość')}</th></tr>")
     for i in idx[:15]:
-        h.append(f"<tr><td>{labels[i]}</td><td class='n'>{fmt(fit.errors[i], 2, unit)}</td>"
+        h.append(f"<tr><td>{escape(str(labels[i]))}</td><td class='n'>{fmt(fit.errors[i], 2, unit)}</td>"
                  f"<td class='n'>{fmt(fit.loo_errors[i], 2, unit)}</td>"
                  f"<td class='n bad'>{fmt(w[i], 2)}</td>"
                  f"<td class='n'>{fmt(fit.redundancy_numbers[i], 2)}</td></tr>")
@@ -400,10 +395,12 @@ def meta_html(rows) -> str:
 
 
 def gcp_table_html(rows, unit: str) -> str:
-    """rows: lista słowników id, enabled, ox, oy, rx, ry, vx, vy, err, loo, w (None gdy brak)."""
+    """rows: lista słowników id, name, enabled, ox, oy, rx, ry, vx, vy, err, loo, w (None gdy brak)."""
+    named = any(r.get("name") for r in rows)
+    name_th = f"<th>{tr('Nazwa')}</th>" if named else ""
     h = [f"<h3>{tr('Punkty kontrolne i reszty')}</h3>",
          "<table width='100%'><tr>"
-         f"<th>#</th><th>{tr('Akt.')}</th><th>{tr('X dawna')}</th><th>{tr('Y dawna')}</th>"
+         f"<th>#</th>{name_th}<th>{tr('Akt.')}</th><th>{tr('X dawna')}</th><th>{tr('Y dawna')}</th>"
          f"<th>{tr('X ref.')}</th><th>{tr('Y ref.')}</th><th>vX</th><th>vY</th>"
          f"<th>{tr('Błąd')}</th><th>LOO</th><th>w</th></tr>"]
     for r in rows:
@@ -412,7 +409,8 @@ def gcp_table_html(rows, unit: str) -> str:
         wcell = f"<td class='n bad'>{fmt(w, 2)}</td>" if out else f"<td class='n'>{fmt(w, 2) if w is not None else '–'}</td>"
         cells = [fmt(r.get(k), d) if r.get(k) is not None else "–"
                  for k, d in (("ox", 1), ("oy", 1), ("rx", 2), ("ry", 2), ("vx", 2), ("vy", 2), ("err", 2), ("loo", 2))]
-        h.append(f"<tr><td>{r['id']}</td><td>{'✓' if r['enabled'] else '–'}</td>"
+        name_td = f"<td>{escape(r.get('name') or '')}</td>" if named else ""
+        h.append(f"<tr><td>{r['id']}</td>{name_td}<td>{'✓' if r['enabled'] else '–'}</td>"
                  + "".join(f"<td class='n'>{c}</td>" for c in cells) + wcell + "</tr>")
     h.append("</table>")
     h.append(f"<div class='note'>{tr('Reszty v = współrzędne referencyjne − transformowane, w jednostkach układu odniesienia')} ({escape(unit)}).</div>")

@@ -147,6 +147,44 @@ def run():
     assert dock.ref_crs.authid() == "EPSG:2180"
     print("points round-trip OK:", dock.lbl_status.text())
 
+    # --- 5b. nazwy punktów: dialog przy dodawaniu, plik towarzyszący, zgodność .points
+    from qgis.PyQt.QtWidgets import QInputDialog
+    dock.chk_names.setChecked(True)
+    assert not dock.tbl_gcp.isColumnHidden(dm.COL_NAME)
+    answers = iter([("Kościół, wieża", True), ("", False)])
+    QInputDialog.getText = staticmethod(lambda *a, **k: next(answers))
+    n0 = len(dock.gcps)
+    dock.btn_capture.setChecked(True)
+    for ox, oy in [(1111.0, -1111.0), (2222.0, -2222.0)]:
+        dock.on_old_canvas_clicked(QgsPointXY(ox, oy), Qt.MouseButton.LeftButton)
+        dock.on_ref_canvas_clicked(dock._ref_to_canvas(*fwd([ox, oy])), Qt.MouseButton.LeftButton)
+    dock.btn_capture.setChecked(False)
+    dock._recalc_timer.stop()
+    assert len(dock.gcps) == n0 + 1, "anulowanie dialogu nazwy powinno odrzucić parę"
+    assert dock.gcps[-1].name == "Kościół, wieża"
+    dock.tbl_gcp.item(0, dm.COL_NAME).setText("<Młyn>")
+    assert dock.gcps[0].name == "<Młyn>"
+    dock.run_analysis()
+    assert dock.analysis.labels[0] == "1 <Młyn>", dock.analysis.labels
+    dock.save_gcp_to_file()
+    names_file = gcp_io.names_path(pts_path)
+    assert os.path.isfile(names_file)
+    assert "Młyn" not in open(pts_path, encoding="utf-8").read(), ".points musi pozostać w formacie QGIS"
+    saved = [(g.old_x, g.old_y, g.ref_x, g.ref_y, g.enabled, g.name) for g in dock.gcps]
+    dock.chk_names.setChecked(False)
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.StandardButton.Yes)
+    dock.load_gcp_from_file()
+    loaded = [(g.old_x, g.old_y, g.ref_x, g.ref_y, g.enabled, g.name) for g in dock.gcps]
+    assert loaded == saved, "nazwy nie wróciły z pliku towarzyszącego"
+    assert dock.chk_names.isChecked(), "wczytanie nazw powinno włączyć kolumnę nazw"
+    # zapis bez nazw usuwa nieaktualny plik nazw
+    for g in dock.gcps:
+        g.name = ""
+    dock.save_gcp_to_file()
+    assert not os.path.isfile(names_file)
+    dock.chk_names.setChecked(False)
+    print("point names OK")
+
     # --- 6. dopisanie punktów z pliku w innym układzie (EPSG:3857) – przeliczenie
     from qgis.core import QgsCoordinateTransform
     ct = QgsCoordinateTransform(crs, QgsCoordinateReferenceSystem("EPSG:3857"), QgsProject.instance())
