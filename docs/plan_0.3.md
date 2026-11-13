@@ -67,6 +67,16 @@ Stan:
   czynnikami statusu; `library.STATUS_WEIGHTS` (pewny 1, niepewny 0,25); przełącznik w zakładce Analiza
   (domyślnie wył.), waga w podpowiedzi kolumny w, wiersz raportu. Testy: równania normalne, LOO = ponowne
   wyrównanie, niezmienniczość skali wag. Estymacja odwzorowania bez wag.
+- etap 5 – import (`importer.py` bez QGIS, `import_dialog.py`): warstwa wektorowa projektu (dowolna geometria,
+  tylko zaznaczone) lub CSV (separator, kodowanie, przecinek dziesiętny, kolumny X/Y, układ), automatyczne
+  dopasowanie pól (PRNG, OSM), typy PL/EN/DE, duplikaty = odległość ≤ tolerancja i ta sama nazwa (także dawna,
+  także w obrębie importu), dopisywanie nazw dawnych, zestaw istniejący lub nowy
+  (`tests/test_importer.py`, `tests/library_import_qgis.py`). Pobieranie z sieci (Overpass, usługi PRNG) – później.
+- etap 6 – macierz pokrycia (`coverage.py` bez QGIS, `coverage_dialog.py`): punkty zestawu × analizy z punktami
+  zestawu (wg roku), kody sure/uncertain/outlier/illegible/disabled/absent, odstające z testu Baardy wybranym
+  modelem liczone na żądanie, punkty wspólne wszystkim mapom, odstające na ≥ 2 mapach, eksport CSV/JSON,
+  dwuklik – wczytanie analizy (`tests/test_coverage.py`, `tests/library_coverage_qgis.py`).
+  Pilot „Kielecczyzna-18” (M2 Zannoni, M5 TKKP Iłża) – na danych użytkownika.
 
 ## Etapy
 

@@ -26,6 +26,7 @@ from qgis.core import (
     QgsProperty, QgsRendererCategory, QgsSettings, QgsSymbolLayer, QgsVectorLayer,
 )
 
+from . import importer as im
 from . import library as lb
 from .layers import set_labels
 from .widgets import FlowLayout
@@ -168,6 +169,7 @@ class LibraryPanel(QWidget):
     saveAnalysisRequested = pyqtSignal()
     openAnalysisRequested = pyqtSignal()
     editAnalysisRequested = pyqtSignal()
+    openAnalysisIdRequested = pyqtSignal(int)
 
     def __init__(self, status=None, parent=None):
         super().__init__(parent)
@@ -219,6 +221,10 @@ class LibraryPanel(QWidget):
         lay.addLayout(row)
 
         row = FlowLayout(spacing=2)
+        self.btn_import = _tool("/mActionSharingImport.svg", tr("Importuj…"), tr(
+            "Import punktów z warstwy wektorowej projektu (np. PRNG, OSM, BDOT10k) lub pliku CSV – "
+            "z dopasowaniem pól, rozpoznawaniem typów i pomijaniem duplikatów"))
+        self.btn_import.clicked.connect(self.import_dialog)
         self.btn_set_new = _tool("/mActionNewTableRow.svg", tr("Nowy zestaw"),
                                  tr("Załóż zestaw z punktów zaznaczonych na warstwie biblioteki (lub pusty)"))
         self.btn_set_new.clicked.connect(self.new_set_dialog)
@@ -228,9 +234,13 @@ class LibraryPanel(QWidget):
         self.btn_set_remove.clicked.connect(self.remove_selected_from_set)
         self.btn_set_rename = _tool("/mActionEditTable.svg", tr("Zmień nazwę"), tr("Zmień nazwę wybranego zestawu"))
         self.btn_set_rename.clicked.connect(self.rename_set_dialog)
+        self.btn_coverage = _tool("/mActionOpenTable.svg", tr("Macierz pokrycia…"), tr(
+            "Punkty wybranego zestawu × mapy zapisane w bibliotece: obecne, niepewne, odstające, nieczytelne, "
+            "brak na mapie; punkty wspólne wszystkim mapom; eksport CSV/JSON"))
+        self.btn_coverage.clicked.connect(self.coverage_dialog)
         self.btn_set_delete = _tool("/mActionDeleteSelected.svg", tr("Usuń zestaw"), tr("Usuń wybrany zestaw (punkty zostają w bibliotece)"))
         self.btn_set_delete.clicked.connect(self.delete_set)
-        for b in (self.btn_set_new, self.btn_set_add, self.btn_set_remove, self.btn_set_rename, self.btn_set_delete):
+        for b in (self.btn_import, self.btn_coverage, self.btn_set_new, self.btn_set_add, self.btn_set_remove, self.btn_set_rename, self.btn_set_delete):
             row.addWidget(b)
         lay.addLayout(row)
 
@@ -290,11 +300,11 @@ class LibraryPanel(QWidget):
             self.lbl_file.setText(tr("Brak biblioteki punktów – otwórz istniejący plik lub załóż nowy."))
             self.lbl_file.setToolTip("")
         sid = self.current_set()
-        for w in (self.chk_layer, self.cmb_set, self.btn_set_new):
+        for w in (self.chk_layer, self.cmb_set, self.btn_set_new, self.btn_import):
             w.setEnabled(has)
         for b in (self.btn_set_add, self.btn_set_remove):
             b.setEnabled(has and sid is not None and self.layer is not None)
-        for b in (self.btn_set_rename, self.btn_set_delete):
+        for b in (self.btn_set_rename, self.btn_set_delete, self.btn_coverage):
             b.setEnabled(has and sid is not None)
         for b in (self.btn_an_save, self.btn_an_open, self.btn_an_meta):
             b.setEnabled(has)
@@ -521,6 +531,69 @@ class LibraryPanel(QWidget):
             result.append(p)
         lib.add_points(new_points)  # nadaje uid obiektom RefPoint
         return [r.uid if isinstance(r, lb.RefPoint) else r for r in result], len(new_points), linked
+
+    # --- import ---------------------------------------------------------------------------
+    def sets_list(self):
+        try:
+            with self.library() as lib:
+                return lib.sets()
+        except lb.LibraryError:
+            return []
+
+    def coverage_dialog(self):
+        if self.current_set() is None:
+            self.status(tr("Wybierz zestaw punktów."), "warn")
+            return
+        if self.layer is not None and not self._save_pending_edits():
+            return
+        from .coverage_dialog import CoverageDialog
+        dlg = CoverageDialog(self, self)
+        if dlg.exec() == QDialog.DialogCode.Accepted and dlg.chosen_analysis is not None:
+            self.openAnalysisIdRequested.emit(dlg.chosen_analysis)
+
+    def import_dialog(self):
+        from .import_dialog import ImportDialog
+        dlg = ImportDialog(self, self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            added, dups, near, merged = dlg.result_stats
+            msg = tr("Import: dodano {a}, pominięto duplikaty: {d}").format(a=added, d=dups)
+            if merged:
+                msg += ", " + tr("uzupełniono nazwy dawne: {m}").format(m=merged)
+            if near:
+                msg += ", " + tr("blisko istniejących (inna nazwa): {n}").format(n=near)
+            self.status(msg + ".", "ok")
+
+    def import_points(self, points, tol, set_id=None, new_set=None, merge_names=True):
+        """Dodaje punkty z pominięciem duplikatów; zwraca (dodane, duplikaty, bliskie, uzupełnione) albo None."""
+        if self.path is None:
+            return None
+        if self.layer is not None and not self._save_pending_edits():
+            return None
+        try:
+            with self.library() as lib:
+                to_add, dups, near = im.find_duplicates(lib.points(), points, tol)
+                lib.add_points(to_add)
+                merged = self._merge_duplicate_names(lib, dups) if merge_names else 0
+                uids = [p.uid for p in to_add] + [q.uid for _p, q in dups]
+                if new_set:
+                    set_id = lib.add_set(new_set)
+                if set_id is not None:
+                    lib.add_to_set(set_id, list(dict.fromkeys(uids)))
+        except lb.LibraryError as e:
+            self.status(self._library_error(e), "error")
+            return None
+        self.refresh_layer()
+        self.reload_sets(select=set_id if set_id is not None else self.current_set())
+        return len(to_add), len(dups), len(near), merged
+
+    @staticmethod
+    def _merge_duplicate_names(lib, dups):
+        merged = 0
+        for p, q in dups:
+            if q.uid and im.merge_alt_names(q, p):
+                lib.update_point(q)
+                merged += 1
+        return merged
 
     def refresh_layer(self):
         self.invalidate_cache()

@@ -359,6 +359,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self.library_panel.saveAnalysisRequested.connect(self.save_library_analysis)
         self.library_panel.openAnalysisRequested.connect(self.open_library_analysis)
         self.library_panel.editAnalysisRequested.connect(self.edit_library_analysis)
+        self.library_panel.openAnalysisIdRequested.connect(self.open_library_analysis)
         self.tab_widget.addTab(self._build_analysis_tab(), _icon("/mActionCalculateField.svg"), self.tr("Analiza"))
         self.tab_widget.addTab(self._build_projection_tab(), _icon("/mIconGlobe.svg"), self.tr("Odwzorowanie"))
         self.tab_widget.addTab(self._build_layers_tab(), _icon("/mActionAddLayer.svg"), self.tr("Warstwy"))

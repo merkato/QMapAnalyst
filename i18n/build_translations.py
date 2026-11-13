@@ -26,6 +26,8 @@ CONTEXTS = {
     "layers.py": "QMapAnalystLayers",
     "library_panel.py": "QMapAnalystLibrary",
     "analysis_store.py": "QMapAnalystDockWidget",
+    "import_dialog.py": "QMapAnalystLibrary",
+    "coverage_dialog.py": "QMapAnalystLibrary",
 }
 
 

@@ -2323,6 +2323,14 @@ Update the reference coordinates of these points?</translation>
         <translation>Show only the points of the selected set on the map</translation>
     </message>
     <message>
+        <source>Importuj…</source>
+        <translation>Import…</translation>
+    </message>
+    <message>
+        <source>Import punktów z warstwy wektorowej projektu (np. PRNG, OSM, BDOT10k) lub pliku CSV – z dopasowaniem pól, rozpoznawaniem typów i pomijaniem duplikatów</source>
+        <translation>Import points from a project vector layer (e.g. PRNG, OSM, BDOT10k) or a CSV file – with field matching, type recognition and skipping of duplicates</translation>
+    </message>
+    <message>
         <source>Nowy zestaw</source>
         <translation>New set</translation>
     </message>
@@ -2353,6 +2361,14 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Zmień nazwę wybranego zestawu</source>
         <translation>Rename the chosen set</translation>
+    </message>
+    <message>
+        <source>Macierz pokrycia…</source>
+        <translation>Coverage matrix…</translation>
+    </message>
+    <message>
+        <source>Punkty wybranego zestawu × mapy zapisane w bibliotece: obecne, niepewne, odstające, nieczytelne, brak na mapie; punkty wspólne wszystkim mapom; eksport CSV/JSON</source>
+        <translation>Points of the chosen set × maps saved in the library: present, uncertain, outliers, illegible, not on map; points common to all maps; CSV/JSON export</translation>
     </message>
     <message>
         <source>Usuń zestaw</source>
@@ -2491,6 +2507,10 @@ Update the reference coordinates of these points?</translation>
         <translation>First open or create a point library (Library tab).</translation>
     </message>
     <message>
+        <source>Wybierz zestaw punktów.</source>
+        <translation>Choose a point set.</translation>
+    </message>
+    <message>
         <source>Warstwa biblioteki ma niezapisane zmiany (np. nowe punkty). Zestawy obejmują tylko punkty zapisane w pliku. Zapisać zmiany teraz?</source>
         <translation>The library layer has unsaved changes (e.g. new points). Sets only include points saved in the file. Save the changes now?</translation>
     </message>
@@ -2509,6 +2529,10 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Punkt jest użyty w analizach: {ids}.</source>
         <translation>The point is used in analyses: {ids}.</translation>
+    </message>
+    <message>
+        <source>Import: dodano {a}, pominięto duplikaty: {d}</source>
+        <translation>Import: added {a}, duplicates skipped: {d}</translation>
     </message>
     <message>
         <source>Wszystkie punkty ({n})</source>
@@ -2561,6 +2585,218 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Nie można wczytać warstwy biblioteki z pliku {f}.</source>
         <translation>Cannot load the library layer from {f}.</translation>
+    </message>
+    <message>
+        <source>uzupełniono nazwy dawne: {m}</source>
+        <translation>historical names completed: {m}</translation>
+    </message>
+    <message>
+        <source>blisko istniejących (inna nazwa): {n}</source>
+        <translation>close to existing (different name): {n}</translation>
+    </message>
+    <message>
+        <source>Nazwa (wymagana):</source>
+        <translation>Name (required):</translation>
+    </message>
+    <message>
+        <source>Nazwy dawne / obce:</source>
+        <translation>Historical / foreign names:</translation>
+    </message>
+    <message>
+        <source>Typ:</source>
+        <translation>Type:</translation>
+    </message>
+    <message>
+        <source>Wskazany obiekt:</source>
+        <translation>Indicated feature:</translation>
+    </message>
+    <message>
+        <source>Niepewność współrzędnych [m]:</source>
+        <translation>Coordinate uncertainty [m]:</translation>
+    </message>
+    <message>
+        <source>Istnieje od (rok):</source>
+        <translation>Exists from (year):</translation>
+    </message>
+    <message>
+        <source>Istnieje do (rok):</source>
+        <translation>Exists until (year):</translation>
+    </message>
+    <message>
+        <source>Źródło:</source>
+        <translation>Source:</translation>
+    </message>
+    <message>
+        <source>Import punktów do biblioteki</source>
+        <translation>Import points to the library</translation>
+    </message>
+    <message>
+        <source>Importuj</source>
+        <translation>Import</translation>
+    </message>
+    <message>
+        <source>Źródło</source>
+        <translation>Source</translation>
+    </message>
+    <message>
+        <source>Plik CSV…</source>
+        <translation>CSV file…</translation>
+    </message>
+    <message>
+        <source>Wybierz plik…</source>
+        <translation>Choose file…</translation>
+    </message>
+    <message>
+        <source>Warstwa lub plik:</source>
+        <translation>Layer or file:</translation>
+    </message>
+    <message>
+        <source>Tylko zaznaczone obiekty</source>
+        <translation>Selected features only</translation>
+    </message>
+    <message>
+        <source>Układ współrzędnych pliku CSV (kod EPSG lub WKT)</source>
+        <translation>Coordinate reference system of the CSV file (EPSG code or WKT)</translation>
+    </message>
+    <message>
+        <source>Współrzędne CSV:</source>
+        <translation>CSV coordinates:</translation>
+    </message>
+    <message>
+        <source>Pola</source>
+        <translation>Fields</translation>
+    </message>
+    <message>
+        <source>Opcje</source>
+        <translation>Options</translation>
+    </message>
+    <message>
+        <source>(bez typu)</source>
+        <translation>(no type)</translation>
+    </message>
+    <message>
+        <source>Typ punktów, gdy pole typu nie jest wskazane lub ma nierozpoznaną wartość</source>
+        <translation>Point type used when no type field is chosen or its value is not recognised</translation>
+    </message>
+    <message>
+        <source>Typ domyślny:</source>
+        <translation>Default type:</translation>
+    </message>
+    <message>
+        <source>Punkt w tej odległości od istniejącego, o tej samej nazwie (także dawnej), jest duplikatem – nie zostanie dodany ponownie</source>
+        <translation>A point within this distance of an existing one with the same name (including historical names) is a duplicate – it will not be added again</translation>
+    </message>
+    <message>
+        <source>Duplikaty w promieniu:</source>
+        <translation>Duplicates within:</translation>
+    </message>
+    <message>
+        <source>Dopisz nowe nazwy dawne do istniejących punktów</source>
+        <translation>Add new historical names to existing points</translation>
+    </message>
+    <message>
+        <source>(bez zestawu)</source>
+        <translation>(no set)</translation>
+    </message>
+    <message>
+        <source>nowy zestaw:</source>
+        <translation>new set:</translation>
+    </message>
+    <message>
+        <source>nazwa nowego zestawu</source>
+        <translation>name of the new set</translation>
+    </message>
+    <message>
+        <source>Dodaj do zestawu:</source>
+        <translation>Add to set:</translation>
+    </message>
+    <message>
+        <source>Plik CSV z punktami</source>
+        <translation>CSV file with points</translation>
+    </message>
+    <message>
+        <source>(brak)</source>
+        <translation>(none)</translation>
+    </message>
+    <message>
+        <source>Punkty do importu: {n}.</source>
+        <translation>Points to import: {n}.</translation>
+    </message>
+    <message>
+        <source>Pominięte (bez nazwy lub współrzędnych): {n}.</source>
+        <translation>Skipped (no name or coordinates): {n}.</translation>
+    </message>
+    <message>
+        <source>odstający (test Baardy)</source>
+        <translation>outlier (Baarda's test)</translation>
+    </message>
+    <message>
+        <source>wyłączony</source>
+        <translation>disabled</translation>
+    </message>
+    <message>
+        <source>nie wskazany</source>
+        <translation>not identified</translation>
+    </message>
+    <message>
+        <source>Macierz pokrycia</source>
+        <translation>Coverage matrix</translation>
+    </message>
+    <message>
+        <source>Eksport CSV…</source>
+        <translation>Export CSV…</translation>
+    </message>
+    <message>
+        <source>Eksport JSON…</source>
+        <translation>Export JSON…</translation>
+    </message>
+    <message>
+        <source>Zamknij</source>
+        <translation>Close</translation>
+    </message>
+    <message>
+        <source>Eksport macierzy pokrycia</source>
+        <translation>Export coverage matrix</translation>
+    </message>
+    <message>
+        <source>Odstające wg modelu:</source>
+        <translation>Outliers by model:</translation>
+    </message>
+    <message>
+        <source>(puste – nie wskazany) · dwuklik – wczytaj analizę</source>
+        <translation>(empty – not identified) · double-click – load the analysis</translation>
+    </message>
+    <message>
+        <source>Żadna analiza zapisana w bibliotece nie zawiera punktów tego zestawu.</source>
+        <translation>No analysis saved in the library contains points of this set.</translation>
+    </message>
+    <message>
+        <source>Punkty wspólne wszystkim mapom (pogrubione): {n}</source>
+        <translation>Points common to all maps (bold): {n}</translation>
+    </message>
+    <message>
+        <source>odstające nie badane – za mało punktów do wyrównania</source>
+        <translation>outliers not tested – too few points for the adjustment</translation>
+    </message>
+    <message>
+        <source>Zestaw „{name}”: punkty {n}, mapy {m}</source>
+        <translation>Set “{name}”: {n} points, {m} maps</translation>
+    </message>
+    <message>
+        <source>Zapisano: {f}</source>
+        <translation>Saved: {f}</translation>
+    </message>
+    <message>
+        <source>punkty zestawu na mapie: {n}</source>
+        <translation>set points on the map: {n}</translation>
+    </message>
+    <message>
+        <source>Odstające na co najmniej dwóch mapach (czerwone) – sprawdź identyfikację lub położenie: {names}</source>
+        <translation>Outliers on at least two maps (red) – check the identification or position: {names}</translation>
+    </message>
+    <message>
+        <source>arkusz {s}</source>
+        <translation>sheet {s}</translation>
     </message>
 </context>
 <context>

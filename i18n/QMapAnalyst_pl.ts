@@ -2323,6 +2323,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Pokaż na mapie tylko punkty wybranego zestawu</translation>
     </message>
     <message>
+        <source>Importuj…</source>
+        <translation>Importuj…</translation>
+    </message>
+    <message>
+        <source>Import punktów z warstwy wektorowej projektu (np. PRNG, OSM, BDOT10k) lub pliku CSV – z dopasowaniem pól, rozpoznawaniem typów i pomijaniem duplikatów</source>
+        <translation>Import punktów z warstwy wektorowej projektu (np. PRNG, OSM, BDOT10k) lub pliku CSV – z dopasowaniem pól, rozpoznawaniem typów i pomijaniem duplikatów</translation>
+    </message>
+    <message>
         <source>Nowy zestaw</source>
         <translation>Nowy zestaw</translation>
     </message>
@@ -2353,6 +2361,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Zmień nazwę wybranego zestawu</source>
         <translation>Zmień nazwę wybranego zestawu</translation>
+    </message>
+    <message>
+        <source>Macierz pokrycia…</source>
+        <translation>Macierz pokrycia…</translation>
+    </message>
+    <message>
+        <source>Punkty wybranego zestawu × mapy zapisane w bibliotece: obecne, niepewne, odstające, nieczytelne, brak na mapie; punkty wspólne wszystkim mapom; eksport CSV/JSON</source>
+        <translation>Punkty wybranego zestawu × mapy zapisane w bibliotece: obecne, niepewne, odstające, nieczytelne, brak na mapie; punkty wspólne wszystkim mapom; eksport CSV/JSON</translation>
     </message>
     <message>
         <source>Usuń zestaw</source>
@@ -2491,6 +2507,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka).</translation>
     </message>
     <message>
+        <source>Wybierz zestaw punktów.</source>
+        <translation>Wybierz zestaw punktów.</translation>
+    </message>
+    <message>
         <source>Warstwa biblioteki ma niezapisane zmiany (np. nowe punkty). Zestawy obejmują tylko punkty zapisane w pliku. Zapisać zmiany teraz?</source>
         <translation>Warstwa biblioteki ma niezapisane zmiany (np. nowe punkty). Zestawy obejmują tylko punkty zapisane w pliku. Zapisać zmiany teraz?</translation>
     </message>
@@ -2509,6 +2529,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Punkt jest użyty w analizach: {ids}.</source>
         <translation>Punkt jest użyty w analizach: {ids}.</translation>
+    </message>
+    <message>
+        <source>Import: dodano {a}, pominięto duplikaty: {d}</source>
+        <translation>Import: dodano {a}, pominięto duplikaty: {d}</translation>
     </message>
     <message>
         <source>Wszystkie punkty ({n})</source>
@@ -2561,6 +2585,218 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Nie można wczytać warstwy biblioteki z pliku {f}.</source>
         <translation>Nie można wczytać warstwy biblioteki z pliku {f}.</translation>
+    </message>
+    <message>
+        <source>uzupełniono nazwy dawne: {m}</source>
+        <translation>uzupełniono nazwy dawne: {m}</translation>
+    </message>
+    <message>
+        <source>blisko istniejących (inna nazwa): {n}</source>
+        <translation>blisko istniejących (inna nazwa): {n}</translation>
+    </message>
+    <message>
+        <source>Nazwa (wymagana):</source>
+        <translation>Nazwa (wymagana):</translation>
+    </message>
+    <message>
+        <source>Nazwy dawne / obce:</source>
+        <translation>Nazwy dawne / obce:</translation>
+    </message>
+    <message>
+        <source>Typ:</source>
+        <translation>Typ:</translation>
+    </message>
+    <message>
+        <source>Wskazany obiekt:</source>
+        <translation>Wskazany obiekt:</translation>
+    </message>
+    <message>
+        <source>Niepewność współrzędnych [m]:</source>
+        <translation>Niepewność współrzędnych [m]:</translation>
+    </message>
+    <message>
+        <source>Istnieje od (rok):</source>
+        <translation>Istnieje od (rok):</translation>
+    </message>
+    <message>
+        <source>Istnieje do (rok):</source>
+        <translation>Istnieje do (rok):</translation>
+    </message>
+    <message>
+        <source>Źródło:</source>
+        <translation>Źródło:</translation>
+    </message>
+    <message>
+        <source>Import punktów do biblioteki</source>
+        <translation>Import punktów do biblioteki</translation>
+    </message>
+    <message>
+        <source>Importuj</source>
+        <translation>Importuj</translation>
+    </message>
+    <message>
+        <source>Źródło</source>
+        <translation>Źródło</translation>
+    </message>
+    <message>
+        <source>Plik CSV…</source>
+        <translation>Plik CSV…</translation>
+    </message>
+    <message>
+        <source>Wybierz plik…</source>
+        <translation>Wybierz plik…</translation>
+    </message>
+    <message>
+        <source>Warstwa lub plik:</source>
+        <translation>Warstwa lub plik:</translation>
+    </message>
+    <message>
+        <source>Tylko zaznaczone obiekty</source>
+        <translation>Tylko zaznaczone obiekty</translation>
+    </message>
+    <message>
+        <source>Układ współrzędnych pliku CSV (kod EPSG lub WKT)</source>
+        <translation>Układ współrzędnych pliku CSV (kod EPSG lub WKT)</translation>
+    </message>
+    <message>
+        <source>Współrzędne CSV:</source>
+        <translation>Współrzędne CSV:</translation>
+    </message>
+    <message>
+        <source>Pola</source>
+        <translation>Pola</translation>
+    </message>
+    <message>
+        <source>Opcje</source>
+        <translation>Opcje</translation>
+    </message>
+    <message>
+        <source>(bez typu)</source>
+        <translation>(bez typu)</translation>
+    </message>
+    <message>
+        <source>Typ punktów, gdy pole typu nie jest wskazane lub ma nierozpoznaną wartość</source>
+        <translation>Typ punktów, gdy pole typu nie jest wskazane lub ma nierozpoznaną wartość</translation>
+    </message>
+    <message>
+        <source>Typ domyślny:</source>
+        <translation>Typ domyślny:</translation>
+    </message>
+    <message>
+        <source>Punkt w tej odległości od istniejącego, o tej samej nazwie (także dawnej), jest duplikatem – nie zostanie dodany ponownie</source>
+        <translation>Punkt w tej odległości od istniejącego, o tej samej nazwie (także dawnej), jest duplikatem – nie zostanie dodany ponownie</translation>
+    </message>
+    <message>
+        <source>Duplikaty w promieniu:</source>
+        <translation>Duplikaty w promieniu:</translation>
+    </message>
+    <message>
+        <source>Dopisz nowe nazwy dawne do istniejących punktów</source>
+        <translation>Dopisz nowe nazwy dawne do istniejących punktów</translation>
+    </message>
+    <message>
+        <source>(bez zestawu)</source>
+        <translation>(bez zestawu)</translation>
+    </message>
+    <message>
+        <source>nowy zestaw:</source>
+        <translation>nowy zestaw:</translation>
+    </message>
+    <message>
+        <source>nazwa nowego zestawu</source>
+        <translation>nazwa nowego zestawu</translation>
+    </message>
+    <message>
+        <source>Dodaj do zestawu:</source>
+        <translation>Dodaj do zestawu:</translation>
+    </message>
+    <message>
+        <source>Plik CSV z punktami</source>
+        <translation>Plik CSV z punktami</translation>
+    </message>
+    <message>
+        <source>(brak)</source>
+        <translation>(brak)</translation>
+    </message>
+    <message>
+        <source>Punkty do importu: {n}.</source>
+        <translation>Punkty do importu: {n}.</translation>
+    </message>
+    <message>
+        <source>Pominięte (bez nazwy lub współrzędnych): {n}.</source>
+        <translation>Pominięte (bez nazwy lub współrzędnych): {n}.</translation>
+    </message>
+    <message>
+        <source>odstający (test Baardy)</source>
+        <translation>odstający (test Baardy)</translation>
+    </message>
+    <message>
+        <source>wyłączony</source>
+        <translation>wyłączony</translation>
+    </message>
+    <message>
+        <source>nie wskazany</source>
+        <translation>nie wskazany</translation>
+    </message>
+    <message>
+        <source>Macierz pokrycia</source>
+        <translation>Macierz pokrycia</translation>
+    </message>
+    <message>
+        <source>Eksport CSV…</source>
+        <translation>Eksport CSV…</translation>
+    </message>
+    <message>
+        <source>Eksport JSON…</source>
+        <translation>Eksport JSON…</translation>
+    </message>
+    <message>
+        <source>Zamknij</source>
+        <translation>Zamknij</translation>
+    </message>
+    <message>
+        <source>Eksport macierzy pokrycia</source>
+        <translation>Eksport macierzy pokrycia</translation>
+    </message>
+    <message>
+        <source>Odstające wg modelu:</source>
+        <translation>Odstające wg modelu:</translation>
+    </message>
+    <message>
+        <source>(puste – nie wskazany) · dwuklik – wczytaj analizę</source>
+        <translation>(puste – nie wskazany) · dwuklik – wczytaj analizę</translation>
+    </message>
+    <message>
+        <source>Żadna analiza zapisana w bibliotece nie zawiera punktów tego zestawu.</source>
+        <translation>Żadna analiza zapisana w bibliotece nie zawiera punktów tego zestawu.</translation>
+    </message>
+    <message>
+        <source>Punkty wspólne wszystkim mapom (pogrubione): {n}</source>
+        <translation>Punkty wspólne wszystkim mapom (pogrubione): {n}</translation>
+    </message>
+    <message>
+        <source>odstające nie badane – za mało punktów do wyrównania</source>
+        <translation>odstające nie badane – za mało punktów do wyrównania</translation>
+    </message>
+    <message>
+        <source>Zestaw „{name}”: punkty {n}, mapy {m}</source>
+        <translation>Zestaw „{name}”: punkty {n}, mapy {m}</translation>
+    </message>
+    <message>
+        <source>Zapisano: {f}</source>
+        <translation>Zapisano: {f}</translation>
+    </message>
+    <message>
+        <source>punkty zestawu na mapie: {n}</source>
+        <translation>punkty zestawu na mapie: {n}</translation>
+    </message>
+    <message>
+        <source>Odstające na co najmniej dwóch mapach (czerwone) – sprawdź identyfikację lub położenie: {names}</source>
+        <translation>Odstające na co najmniej dwóch mapach (czerwone) – sprawdź identyfikację lub położenie: {names}</translation>
+    </message>
+    <message>
+        <source>arkusz {s}</source>
+        <translation>arkusz {s}</translation>
     </message>
 </context>
 <context>
