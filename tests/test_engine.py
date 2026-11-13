@@ -326,6 +326,88 @@ def test_theme_contrast_on_qgis_backgrounds():
     assert min(theme.contrast(c, "#202020"), theme.contrast(c, "#323232")) >= theme.SEMANTIC_MIN
 
 
+
+# --- wagi a priori ---------------------------------------------------------------
+def _noisy(n=30, seed=5, sigma=4.0):
+    src, dst, rng = _synthetic(n, seed)
+    return src, dst + rng.normal(0, sigma, dst.shape), rng
+
+
+def test_unit_weights_equal_unweighted():
+    src, dst, _ = _noisy()
+    a = math_engine.fit_transform("affine", src, dst)
+    b = math_engine.fit_transform("affine", src, dst, np.ones(len(src)))
+    assert b.weights is None and not b.stats["weighted"]
+    assert np.allclose(a.residuals, b.residuals) and a.sigma0 == b.sigma0
+
+
+def test_weighted_normal_equations_and_sigma0():
+    src, dst, rng = _noisy()
+    w = rng.uniform(0.2, 3.0, len(src))
+    fr = math_engine.fit_transform("affine", src, dst, w)
+    # jawne równania normalne na tych samych współrzędnych znormalizowanych
+    u = (src - fr.src_center) / fr.src_scale
+    A = math_engine._design("affine", u)
+    L = (dst - fr.dst_center).reshape(-1)
+    P = np.diag(np.repeat(w, 2))
+    x = np.linalg.solve(A.T @ P @ A, A.T @ P @ L)
+    assert np.allclose(x, fr.params)
+    v = fr.residuals.reshape(-1)
+    assert abs(fr.sigma0 - math.sqrt(v @ P @ v / fr.redundancy)) < 1e-9
+    assert fr.stats["weighted"]
+
+
+def test_weighted_loo_matches_refit():
+    src, dst, rng = _noisy()
+    w = rng.uniform(0.2, 3.0, len(src))
+    fr = math_engine.fit_transform("affine", src, dst, w)
+    for i in (0, 7, 19):
+        mask = np.arange(len(src)) != i
+        fr_i = math_engine.fit_transform("affine", src[mask], dst[mask], w[mask])
+        loo = np.linalg.norm(dst[i] - fr_i.predict(src[i:i + 1])[0])
+        assert abs(loo - fr.loo_errors[i]) < 1e-6, (i, loo, fr.loo_errors[i])
+
+
+def test_weight_scale_invariance():
+    """Pomnożenie wszystkich wag przez stałą nie zmienia parametrów ani testu Baardy; σ₀ skaluje się √c."""
+    src, dst, rng = _noisy()
+    w = rng.uniform(0.2, 3.0, len(src))
+    a = math_engine.fit_transform("helmert", src, dst, w)
+    b = math_engine.fit_transform("helmert", src, dst, 4.0 * w)
+    assert np.allclose(a.predict(src), b.predict(src))
+    assert np.allclose(a.std_residuals, b.std_residuals)
+    assert np.allclose(a.loo_errors, b.loo_errors)
+    assert abs(b.sigma0 - 2.0 * a.sigma0) < 1e-9
+
+
+def test_downweighted_blunder_has_less_influence():
+    src, dst, _ = _noisy(sigma=1.0)
+    dst[4] += [300.0, 200.0]
+    w = np.ones(len(src))
+    w[4] = 0.01
+    a = math_engine.fit_transform("affine", src, dst)
+    b = math_engine.fit_transform("affine", src, dst, w)
+    others = np.arange(len(src)) != 4
+    assert b.errors[others].max() < a.errors[others].max() / 3
+    assert b.errors[4] > a.errors[4]
+
+
+def test_invalid_weights():
+    src, dst, _ = _noisy()
+    for bad in (np.zeros(len(src)), np.ones(3), -np.ones(len(src))):
+        try:
+            math_engine.fit_transform("affine", src, dst, bad)
+            raise AssertionError("accepted invalid weights")
+        except math_engine.EngineError:
+            pass
+
+
+def test_apriori_weights():
+    p = math_engine.apriori_weights([1.0, 0.25, 1.0, 1.0], [None, None, 10.0, float("nan")], 10.0)
+    assert np.allclose(p, [1.0, 0.25, 0.5, 1.0])
+    assert np.allclose(math_engine.apriori_weights([1.0, 0.25], [5.0, 5.0], float("nan")), [1.0, 0.25])
+
+
 if __name__ == "__main__":
     import time
     failed = 0

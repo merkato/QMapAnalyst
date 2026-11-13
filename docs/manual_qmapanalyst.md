@@ -56,9 +56,35 @@ Zapis/odczyt: format Georeferencera QGIS (`.points`) oraz CSV (separator `,` lub
 * CSV – nazwa jest dodatkową kolumną `name`.
 * `.points` – plik pozostaje dokładnie w formacie Georeferencera QGIS, a nazwy trafiają do pliku towarzyszącego `<plik>.points.names.csv` (`id,name,sourceX,sourceY,mapX,mapY`). Przy wczytywaniu nazwy są przypisywane po współrzędnych skanu, więc przetrwają zmianę kolejności, dodanie lub usunięcie punktów w Georeferencerze; gdy liczba punktów się zgadza, punkty o poprawionych współrzędnych dostają nazwę po numerze. Zapis bez nazw usuwa nieaktualny plik towarzyszący.
 
+**Punkty z biblioteki** (gdy otwarta jest biblioteka punktów – zakładka *Biblioteka*):
+* **Przyciąganie** – w kroku 2/2 kliknięcie w pobliżu (do 10 px) punktu widocznej warstwy biblioteki bierze dokładne współrzędne, nazwę i identyfikator tego punktu.
+* **Wyszukiwarka** pod przyciskami – wpisz nazwę (także dawną, bez polskich znaków); wyniki z wybranego zestawu, uporządkowane także według odległości od położenia przewidywanego (przy tej samej nazwie w kilku miejscach właściwy punkt jest zwykle pierwszy). Wybrany punkt zaznacza się kwadratem na mapie głównej – wystarczy kliknąć go na mapie dawnej. Jeśli punkt na skanie wskazano już wcześniej (krok 2/2), para powstaje od razu.
+* **Następny z zestawu** – kolejny punkt wybranego zestawu, którego nie ma jeszcze w analizie (najbliższy ostatnio dodanemu). Po obliczeniu transformacji żółte kółko na mapie dawnej pokazuje, gdzie go szukać. Ponowne kliknięcie pomija punkt (np. nieobecny na mapie).
+* Ten sam punkt biblioteki nie może wystąpić w analizie dwa razy.
+* **Brak na mapie** – oznacza bieżący punkt z biblioteki jako nieobecny na tej mapie (np. wieś pominięta przez kartografa) z uwagą. To informacja, nie błąd: punkt nie wchodzi do obliczeń, „Następny z zestawu” go pomija, a zapis analizy go zachowuje. Liczba takich punktów jest na przycisku, nazwy – w podpowiedzi.
+
+**Status i uwagi.** Kolumna *Status* (dwuklik – lista) opisuje identyfikację punktu na tej mapie: *pewny*, *niepewny* albo *nieczytelny*. Punkt nieczytelny nie wchodzi do obliczeń (jak wyłączony), ale zostaje w analizie. Kolumna *Uwagi* przechowuje komentarz do punktu na tej mapie.
+
+**Do biblioteki.** Zaznaczone w tabeli punkty GCP można dodać do biblioteki punktów (ich współrzędne odniesienia, przeliczone do układu biblioteki) – oraz do zestawu wybranego w zakładce *Biblioteka*. Punkt leżący już w bibliotece (do 1 m) zostaje powiązany z istniejącym, a nie zdublowany. Punkt bez nazwy dostaje nazwę „GCP n”, a źródłem staje się nazwa skanu. Powiązanie z biblioteką nie jest (jeszcze) zapisywane w plikach CSV/.points.
+
 ---
 
-## 3. Zakładka Analiza
+## 3. Zakładka Biblioteka *(wersja rozwojowa 0.3)*
+
+Biblioteka punktów referencyjnych to jeden plik GeoPackage użytkownika, wspólny dla wszystkich projektów i analiz. Przechowuje punkty (miejscowości, kościoły, ujścia rzek…) wraz z nazwami dawnymi, typem, wskazanym obiektem i niepewnością współrzędnych oraz **zestawy** – np. regionalne, jak „Kielecczyzna-18”. Ten sam punkt może należeć do wielu zestawów.
+
+* **Otwórz / Nowa** – wybór pliku biblioteki lub założenie nowego (z wyborem układu współrzędnych, domyślnie układ projektu). Ścieżka jest zapamiętywana.
+* **Warstwa na mapie głównej** – punkty biblioteki na mapie QGIS: symbol według typu, etykieta z nazwą, podpowiedź z nazwami dawnymi. Punkty użyte w bieżącej analizie mają żółtą obwódkę.
+* **Zestaw** – pokazuje na mapie tylko punkty wybranego zestawu.
+* **Nowy zestaw / Dodaj zaznaczone / Usuń zaznaczone** – zestawy tworzy się z punktów zaznaczonych na warstwie biblioteki zwykłym narzędziem zaznaczania QGIS. Usunięcie z zestawu ani usunięcie zestawu nie usuwa punktów z biblioteki.
+
+**Analiza mapy w bibliotece.** *Zapisz analizę* zapisuje w pliku biblioteki punkty GCP bieżącej mapy – położenie na skanie, współrzędne odniesienia (kopię z chwili powiązania), status, uwagi i punkty „brak na mapie” – wraz z opisem mapy (*Opis mapy…*: tytuł, autor, rok od–do, skala nominalna, arkusz, DPI) i odciskiem pliku skanu (SHA-256). Zapisywane są dane wejściowe, nie wyniki – wynik przelicza się po wczytaniu. Ponowny zapis zastępuje punkty tej samej analizy; przy pierwszym zapisie skanu, który ma już analizę w bibliotece, wtyczka pyta, czy ją zastąpić. *Wczytaj analizę…* przywraca punkty (skany tej samej mapy oznaczone ★ są na początku listy) i – gdy trzeba – sam skan. Jeśli po zapisaniu analizy punkt w bibliotece poprawiono, wtyczka pokaże różnicę i zapyta o aktualizację współrzędnych; punkt usunięty z biblioteki zostaje w analizie jako punkt spoza biblioteki.
+
+**Dodawanie i poprawianie punktów** odbywa się narzędziami edycji QGIS na warstwie biblioteki. Formularz ma listę typów, a identyfikator punktu (uid) nadawany jest automatycznie i nie zmienia się – na nim opierają się powiązania z analizami. Nazwy dawne i obce wpisuje się w jednym polu, oddzielone znakiem `|` (np. `Ilza|Ilsa`).
+
+---
+
+## 4. Zakładka Analiza
 
 ![Zakładka Analiza: raport dokładności transformacji afinicznej](analysis.png)
 
@@ -82,7 +108,10 @@ Raport zawiera:
 
 ---
 
-## 4. Zakładka Odwzorowanie
+**Wagi a priori** *(wersja rozwojowa 0.3)*. Przełącznik *Wagi a priori* włącza wyrównanie ważone. Waga punktu to czynnik statusu (*pewny* 1, *niepewny* 0,25 – ok. dwukrotnie większy błąd wskazania) pomnożony przez σ²ₘ / (σ²ₘ + σ²ᵣ), gdzie σᵣ to niepewność współrzędnych punktu z biblioteki (pole *niepewność współrzędnych [m]*), a σₘ – typowy błąd współrzędnej mapy (σ₀ wyrównania z samymi czynnikami statusu). Punkt pewny o dokładnych współrzędnych ma wagę 1; środek wsi z niepewnością ±200 m na dokładnej mapie katastralnej dostaje wagę bliską zera, a na mapie o błędach rzędu kilometra – prawie 1. Reszty, RMSE i błędy punktów są geometryczne (bez wag); σ₀ (błąd jednostkowy), błędy parametrów, test Baardy, LOO i AICc uwzględniają wagi. Wagę punktu pokazuje podpowiedź w kolumnie *w*, a raport – wiersz *Wagi a priori*. Estymacja odwzorowania nie używa wag. Domyślnie wyłączone – wyniki jak w wersji 0.2.
+
+
+## 5. Zakładka Odwzorowanie
 
 ![Zakładka Odwzorowanie: ranking kandydatów i siatka geograficzna najlepszego z nich na skanie](projection.png)
 
@@ -123,7 +152,7 @@ Panel szczegółów porównuje hipotezę ze swobodnym dopasowaniem tego samego o
 
 ---
 
-## 5. Zakładka Warstwy
+## 6. Zakładka Warstwy
 
 ![Zakładka Warstwy: siatka PUWG 1992 (oczko 200 m), izolinie skali i wektory przesunięć na skanie](results.png)
 
@@ -147,7 +176,7 @@ Ponowne wygenerowanie warstwy zastępuje poprzednią wersję (z zachowaniem jej 
 
 ---
 
-## 6. Zakładka Eksport
+## 7. Zakładka Eksport
 
 Wybierz folder i zaznacz, co zapisać. Nazwy plików zaczynają się od nazwy skanu (np. `Charlottenbrunn_raport.pdf`):
 
@@ -162,7 +191,7 @@ Raport można też zapisać bezpośrednio z zakładki **Analiza** przyciskiem **
 
 ---
 
-## 7. Uwagi techniczne
+## 8. Uwagi techniczne
 
 * **Język:** interfejs, raport analizy (w panelu i w PDF), komunikaty, nazwy warstw i legendy są po polsku albo po angielsku – zgodnie z językiem interfejsu QGIS (każdy język inny niż polski → angielski). W wersji polskiej liczby w raporcie i tabelach mają przecinek dziesiętny; pliki CSV zawsze używają kropki.
 

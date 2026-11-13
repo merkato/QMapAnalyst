@@ -12,6 +12,10 @@
         <translation>GCP</translation>
     </message>
     <message>
+        <source>Biblioteka</source>
+        <translation>Biblioteka</translation>
+    </message>
+    <message>
         <source>Analiza</source>
         <translation>Analiza</translation>
     </message>
@@ -120,6 +124,14 @@
         <translation>Przełącz aktywność zaznaczonych punktów</translation>
     </message>
     <message>
+        <source>Do biblioteki</source>
+        <translation>Do biblioteki</translation>
+    </message>
+    <message>
+        <source>Dodaj zaznaczone punkty GCP (ich współrzędne odniesienia) do biblioteki punktów i do zestawu wybranego w zakładce Biblioteka. Punkt leżący już w bibliotece (do 1 m) zostanie powiązany, a nie zdublowany.</source>
+        <translation>Dodaj zaznaczone punkty GCP (ich współrzędne odniesienia) do biblioteki punktów i do zestawu wybranego w zakładce Biblioteka. Punkt leżący już w bibliotece (do 1 m) zostanie powiązany, a nie zdublowany.</translation>
+    </message>
+    <message>
         <source>Wczytaj GCP (CSV / .points)…</source>
         <translation>Wczytaj GCP (CSV / .points)…</translation>
     </message>
@@ -140,6 +152,26 @@
         <translation>Dwuklik w numer wiersza – pokaż punkt na obu mapach. Dwuklik w komórkę – edycja współrzędnej.</translation>
     </message>
     <message>
+        <source>Punkt z biblioteki – wpisz nazwę…</source>
+        <translation>Punkt z biblioteki – wpisz nazwę…</translation>
+    </message>
+    <message>
+        <source>Wyszukiwanie w bibliotece punktów (w zestawie wybranym w zakładce Biblioteka) po nazwie i nazwach dawnych. Wybrany punkt staje się punktem odniesienia pary: wystarczy wskazać go na mapie dawnej. Wyniki są uporządkowane także według odległości od przewidywanego położenia.</source>
+        <translation>Wyszukiwanie w bibliotece punktów (w zestawie wybranym w zakładce Biblioteka) po nazwie i nazwach dawnych. Wybrany punkt staje się punktem odniesienia pary: wystarczy wskazać go na mapie dawnej. Wyniki są uporządkowane także według odległości od przewidywanego położenia.</translation>
+    </message>
+    <message>
+        <source>Następny z zestawu</source>
+        <translation>Następny z zestawu</translation>
+    </message>
+    <message>
+        <source>Kolejny punkt wybranego zestawu, którego nie ma jeszcze w analizie (najbliższy ostatnio dodanemu). Ponowne kliknięcie pomija bieżący punkt.</source>
+        <translation>Kolejny punkt wybranego zestawu, którego nie ma jeszcze w analizie (najbliższy ostatnio dodanemu). Ponowne kliknięcie pomija bieżący punkt.</translation>
+    </message>
+    <message>
+        <source>Brak na mapie</source>
+        <translation>Brak na mapie</translation>
+    </message>
+    <message>
         <source>Helmert – skala, obrót, przesunięcie (zachowuje kształty).
 Afiniczna – dodatkowo różne skale osi i skos (np. skurcz papieru).
 Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktów).</source>
@@ -158,6 +190,14 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
     <message>
         <source>Rozdzielczość skanu:</source>
         <translation>Rozdzielczość skanu:</translation>
+    </message>
+    <message>
+        <source>Wagi a priori (status punktu, niepewność współrzędnych)</source>
+        <translation>Wagi a priori (status punktu, niepewność współrzędnych)</translation>
+    </message>
+    <message>
+        <source>Wyrównanie ważone: punkt niepewny ma wagę 0,25 (ok. dwukrotnie większy błąd wskazania), a punkt biblioteki o dużej niepewności współrzędnych (pole sigma_m) – wagę zmniejszoną względem typowego błędu mapy. Reszty i RMSE pozostają geometryczne; σ₀, test Baardy, LOO i AICc uwzględniają wagi. Wyłączone – wyniki jak w wersji 0.2.</source>
+        <translation>Wyrównanie ważone: punkt niepewny ma wagę 0,25 (ok. dwukrotnie większy błąd wskazania), a punkt biblioteki o dużej niepewności współrzędnych (pole sigma_m) – wagę zmniejszoną względem typowego błędu mapy. Reszty i RMSE pozostają geometryczne; σ₀, test Baardy, LOO i AICc uwzględniają wagi. Wyłączone – wyniki jak w wersji 0.2.</translation>
     </message>
     <message>
         <source>Oblicz transformację</source>
@@ -388,6 +428,14 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Przerwano dodawanie punktu (zmieniono narzędzie mapy głównej).</translation>
     </message>
     <message>
+        <source>Punkt z biblioteki: {name}. Kliknij go na MAPIE DAWNEJ (żółte kółko – położenie przewidywane).</source>
+        <translation>Punkt z biblioteki: {name}. Kliknij go na MAPIE DAWNEJ (żółte kółko – położenie przewidywane).</translation>
+    </message>
+    <message>
+        <source>Punkt z biblioteki: {name}. Kliknij go na MAPIE DAWNEJ.</source>
+        <translation>Punkt z biblioteki: {name}. Kliknij go na MAPIE DAWNEJ.</translation>
+    </message>
+    <message>
         <source>Zapisz punkty GCP</source>
         <translation>Zapisz punkty GCP</translation>
     </message>
@@ -432,6 +480,10 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation> (hipoteza)</translation>
     </message>
     <message>
+        <source>nie (wszystkie punkty równoważne)</source>
+        <translation>nie (wszystkie punkty równoważne)</translation>
+    </message>
+    <message>
         <source>Zapisz raport analizy</source>
         <translation>Zapisz raport analizy</translation>
     </message>
@@ -454,6 +506,14 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
     <message>
         <source>Nazwa punktu (dwuklik – edycja)</source>
         <translation>Nazwa punktu (dwuklik – edycja)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>Identyfikacja punktu na tej mapie (dwuklik – zmiana): pewny, niepewny, nieczytelny. Punkt nieczytelny nie wchodzi do obliczeń.</source>
+        <translation>Identyfikacja punktu na tej mapie (dwuklik – zmiana): pewny, niepewny, nieczytelny. Punkt nieczytelny nie wchodzi do obliczeń.</translation>
     </message>
     <message>
         <source>X dawna</source>
@@ -506,6 +566,14 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
     <message>
         <source>Reszta standaryzowana (test Baardy). |w| &gt; 3,29 – punkt podejrzany o błąd grubej identyfikacji</source>
         <translation>Reszta standaryzowana (test Baardy). |w| &gt; 3,29 – punkt podejrzany o błąd grubej identyfikacji</translation>
+    </message>
+    <message>
+        <source>Uwagi</source>
+        <translation>Uwagi</translation>
+    </message>
+    <message>
+        <source>Uwagi do punktu na tej mapie (dwuklik – edycja)</source>
+        <translation>Uwagi do punktu na tej mapie (dwuklik – edycja)</translation>
     </message>
     <message>
         <source>Waga</source>
@@ -568,6 +636,30 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Nazwa punktu</translation>
     </message>
     <message>
+        <source>Najpierw wczytaj skan mapy dawnej.</source>
+        <translation>Najpierw wczytaj skan mapy dawnej.</translation>
+    </message>
+    <message>
+        <source>Wybierz zestaw punktów w zakładce Biblioteka.</source>
+        <translation>Wybierz zestaw punktów w zakładce Biblioteka.</translation>
+    </message>
+    <message>
+        <source>Wszystkie punkty zestawu są już w analizie.</source>
+        <translation>Wszystkie punkty zestawu są już w analizie.</translation>
+    </message>
+    <message>
+        <source>Zaznacz punkty GCP w tabeli.</source>
+        <translation>Zaznacz punkty GCP w tabeli.</translation>
+    </message>
+    <message>
+        <source>Biblioteka: nowe punkty – {new}, powiązane z istniejącymi – {linked}.</source>
+        <translation>Biblioteka: nowe punkty – {new}, powiązane z istniejącymi – {linked}.</translation>
+    </message>
+    <message>
+        <source>Waga a priori p = {p}</source>
+        <translation>Waga a priori p = {p}</translation>
+    </message>
+    <message>
         <source>Zaznacz wiersze do usunięcia.</source>
         <translation>Zaznacz wiersze do usunięcia.</translation>
     </message>
@@ -596,12 +688,12 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Obliczono ({n} pkt): σ₀ = {s} {u}, RMSE = {r} {u}, skala ≈ {m}</translation>
     </message>
     <message>
-        <source>Najpierw oblicz transformację.</source>
-        <translation>Najpierw oblicz transformację.</translation>
+        <source>wagi a priori</source>
+        <translation>wagi a priori</translation>
     </message>
     <message>
-        <source>Najpierw wczytaj skan mapy dawnej.</source>
-        <translation>Najpierw wczytaj skan mapy dawnej.</translation>
+        <source>Najpierw oblicz transformację.</source>
+        <translation>Najpierw oblicz transformację.</translation>
     </message>
     <message>
         <source>QMapAnalyst – Wektory przesunięć</source>
@@ -680,12 +772,20 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Punkty GCP (aktywne / wszystkie)</translation>
     </message>
     <message>
+        <source>Wagi a priori</source>
+        <translation>Wagi a priori</translation>
+    </message>
+    <message>
         <source>Data analizy</source>
         <translation>Data analizy</translation>
     </message>
     <message>
         <source>Wersja wtyczki</source>
         <translation>Wersja wtyczki</translation>
+    </message>
+    <message>
+        <source>tak – pewny 1, niepewny 0,25, niepewność współrzędnych z biblioteki; zakres {lo}–{hi}</source>
+        <translation>tak – pewny 1, niepewny 0,25, niepewność współrzędnych z biblioteki; zakres {lo}–{hi}</translation>
     </message>
     <message>
         <source>Eksportowanie…</source>
@@ -832,6 +932,18 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Dodano parę #{n}. KROK 1/2: kliknij kolejny punkt na mapie dawnej (lub wyłącz tryb dodawania).</translation>
     </message>
     <message>
+        <source>Punkt {name} jest już w analizie (#{n}).</source>
+        <translation>Punkt {name} jest już w analizie (#{n}).</translation>
+    </message>
+    <message>
+        <source>Dodano parę #{n}: {name} (z biblioteki). KROK 1/2: kliknij kolejny punkt na mapie dawnej.</source>
+        <translation>Dodano parę #{n}: {name} (z biblioteki). KROK 1/2: kliknij kolejny punkt na mapie dawnej.</translation>
+    </message>
+    <message>
+        <source>Zestaw: {name}.</source>
+        <translation>Zestaw: {name}.</translation>
+    </message>
+    <message>
         <source>Współrzędne przeliczono z układu {crs}.</source>
         <translation>Współrzędne przeliczono z układu {crs}.</translation>
     </message>
@@ -876,6 +988,18 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Podaj wartość parametru: {p}</translation>
     </message>
     <message>
+        <source>Brakuje jeszcze {n} pkt zestawu.</source>
+        <translation>Brakuje jeszcze {n} pkt zestawu.</translation>
+    </message>
+    <message>
+        <source>GCP {n}</source>
+        <translation>GCP {n}</translation>
+    </message>
+    <message>
+        <source>Niepoprawna wartość liczbowa – przywrócono poprzednią.</source>
+        <translation>Niepoprawna wartość liczbowa – przywrócono poprzednią.</translation>
+    </message>
+    <message>
         <source>Nazwy punktów zapisano w pliku {f}.</source>
         <translation>Nazwy punktów zapisano w pliku {f}.</translation>
     </message>
@@ -904,12 +1028,8 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Szerokość poza zakresem ±90°: {p}</translation>
     </message>
     <message>
-        <source>wył.</source>
-        <translation>wył.</translation>
-    </message>
-    <message>
-        <source>Niepoprawna wartość liczbowa – przywrócono poprzednią.</source>
-        <translation>Niepoprawna wartość liczbowa – przywrócono poprzednią.</translation>
+        <source>Punkt biblioteki ({uid})</source>
+        <translation>Punkt biblioteki ({uid})</translation>
     </message>
     <message>
         <source>punkty</source>
@@ -926,6 +1046,94 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>mapy</source>
         <translation>mapy</translation>
+    </message>
+    <message>
+        <source>wył.</source>
+        <translation>wył.</translation>
+    </message>
+    <message>
+        <source>Wczytaj analizę</source>
+        <translation>Wczytaj analizę</translation>
+    </message>
+    <message>
+        <source>Analiza mapy:</source>
+        <translation>Analiza mapy:</translation>
+    </message>
+    <message>
+        <source>Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka).</source>
+        <translation>Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka).</translation>
+    </message>
+    <message>
+        <source>Najpierw wybierz punkt z biblioteki (wyszukiwarka lub „Następny z zestawu”).</source>
+        <translation>Najpierw wybierz punkt z biblioteki (wyszukiwarka lub „Następny z zestawu”).</translation>
+    </message>
+    <message>
+        <source>Oznacz bieżący punkt z biblioteki jako nieobecny na tej mapie (informacja, nie błąd).</source>
+        <translation>Oznacz bieżący punkt z biblioteki jako nieobecny na tej mapie (informacja, nie błąd).</translation>
+    </message>
+    <message>
+        <source>W bibliotece jest już analiza tego skanu: „{title}”. Zastąpić ją?
+
+Nie – zapisz jako nową analizę.</source>
+        <translation>W bibliotece jest już analiza tego skanu: „{title}”. Zastąpić ją?
+
+Nie – zapisz jako nową analizę.</translation>
+    </message>
+    <message>
+        <source>Zapisano analizę „{title}” w bibliotece (punkty: {n}, brak na mapie: {m}).</source>
+        <translation>Zapisano analizę „{title}” w bibliotece (punkty: {n}, brak na mapie: {m}).</translation>
+    </message>
+    <message>
+        <source>Wczytano analizę „{title}” (punkty: {n}, brak na mapie: {m}).</source>
+        <translation>Wczytano analizę „{title}” (punkty: {n}, brak na mapie: {m}).</translation>
+    </message>
+    <message>
+        <source>Punkt „{name}” – uwagi (np. pominięty przez kartografa):</source>
+        <translation>Punkt „{name}” – uwagi (np. pominięty przez kartografa):</translation>
+    </message>
+    <message>
+        <source>„{name}” – brak na mapie.</source>
+        <translation>„{name}” – brak na mapie.</translation>
+    </message>
+    <message>
+        <source>W bibliotece jest analiza tego skanu: „{title}”. Wczytasz ją w zakładce Biblioteka.</source>
+        <translation>W bibliotece jest analiza tego skanu: „{title}”. Wczytasz ją w zakładce Biblioteka.</translation>
+    </message>
+    <message>
+        <source>Punkty usunięte z biblioteki (liczba: {n}) – zostają jako punkty spoza biblioteki.</source>
+        <translation>Punkty usunięte z biblioteki (liczba: {n}) – zostają jako punkty spoza biblioteki.</translation>
+    </message>
+    <message>
+        <source>Punkty zmieniły położenie w bibliotece (liczba: {n}, największa zmiana {d} {unit}): {names}.
+
+Zaktualizować współrzędne odniesienia tych punktów?</source>
+        <translation>Punkty zmieniły położenie w bibliotece (liczba: {n}, największa zmiana {d} {unit}): {names}.
+
+Zaktualizować współrzędne odniesienia tych punktów?</translation>
+    </message>
+    <message>
+        <source>Zaktualizowano współrzędne punktów z biblioteki (liczba: {n}).</source>
+        <translation>Zaktualizowano współrzędne punktów z biblioteki (liczba: {n}).</translation>
+    </message>
+    <message>
+        <source>ark. {s}</source>
+        <translation>ark. {s}</translation>
+    </message>
+    <message>
+        <source>Biblioteka nie zawiera zapisanych analiz.</source>
+        <translation>Biblioteka nie zawiera zapisanych analiz.</translation>
+    </message>
+    <message>
+        <source>Zastąpić bieżące punkty ({n}) punktami analizy „{title}”?</source>
+        <translation>Zastąpić bieżące punkty ({n}) punktami analizy „{title}”?</translation>
+    </message>
+    <message>
+        <source>Analiza dotyczy innego skanu ({f}). Wczytać go?</source>
+        <translation>Analiza dotyczy innego skanu ({f}). Wczytać go?</translation>
+    </message>
+    <message>
+        <source>Brak na mapie ({n}): {names}</source>
+        <translation>Brak na mapie ({n}): {names}</translation>
     </message>
     <message>
         <source>Helmert (4 parametry)</source>
@@ -1973,6 +2181,389 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     </message>
 </context>
 <context>
+    <name>QMapAnalystLibrary</name>
+    <message>
+        <source>miasto</source>
+        <translation>miasto</translation>
+    </message>
+    <message>
+        <source>wieś</source>
+        <translation>wieś</translation>
+    </message>
+    <message>
+        <source>kościół</source>
+        <translation>kościół</translation>
+    </message>
+    <message>
+        <source>klasztor</source>
+        <translation>klasztor</translation>
+    </message>
+    <message>
+        <source>zamek</source>
+        <translation>zamek</translation>
+    </message>
+    <message>
+        <source>dwór</source>
+        <translation>dwór</translation>
+    </message>
+    <message>
+        <source>młyn</source>
+        <translation>młyn</translation>
+    </message>
+    <message>
+        <source>most</source>
+        <translation>most</translation>
+    </message>
+    <message>
+        <source>ujście</source>
+        <translation>ujście</translation>
+    </message>
+    <message>
+        <source>skrzyżowanie</source>
+        <translation>skrzyżowanie</translation>
+    </message>
+    <message>
+        <source>szczyt</source>
+        <translation>szczyt</translation>
+    </message>
+    <message>
+        <source>punkt osnowy</source>
+        <translation>punkt osnowy</translation>
+    </message>
+    <message>
+        <source>inny</source>
+        <translation>inny</translation>
+    </message>
+    <message>
+        <source>pewny</source>
+        <translation>pewny</translation>
+    </message>
+    <message>
+        <source>niepewny</source>
+        <translation>niepewny</translation>
+    </message>
+    <message>
+        <source>nieczytelny</source>
+        <translation>nieczytelny</translation>
+    </message>
+    <message>
+        <source>brak na mapie</source>
+        <translation>brak na mapie</translation>
+    </message>
+    <message>
+        <source>identyfikator</source>
+        <translation>identyfikator</translation>
+    </message>
+    <message>
+        <source>nazwa</source>
+        <translation>nazwa</translation>
+    </message>
+    <message>
+        <source>nazwy dawne (oddzielone |)</source>
+        <translation>nazwy dawne (oddzielone |)</translation>
+    </message>
+    <message>
+        <source>typ</source>
+        <translation>typ</translation>
+    </message>
+    <message>
+        <source>wskazany obiekt</source>
+        <translation>wskazany obiekt</translation>
+    </message>
+    <message>
+        <source>niepewność współrzędnych [m]</source>
+        <translation>niepewność współrzędnych [m]</translation>
+    </message>
+    <message>
+        <source>istnieje od (rok)</source>
+        <translation>istnieje od (rok)</translation>
+    </message>
+    <message>
+        <source>istnieje do (rok)</source>
+        <translation>istnieje do (rok)</translation>
+    </message>
+    <message>
+        <source>źródło</source>
+        <translation>źródło</translation>
+    </message>
+    <message>
+        <source>uwagi</source>
+        <translation>uwagi</translation>
+    </message>
+    <message>
+        <source>bez typu</source>
+        <translation>bez typu</translation>
+    </message>
+    <message>
+        <source>Otwórz…</source>
+        <translation>Otwórz…</translation>
+    </message>
+    <message>
+        <source>Otwórz plik biblioteki punktów (GeoPackage)</source>
+        <translation>Otwórz plik biblioteki punktów (GeoPackage)</translation>
+    </message>
+    <message>
+        <source>Nowa…</source>
+        <translation>Nowa…</translation>
+    </message>
+    <message>
+        <source>Załóż nowy plik biblioteki punktów</source>
+        <translation>Załóż nowy plik biblioteki punktów</translation>
+    </message>
+    <message>
+        <source>Warstwa na mapie głównej</source>
+        <translation>Warstwa na mapie głównej</translation>
+    </message>
+    <message>
+        <source>Pokaż punkty biblioteki na mapie głównej QGIS (styl według typu, etykiety z nazwą). Punkty użyte w bieżącej analizie mają żółtą obwódkę.</source>
+        <translation>Pokaż punkty biblioteki na mapie głównej QGIS (styl według typu, etykiety z nazwą). Punkty użyte w bieżącej analizie mają żółtą obwódkę.</translation>
+    </message>
+    <message>
+        <source>Pokaż na mapie tylko punkty wybranego zestawu</source>
+        <translation>Pokaż na mapie tylko punkty wybranego zestawu</translation>
+    </message>
+    <message>
+        <source>Nowy zestaw</source>
+        <translation>Nowy zestaw</translation>
+    </message>
+    <message>
+        <source>Załóż zestaw z punktów zaznaczonych na warstwie biblioteki (lub pusty)</source>
+        <translation>Załóż zestaw z punktów zaznaczonych na warstwie biblioteki (lub pusty)</translation>
+    </message>
+    <message>
+        <source>Dodaj zaznaczone</source>
+        <translation>Dodaj zaznaczone</translation>
+    </message>
+    <message>
+        <source>Dodaj zaznaczone punkty do wybranego zestawu</source>
+        <translation>Dodaj zaznaczone punkty do wybranego zestawu</translation>
+    </message>
+    <message>
+        <source>Usuń zaznaczone</source>
+        <translation>Usuń zaznaczone</translation>
+    </message>
+    <message>
+        <source>Usuń zaznaczone punkty z wybranego zestawu (punkty zostają w bibliotece)</source>
+        <translation>Usuń zaznaczone punkty z wybranego zestawu (punkty zostają w bibliotece)</translation>
+    </message>
+    <message>
+        <source>Zmień nazwę</source>
+        <translation>Zmień nazwę</translation>
+    </message>
+    <message>
+        <source>Zmień nazwę wybranego zestawu</source>
+        <translation>Zmień nazwę wybranego zestawu</translation>
+    </message>
+    <message>
+        <source>Usuń zestaw</source>
+        <translation>Usuń zestaw</translation>
+    </message>
+    <message>
+        <source>Usuń wybrany zestaw (punkty zostają w bibliotece)</source>
+        <translation>Usuń wybrany zestaw (punkty zostają w bibliotece)</translation>
+    </message>
+    <message>
+        <source>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Aby utworzyć zestaw regionalny, zaznacz punkty na mapie i kliknij „Nowy zestaw”.</source>
+        <translation>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Aby utworzyć zestaw regionalny, zaznacz punkty na mapie i kliknij „Nowy zestaw”.</translation>
+    </message>
+    <message>
+        <source>Zapisz analizę</source>
+        <translation>Zapisz analizę</translation>
+    </message>
+    <message>
+        <source>Zapisz punkty GCP bieżącej mapy w bibliotece: położenie na skanie, współrzędne odniesienia, status, uwagi oraz punkty zestawu oznaczone jako „brak na mapie”.</source>
+        <translation>Zapisz punkty GCP bieżącej mapy w bibliotece: położenie na skanie, współrzędne odniesienia, status, uwagi oraz punkty zestawu oznaczone jako „brak na mapie”.</translation>
+    </message>
+    <message>
+        <source>Wczytaj analizę…</source>
+        <translation>Wczytaj analizę…</translation>
+    </message>
+    <message>
+        <source>Wczytaj analizę mapy zapisaną w bibliotece</source>
+        <translation>Wczytaj analizę mapy zapisaną w bibliotece</translation>
+    </message>
+    <message>
+        <source>Opis mapy…</source>
+        <translation>Opis mapy…</translation>
+    </message>
+    <message>
+        <source>Tytuł, autor, rok, skala, arkusz mapy</source>
+        <translation>Tytuł, autor, rok, skala, arkusz mapy</translation>
+    </message>
+    <message>
+        <source>Plik nie jest biblioteką punktów QMapAnalyst.</source>
+        <translation>Plik nie jest biblioteką punktów QMapAnalyst.</translation>
+    </message>
+    <message>
+        <source>Otwórz bibliotekę punktów</source>
+        <translation>Otwórz bibliotekę punktów</translation>
+    </message>
+    <message>
+        <source>Nowa biblioteka punktów</source>
+        <translation>Nowa biblioteka punktów</translation>
+    </message>
+    <message>
+        <source>Układ współrzędnych biblioteki</source>
+        <translation>Układ współrzędnych biblioteki</translation>
+    </message>
+    <message>
+        <source>Dodano do zestawu: {n} pkt.</source>
+        <translation>Dodano do zestawu: {n} pkt.</translation>
+    </message>
+    <message>
+        <source>Usunięto z zestawu: {n} pkt.</source>
+        <translation>Usunięto z zestawu: {n} pkt.</translation>
+    </message>
+    <message>
+        <source>Zmień nazwę zestawu</source>
+        <translation>Zmień nazwę zestawu</translation>
+    </message>
+    <message>
+        <source>Nowa nazwa:</source>
+        <translation>Nowa nazwa:</translation>
+    </message>
+    <message>
+        <source>Opis mapy</source>
+        <translation>Opis mapy</translation>
+    </message>
+    <message>
+        <source>nieznana</source>
+        <translation>nieznana</translation>
+    </message>
+    <message>
+        <source>Tytuł:</source>
+        <translation>Tytuł:</translation>
+    </message>
+    <message>
+        <source>Autor / wydawca:</source>
+        <translation>Autor / wydawca:</translation>
+    </message>
+    <message>
+        <source>Rok (od – do):</source>
+        <translation>Rok (od – do):</translation>
+    </message>
+    <message>
+        <source>Skala nominalna:</source>
+        <translation>Skala nominalna:</translation>
+    </message>
+    <message>
+        <source>Arkusz:</source>
+        <translation>Arkusz:</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość skanu [DPI]:</source>
+        <translation>Rozdzielczość skanu [DPI]:</translation>
+    </message>
+    <message>
+        <source>Uwagi:</source>
+        <translation>Uwagi:</translation>
+    </message>
+    <message>
+        <source>Skan:</source>
+        <translation>Skan:</translation>
+    </message>
+    <message>
+        <source>Zestaw:</source>
+        <translation>Zestaw:</translation>
+    </message>
+    <message>
+        <source>Analiza mapy: nie zapisana w bibliotece.</source>
+        <translation>Analiza mapy: nie zapisana w bibliotece.</translation>
+    </message>
+    <message>
+        <source>Analiza mapy: &lt;b&gt;{title}&lt;/b&gt;</source>
+        <translation>Analiza mapy: &lt;b&gt;{title}&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Brak biblioteki punktów – otwórz istniejący plik lub załóż nowy.</source>
+        <translation>Brak biblioteki punktów – otwórz istniejący plik lub załóż nowy.</translation>
+    </message>
+    <message>
+        <source>Błąd biblioteki punktów: {err}</source>
+        <translation>Błąd biblioteki punktów: {err}</translation>
+    </message>
+    <message>
+        <source>Biblioteka punktów</source>
+        <translation>Biblioteka punktów</translation>
+    </message>
+    <message>
+        <source>Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka).</source>
+        <translation>Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka).</translation>
+    </message>
+    <message>
+        <source>Warstwa biblioteki ma niezapisane zmiany (np. nowe punkty). Zestawy obejmują tylko punkty zapisane w pliku. Zapisać zmiany teraz?</source>
+        <translation>Warstwa biblioteki ma niezapisane zmiany (np. nowe punkty). Zestawy obejmują tylko punkty zapisane w pliku. Zapisać zmiany teraz?</translation>
+    </message>
+    <message>
+        <source>Najpierw zapisz zmiany warstwy biblioteki.</source>
+        <translation>Najpierw zapisz zmiany warstwy biblioteki.</translation>
+    </message>
+    <message>
+        <source>Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS).</source>
+        <translation>Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS).</translation>
+    </message>
+    <message>
+        <source>Plik utworzyła nowsza wersja QMapAnalyst (schemat {v}). Zaktualizuj wtyczkę.</source>
+        <translation>Plik utworzyła nowsza wersja QMapAnalyst (schemat {v}). Zaktualizuj wtyczkę.</translation>
+    </message>
+    <message>
+        <source>Punkt jest użyty w analizach: {ids}.</source>
+        <translation>Punkt jest użyty w analizach: {ids}.</translation>
+    </message>
+    <message>
+        <source>Wszystkie punkty ({n})</source>
+        <translation>Wszystkie punkty ({n})</translation>
+    </message>
+    <message>
+        <source>zaznaczone na mapie: {n}</source>
+        <translation>zaznaczone na mapie: {n}</translation>
+    </message>
+    <message>
+        <source>użyte w analizie: {n}</source>
+        <translation>użyte w analizie: {n}</translation>
+    </message>
+    <message>
+        <source>Nie zapisano zmian warstwy biblioteki: {err}</source>
+        <translation>Nie zapisano zmian warstwy biblioteki: {err}</translation>
+    </message>
+    <message>
+        <source>Nazwa zestawu (zaznaczonych punktów: {n}):</source>
+        <translation>Nazwa zestawu (zaznaczonych punktów: {n}):</translation>
+    </message>
+    <message>
+        <source>Utworzono zestaw „{name}” ({n} pkt).</source>
+        <translation>Utworzono zestaw „{name}” ({n} pkt).</translation>
+    </message>
+    <message>
+        <source>Biblioteka: &lt;b&gt;{name}&lt;/b&gt; ({crs})</source>
+        <translation>Biblioteka: &lt;b&gt;{name}&lt;/b&gt; ({crs})</translation>
+    </message>
+    <message>
+        <source>Biblioteka punktów: {f}</source>
+        <translation>Biblioteka punktów: {f}</translation>
+    </message>
+    <message>
+        <source>Plik {f} już istnieje – wybierz inną nazwę.</source>
+        <translation>Plik {f} już istnieje – wybierz inną nazwę.</translation>
+    </message>
+    <message>
+        <source>Filtr zestawu zostanie zastosowany po zakończeniu edycji warstwy biblioteki.</source>
+        <translation>Filtr zestawu zostanie zastosowany po zakończeniu edycji warstwy biblioteki.</translation>
+    </message>
+    <message>
+        <source>Zaznaczone punkty bez identyfikatora: {n} (np. wklejone z innej warstwy). Nadać im identyfikatory?</source>
+        <translation>Zaznaczone punkty bez identyfikatora: {n} (np. wklejone z innej warstwy). Nadać im identyfikatory?</translation>
+    </message>
+    <message>
+        <source>Usunąć zestaw {name}? Punkty zostaną w bibliotece.</source>
+        <translation>Usunąć zestaw {name}? Punkty zostaną w bibliotece.</translation>
+    </message>
+    <message>
+        <source>Nie można wczytać warstwy biblioteki z pliku {f}.</source>
+        <translation>Nie można wczytać warstwy biblioteki z pliku {f}.</translation>
+    </message>
+</context>
+<context>
     <name>QMapAnalystEngine</name>
     <message>
         <source>Nieznany model transformacji: {model}</source>
@@ -1989,6 +2580,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>Współrzędne punktów zawierają wartości nieliczbowe.</source>
         <translation>Współrzędne punktów zawierają wartości nieliczbowe.</translation>
+    </message>
+    <message>
+        <source>Wagi punktów muszą być dodatnimi liczbami (po jednej na punkt).</source>
+        <translation>Wagi punktów muszą być dodatnimi liczbami (po jednej na punkt).</translation>
     </message>
     <message>
         <source>Układ równań jest osobliwy – punkty są współliniowe lub zdublowane.</source>

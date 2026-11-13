@@ -24,6 +24,8 @@ CONTEXTS = {
     "report.py": "QMapAnalystReport",
     "export.py": "QMapAnalystExport",
     "layers.py": "QMapAnalystLayers",
+    "library_panel.py": "QMapAnalystLibrary",
+    "analysis_store.py": "QMapAnalystDockWidget",
 }
 
 

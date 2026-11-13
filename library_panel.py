@@ -1,0 +1,878 @@
+"""
+Zakładka „Biblioteka”: plik biblioteki punktów referencyjnych, jej warstwa na mapie głównej, zestawy.
+
+Punkty dodaje się i edytuje zwykłymi narzędziami QGIS na warstwie biblioteki (formularz ma listę
+typów, uid nadaje się automatycznie). Panel zakłada/otwiera plik, filtruje warstwę po zestawie,
+zarządza zestawami (z zaznaczenia na mapie) i wyróżnia punkty użyte w bieżącej analizie.
+
+Połączenie OGR z plikiem (library.Library) otwierane jest tylko na czas operacji – warstwa QGIS
+trzyma własne połączenie, a długo otwarte drugie mogłoby blokować zapis.
+"""
+
+import os
+import uuid
+from contextlib import contextmanager
+from html import escape
+
+from qgis.PyQt.QtCore import QCoreApplication, Qt, pyqtSignal
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtWidgets import (
+    QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QFormLayout, QFrame, QHBoxLayout,
+    QInputDialog, QLabel, QLineEdit, QMessageBox, QSpinBox, QToolButton, QVBoxLayout, QWidget,
+)
+from qgis.core import (
+    QgsApplication, QgsCategorizedSymbolRenderer, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsCsException, QgsDefaultValue,
+    QgsEditorWidgetSetup, QgsExpressionContextUtils, QgsFeatureRequest, QgsPointXY, QgsRectangle, QgsFieldConstraints, QgsMarkerSymbol, QgsProject,
+    QgsProperty, QgsRendererCategory, QgsSettings, QgsSymbolLayer, QgsVectorLayer,
+)
+
+from . import library as lb
+from .layers import set_labels
+from .widgets import FlowLayout
+
+SETTINGS_PATH = "QMapAnalyst/library_path"
+LAYER_PROP = "qmapanalyst/library"      # właściwość warstwy: ścieżka pliku biblioteki
+USED_VAR = "qma_used_uids"              # zmienna warstwy: uid punktów użytych w analizie („|”)
+
+# kształt, kolor wypełnienia, rozmiar [mm]
+TYPE_SYMBOLS = {
+    "town": ("square", "#c62828", 3.4),
+    "village": ("circle", "#8d6e63", 2.6),
+    "church": ("cross_fill", "#6a1b9a", 3.4),
+    "monastery": ("cross_fill", "#283593", 3.4),
+    "castle": ("pentagon", "#37474f", 3.2),
+    "manor": ("hexagon", "#5d4037", 3.0),
+    "mill": ("star", "#00838f", 3.2),
+    "bridge": ("diamond", "#455a64", 3.0),
+    "confluence": ("triangle", "#0277bd", 3.0),
+    "crossroads": ("cross2", "#424242", 3.0),
+    "peak": ("equilateral_triangle", "#2e7d32", 3.2),
+    "control": ("triangle", "#ef6c00", 3.0),
+    "other": ("circle", "#757575", 2.4),
+}
+_USED = f"array_contains(string_to_array(coalesce(@{USED_VAR}, ''), '|'), \"uid\")"
+
+
+def tr(text):
+    return QCoreApplication.translate("QMapAnalystLibrary", text)
+
+
+def type_labels():
+    return {
+        "town": tr("miasto"), "village": tr("wieś"), "church": tr("kościół"), "monastery": tr("klasztor"),
+        "castle": tr("zamek"), "manor": tr("dwór"), "mill": tr("młyn"), "bridge": tr("most"),
+        "confluence": tr("ujście"), "crossroads": tr("skrzyżowanie"), "peak": tr("szczyt"),
+        "control": tr("punkt osnowy"), "other": tr("inny"),
+    }
+
+
+def status_labels():
+    """Status identyfikacji punktu na danej mapie (kody library.STATUSES)."""
+    return {"sure": tr("pewny"), "uncertain": tr("niepewny"), "illegible": tr("nieczytelny"),
+            "absent": tr("brak na mapie")}
+
+
+def field_aliases():
+    return {
+        "uid": tr("identyfikator"), "name": tr("nazwa"), "alt_names": tr("nazwy dawne (oddzielone |)"),
+        "type": tr("typ"), "feature": tr("wskazany obiekt"), "sigma_m": tr("niepewność współrzędnych [m]"),
+        "valid_from": tr("istnieje od (rok)"), "valid_to": tr("istnieje do (rok)"), "source": tr("źródło"),
+        "note": tr("uwagi"),
+    }
+
+
+def _enum(owner, scoped, name):
+    """Wyliczenie QGIS – zakresowe (Qt6 / nowsze QGIS) albo płaskie (starsze)."""
+    holder = getattr(owner, scoped, None)
+    return getattr(holder, name) if holder is not None and hasattr(holder, name) else getattr(owner, name)
+
+
+def _quote(value):
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+# ----------------------------------------------------------------------
+#  Warstwa biblioteki
+# ----------------------------------------------------------------------
+def _symbol(shape, color, size):
+    sym = QgsMarkerSymbol.createSimple({"name": shape, "color": color, "outline_color": "255,255,255",
+                                        "outline_width": "0.3", "size": str(size)})
+    sl = sym.symbolLayer(0)
+    props = sl.dataDefinedProperties()
+    props.setProperty(_enum(QgsSymbolLayer, "Property", "StrokeColor"),
+                      QgsProperty.fromExpression(f"if({_USED}, '255,190,0,255', '255,255,255,255')"))
+    props.setProperty(_enum(QgsSymbolLayer, "Property", "StrokeWidth"),
+                      QgsProperty.fromExpression(f"if({_USED}, 0.9, 0.3)"))
+    props.setProperty(_enum(QgsSymbolLayer, "Property", "Size"),
+                      QgsProperty.fromExpression(f"if({_USED}, {size * 1.45:.2f}, {size})"))
+    sl.setDataDefinedProperties(props)
+    return sym
+
+
+def style_library_layer(layer):
+    labels = type_labels()
+    cats = [QgsRendererCategory(code, _symbol(*TYPE_SYMBOLS[code]), labels[code]) for code in lb.POINT_TYPES]
+    cats.append(QgsRendererCategory(None, _symbol("circle", "#9e9e9e", 2.2), tr("bez typu")))
+    layer.setRenderer(QgsCategorizedSymbolRenderer("type", cats))
+    set_labels(layer, '"name"', QColor(25, 25, 25), size=8.0)
+
+
+def configure_form(layer):
+    """Formularz edycji w QGIS: lista typów, automatyczny uid, aliasy pól, podpowiedź na mapie."""
+    fields = layer.fields()
+    for name, alias in field_aliases().items():
+        idx = fields.indexOf(name)
+        if idx >= 0:
+            layer.setFieldAlias(idx, alias)
+    uid = fields.indexOf("uid")
+    if uid >= 0:
+        layer.setDefaultValueDefinition(uid, QgsDefaultValue("uuid('WithoutBraces')"))
+        layer.setFieldConstraint(uid, _enum(QgsFieldConstraints, "Constraint", "ConstraintNotNull"))
+        layer.setFieldConstraint(uid, _enum(QgsFieldConstraints, "Constraint", "ConstraintUnique"))
+        form = layer.editFormConfig()
+        form.setReadOnly(uid, True)
+        layer.setEditFormConfig(form)
+    typ = fields.indexOf("type")
+    if typ >= 0:
+        labels = type_labels()
+        layer.setEditorWidgetSetup(typ, QgsEditorWidgetSetup(
+            "ValueMap", {"map": [{labels[c]: c} for c in lb.POINT_TYPES]}))
+    layer.setDisplayExpression('"name"')
+    layer.setMapTipTemplate(
+        "<b>[% \"name\" %]</b>[% if(coalesce(\"alt_names\", '') <> '', '<br>' || replace(\"alt_names\", '|', ', '), '') %]"
+        "<br><i>[% represent_value(\"type\") %]</i>"
+        "[% if(coalesce(\"feature\", '') <> '', ' – ' || \"feature\", '') %]")
+
+
+# ----------------------------------------------------------------------
+#  Panel
+# ----------------------------------------------------------------------
+def _tool(icon, text, tip, icon_only=False):
+    b = QToolButton()
+    ic = QgsApplication.getThemeIcon(icon) if icon else None
+    if ic is not None and not ic.isNull():
+        b.setIcon(ic)
+    else:
+        icon_only = False
+    b.setText(text)
+    b.setToolTip(tip)
+    b.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly if icon_only else Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+    b.setAutoRaise(True)
+    return b
+
+
+class LibraryPanel(QWidget):
+    """Zakładka biblioteki punktów. status(text, level) – komunikaty na pasku stanu panelu."""
+
+    libraryChanged = pyqtSignal()
+    saveAnalysisRequested = pyqtSignal()
+    openAnalysisRequested = pyqtSignal()
+    editAnalysisRequested = pyqtSignal()
+
+    def __init__(self, status=None, parent=None):
+        super().__init__(parent)
+        self.project = QgsProject.instance()
+        self.status = status or (lambda text, level="info": None)
+        self.path = None
+        self.layer = None
+        self._used = set()
+        self._crs_authid = ""
+        self._crs_wkt = ""
+        self._cache = None          # (punkty, {set_id: [uid]}) – do wyszukiwania i „następnego z zestawu”
+        self._build()
+        self.project.layersWillBeRemoved.connect(self._on_layers_removed)
+        path = QgsSettings().value(SETTINGS_PATH, "", type=str)
+        if path and os.path.isfile(path):
+            self.use_library(path, quiet=True)
+        self._update_state()
+
+    # --- interfejs ---------------------------------------------------------
+    def _build(self):
+        lay = QVBoxLayout(self)
+        row = QHBoxLayout()
+        self.lbl_file = QLabel()
+        self.lbl_file.setWordWrap(True)
+        row.addWidget(self.lbl_file, 1)
+        self.btn_open = _tool("/mActionFileOpen.svg", tr("Otwórz…"), tr("Otwórz plik biblioteki punktów (GeoPackage)"), True)
+        self.btn_open.clicked.connect(self.open_dialog)
+        self.btn_new = _tool("/mActionNewGeoPackageLayer.svg", tr("Nowa…"), tr("Załóż nowy plik biblioteki punktów"), True)
+        self.btn_new.clicked.connect(self.create_dialog)
+        row.addWidget(self.btn_open)
+        row.addWidget(self.btn_new)
+        lay.addLayout(row)
+
+        row = QHBoxLayout()
+        self.chk_layer = QCheckBox(tr("Warstwa na mapie głównej"))
+        self.chk_layer.setToolTip(tr("Pokaż punkty biblioteki na mapie głównej QGIS (styl według typu, etykiety z nazwą). "
+                                     "Punkty użyte w bieżącej analizie mają żółtą obwódkę."))
+        self.chk_layer.toggled.connect(self.on_layer_toggled)
+        lay.addWidget(self.chk_layer)
+
+        row = QHBoxLayout()
+        row.addWidget(QLabel(tr("Zestaw:")))
+        self.cmb_set = QComboBox()
+        self.cmb_set.setMinimumContentsLength(12)
+        self.cmb_set.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.cmb_set.setToolTip(tr("Pokaż na mapie tylko punkty wybranego zestawu"))
+        self.cmb_set.currentIndexChanged.connect(self.apply_filter)
+        row.addWidget(self.cmb_set, 1)
+        lay.addLayout(row)
+
+        row = FlowLayout(spacing=2)
+        self.btn_set_new = _tool("/mActionNewTableRow.svg", tr("Nowy zestaw"),
+                                 tr("Załóż zestaw z punktów zaznaczonych na warstwie biblioteki (lub pusty)"))
+        self.btn_set_new.clicked.connect(self.new_set_dialog)
+        self.btn_set_add = _tool("/mActionAdd.svg", tr("Dodaj zaznaczone"), tr("Dodaj zaznaczone punkty do wybranego zestawu"))
+        self.btn_set_add.clicked.connect(self.add_selected_to_set)
+        self.btn_set_remove = _tool("/mActionRemove.svg", tr("Usuń zaznaczone"), tr("Usuń zaznaczone punkty z wybranego zestawu (punkty zostają w bibliotece)"))
+        self.btn_set_remove.clicked.connect(self.remove_selected_from_set)
+        self.btn_set_rename = _tool("/mActionEditTable.svg", tr("Zmień nazwę"), tr("Zmień nazwę wybranego zestawu"))
+        self.btn_set_rename.clicked.connect(self.rename_set_dialog)
+        self.btn_set_delete = _tool("/mActionDeleteSelected.svg", tr("Usuń zestaw"), tr("Usuń wybrany zestaw (punkty zostają w bibliotece)"))
+        self.btn_set_delete.clicked.connect(self.delete_set)
+        for b in (self.btn_set_new, self.btn_set_add, self.btn_set_remove, self.btn_set_rename, self.btn_set_delete):
+            row.addWidget(b)
+        lay.addLayout(row)
+
+        lay.addWidget(self._build_analysis_box())
+
+        self.lbl_info = QLabel()
+        self.lbl_info.setWordWrap(True)
+        lay.addWidget(self.lbl_info)
+        hint = QLabel(tr("Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator "
+                         "nadawany jest automatycznie. Aby utworzyć zestaw regionalny, zaznacz punkty na mapie "
+                         "i kliknij „Nowy zestaw”."))
+        hint.setWordWrap(True)
+        hint.setStyleSheet("color: palette(placeholder-text); font-size: 8pt;")
+        lay.addWidget(hint)
+        lay.addStretch()
+
+    def _build_analysis_box(self):
+        box = QFrame()
+        box.setFrameShape(QFrame.Shape.StyledPanel)
+        v = QVBoxLayout(box)
+        v.setContentsMargins(6, 4, 6, 4)
+        self.lbl_analysis = QLabel()
+        self.lbl_analysis.setWordWrap(True)
+        v.addWidget(self.lbl_analysis)
+        row = FlowLayout(spacing=2)
+        self.btn_an_save = _tool("/mActionFileSave.svg", tr("Zapisz analizę"), tr(
+            "Zapisz punkty GCP bieżącej mapy w bibliotece: położenie na skanie, współrzędne odniesienia, status, "
+            "uwagi oraz punkty zestawu oznaczone jako „brak na mapie”."))
+        self.btn_an_save.clicked.connect(self.saveAnalysisRequested)
+        self.btn_an_open = _tool("/mActionFileOpen.svg", tr("Wczytaj analizę…"), tr("Wczytaj analizę mapy zapisaną w bibliotece"))
+        self.btn_an_open.clicked.connect(self.openAnalysisRequested)
+        self.btn_an_meta = _tool("/mActionFormView.svg", tr("Opis mapy…"), tr("Tytuł, autor, rok, skala, arkusz mapy"))
+        self.btn_an_meta.clicked.connect(self.editAnalysisRequested)
+        for b in (self.btn_an_save, self.btn_an_open, self.btn_an_meta):
+            row.addWidget(b)
+        v.addLayout(row)
+        self.set_analysis_label(None)
+        return box
+
+    def set_analysis_label(self, analysis):
+        if analysis is None or analysis.analysis_id is None:
+            self.lbl_analysis.setText(tr("Analiza mapy: nie zapisana w bibliotece."))
+            return
+        years = analysis_years(analysis)
+        text = tr("Analiza mapy: <b>{title}</b>").format(title=escape(analysis.title or "?"))
+        if years:
+            text += f" ({years})"
+        self.lbl_analysis.setText(text)
+
+    def _update_state(self):
+        has = self.path is not None
+        if has:
+            self.lbl_file.setText(tr("Biblioteka: <b>{name}</b> ({crs})").format(
+                name=escape(os.path.basename(self.path)), crs=self._crs_authid or "?"))
+            self.lbl_file.setToolTip(self.path)
+        else:
+            self.lbl_file.setText(tr("Brak biblioteki punktów – otwórz istniejący plik lub załóż nowy."))
+            self.lbl_file.setToolTip("")
+        sid = self.current_set()
+        for w in (self.chk_layer, self.cmb_set, self.btn_set_new):
+            w.setEnabled(has)
+        for b in (self.btn_set_add, self.btn_set_remove):
+            b.setEnabled(has and sid is not None and self.layer is not None)
+        for b in (self.btn_set_rename, self.btn_set_delete):
+            b.setEnabled(has and sid is not None)
+        for b in (self.btn_an_save, self.btn_an_open, self.btn_an_meta):
+            b.setEnabled(has)
+        self.chk_layer.blockSignals(True)
+        self.chk_layer.setChecked(self.layer is not None and self._layer_visible())
+        self.chk_layer.blockSignals(False)
+
+    # --- plik biblioteki -------------------------------------------------------
+    @contextmanager
+    def library(self):
+        lib = lb.Library.open(self.path)
+        try:
+            yield lib
+        finally:
+            lib.close()
+
+    def _library_error(self, exc):
+        if isinstance(exc, lb.SchemaTooNew):
+            return tr("Plik utworzyła nowsza wersja QMapAnalyst (schemat {v}). Zaktualizuj wtyczkę.").format(v=exc.found)
+        if isinstance(exc, lb.NotALibrary):
+            return tr("Plik nie jest biblioteką punktów QMapAnalyst.")
+        if isinstance(exc, lb.PointInUse):
+            return tr("Punkt jest użyty w analizach: {ids}.").format(ids=", ".join(map(str, exc.analyses)))
+        return tr("Błąd biblioteki punktów: {err}").format(err=exc)
+
+    def use_library(self, path, quiet=False):
+        """Ustawia bieżący plik biblioteki. Zwraca True, gdy się udało."""
+        try:
+            with lb.Library.open(path) as lib:
+                self._crs_authid = lib.crs_authid
+                self._crs_wkt = lib.crs_wkt
+        except lb.LibraryError as e:
+            if not quiet:
+                QMessageBox.warning(self, "QMapAnalyst", self._library_error(e))
+            self.status(self._library_error(e), "error")
+            return False
+        if self.layer is not None and self._layer_path(self.layer) != self._norm(path):
+            self.project.removeMapLayer(self.layer.id())
+            self.layer = None
+        self.path = os.path.abspath(path)
+        QgsSettings().setValue(SETTINGS_PATH, self.path)
+        self.layer = self._find_layer()
+        if self.layer is not None:
+            self._prepare_layer(self.layer)
+        self.reload_sets()
+        if not quiet:
+            self.status(tr("Biblioteka punktów: {f}").format(f=os.path.basename(self.path)), "ok")
+        self.libraryChanged.emit()
+        return True
+
+    def open_dialog(self):
+        start = os.path.dirname(self.path) if self.path else ""
+        path, _f = QFileDialog.getOpenFileName(self, tr("Otwórz bibliotekę punktów"), start, "GeoPackage (*.gpkg)")
+        if path and self.use_library(path):
+            self.show_layer(True)
+
+    def create_dialog(self):
+        path, _f = QFileDialog.getSaveFileName(self, tr("Nowa biblioteka punktów"), "", "GeoPackage (*.gpkg)")
+        if not path:
+            return
+        if not path.lower().endswith(".gpkg"):
+            path += ".gpkg"
+        crs = self.ask_crs()
+        if crs is None:
+            return
+        if os.path.exists(path):
+            QMessageBox.warning(self, "QMapAnalyst", tr("Plik {f} już istnieje – wybierz inną nazwę.").format(f=os.path.basename(path)))
+            return
+        self.create_library(path, crs)
+
+    def ask_crs(self):
+        """Układ współrzędnych nowej biblioteki (domyślnie układ projektu)."""
+        from qgis.gui import QgsProjectionSelectionDialog
+        dlg = QgsProjectionSelectionDialog(self)
+        dlg.setWindowTitle(tr("Układ współrzędnych biblioteki"))
+        crs = self.project.crs()
+        dlg.setCrs(crs if crs.isValid() else QgsCoordinateReferenceSystem("EPSG:2180"))
+        if not dlg.exec():
+            return None
+        return dlg.crs()
+
+    def create_library(self, path, crs):
+        definition = crs.authid() or crs.toWkt()
+        try:
+            lb.Library.create(path, definition).close()
+        except lb.LibraryError as e:
+            QMessageBox.warning(self, "QMapAnalyst", self._library_error(e))
+            return False
+        if self.use_library(path):
+            self.show_layer(True)
+            return True
+        return False
+
+    # --- warstwa ------------------------------------------------------------------
+    @staticmethod
+    def _norm(path):
+        return os.path.normcase(os.path.abspath(path))
+
+    def _layer_path(self, layer):
+        return self._norm(layer.customProperty(LAYER_PROP, "") or "x")
+
+    def _find_layer(self):
+        """Warstwa biblioteki już obecna w projekcie (np. zapisana w pliku projektu)."""
+        want = self._norm(self.path)
+        for layer in self.project.mapLayers().values():
+            if isinstance(layer, QgsVectorLayer) and layer.customProperty(LAYER_PROP) and self._layer_path(layer) == want:
+                return layer
+        return None
+
+    def _prepare_layer(self, layer):
+        configure_form(layer)
+        layer.selectionChanged.connect(self._on_selection_changed)
+        layer.editingStopped.connect(self.apply_filter)
+        layer.afterCommitChanges.connect(self.invalidate_cache)
+        QgsExpressionContextUtils.setLayerVariable(layer, USED_VAR, "|".join(sorted(self._used)))
+        layer.triggerRepaint()
+
+    def _layer_visible(self):
+        node = self.project.layerTreeRoot().findLayer(self.layer.id()) if self.layer else None
+        return node is not None and node.isVisible()
+
+    def show_layer(self, visible=True):
+        if self.path is None:
+            return None
+        if self.layer is None and visible:
+            layer = QgsVectorLayer(f"{self.path}|layername=ref_points", tr("Biblioteka punktów"), "ogr")
+            if not layer.isValid():
+                self.status(tr("Nie można wczytać warstwy biblioteki z pliku {f}.").format(f=self.path), "error")
+                return None
+            layer.setCustomProperty(LAYER_PROP, self.path)
+            style_library_layer(layer)
+            self._prepare_layer(layer)
+            self.project.addMapLayer(layer, False)
+            self.project.layerTreeRoot().insertLayer(0, layer)
+            self.layer = layer
+            self.apply_filter()
+        elif self.layer is not None:
+            node = self.project.layerTreeRoot().findLayer(self.layer.id())
+            if node is not None:
+                node.setItemVisibilityChecked(visible)
+        self._update_state()
+        return self.layer
+
+    def on_layer_toggled(self, checked):
+        self.show_layer(checked)
+
+    def _on_selection_changed(self, *args):
+        self._update_info()
+        self._update_state()
+
+    def _on_layers_removed(self, ids):
+        if self.layer is not None and self.layer.id() in ids:
+            self.layer = None
+            self._update_state()
+
+    def set_used_uids(self, uids):
+        """Punkty biblioteki użyte w bieżącej analizie – wyróżnione na warstwie."""
+        uids = {u for u in uids if u}
+        if uids == self._used:
+            return
+        self._used = uids
+        if self.layer is not None:
+            QgsExpressionContextUtils.setLayerVariable(self.layer, USED_VAR, "|".join(sorted(uids)))
+            self.layer.triggerRepaint()
+
+    # --- punkty z analizy ----------------------------------------------------------------
+    def library_crs(self):
+        crs = QgsCoordinateReferenceSystem(self._crs_authid) if self._crs_authid else QgsCoordinateReferenceSystem()
+        if not crs.isValid() and self._crs_wkt:
+            crs = QgsCoordinateReferenceSystem.fromWkt(self._crs_wkt)
+        return crs
+
+    def add_reference_points(self, items, crs, source=""):
+        """Dodaje punkty odniesienia (np. z tabeli GCP) do biblioteki i do wybranego zestawu.
+
+        items – lista (nazwa, x, y, uid lub None) we współrzędnych układu crs.
+        Punkt już powiązany (uid w bibliotece) lub leżący w bibliotece w odległości ≤ 1 m (1e-5° dla
+        układów geograficznych) jest wiązany z istniejącym zamiast dublowany.
+        Zwraca (lista uid w kolejności items, liczba nowych, liczba powiązanych) albo None."""
+        if self.path is None:
+            self.status(tr("Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka)."), "warn")
+            return None
+        if self.layer is not None and not self._save_pending_edits():
+            return None
+        lib_crs = self.library_crs()
+        ct = None
+        if crs is not None and crs.isValid() and lib_crs.isValid() and crs != lib_crs:
+            ct = QgsCoordinateTransform(crs, lib_crs, self.project)
+        tol = 1e-5 if lib_crs.isValid() and lib_crs.isGeographic() else 1.0
+        try:
+            with self.library() as lib:
+                result, new_count, linked = self._merge_points(lib, items, ct, tol, source)
+                sid = self.current_set()
+                if sid is not None:
+                    lib.add_to_set(sid, result)
+        except (lb.LibraryError, QgsCsException) as e:
+            self.status(self._library_error(e), "error")
+            return None
+        self.refresh_layer()
+        self.reload_sets(select=self.current_set())
+        return result, new_count, linked
+
+    @staticmethod
+    def _merge_points(lib, items, ct, tol, source):
+        existing = lib.points()
+        result, new_points = [], []
+        linked = 0
+        for name, x, y, uid in items:
+            if uid and lib.get_point(uid) is not None:
+                result.append(uid)
+                linked += 1
+                continue
+            if ct is not None:
+                pt = ct.transform(float(x), float(y))
+                x, y = pt.x(), pt.y()
+            near = min(existing, key=lambda p: (p.x - x) ** 2 + (p.y - y) ** 2, default=None)
+            if near is not None and ((near.x - x) ** 2 + (near.y - y) ** 2) ** 0.5 <= tol:
+                result.append(near.uid or near)  # bez uid – nowy punkt z tej samej listy
+                linked += 1
+                continue
+            p = lb.RefPoint(name, float(x), float(y), source=source)
+            new_points.append(p)
+            existing.append(p)
+            result.append(p)
+        lib.add_points(new_points)  # nadaje uid obiektom RefPoint
+        return [r.uid if isinstance(r, lb.RefPoint) else r for r in result], len(new_points), linked
+
+    def refresh_layer(self):
+        self.invalidate_cache()
+        if self.layer is not None:
+            self.layer.dataProvider().reloadData()
+            self.layer.triggerRepaint()
+
+    # --- wyszukiwanie i wskazywanie punktów -------------------------------------------
+    def invalidate_cache(self, *args):
+        self._cache = None
+
+    def _cached(self):
+        if self._cache is None:
+            points, members = [], {}
+            if self.path is not None:
+                try:
+                    with self.library() as lib:
+                        points = lib.points()
+                        members = {sid: lib.set_members(sid) for sid, *_rest in lib.sets()}
+                except lb.LibraryError as e:
+                    self.status(self._library_error(e), "error")
+            self._cache = (points, members)
+        return self._cache
+
+    def set_points(self):
+        """Punkty wybranego zestawu albo None, gdy zestaw nie jest wybrany."""
+        sid = self.current_set()
+        if sid is None:
+            return None
+        points, members = self._cached()
+        uids = set(members.get(sid, ()))
+        return [p for p in points if p.uid in uids]
+
+    def search(self, text, near=None, limit=30):
+        """Wyszukiwanie w bibliotece (w wybranym zestawie, gdy jest wybrany); near w układzie biblioteki."""
+        points = self.set_points()
+        if points is None:
+            points = self._cached()[0]
+        return lb.search_points(points, text, near, limit)
+
+    def to_crs(self, p, crs):
+        """Współrzędne punktu biblioteki w układzie crs (QgsPointXY)."""
+        lib_crs = self.library_crs()
+        pt = QgsPointXY(p.x, p.y)
+        if crs is None or not crs.isValid() or not lib_crs.isValid() or crs == lib_crs:
+            return pt
+        return QgsCoordinateTransform(lib_crs, crs, self.project).transform(pt)
+
+    def from_crs(self, pt, crs):
+        """Punkt z układu crs w układzie biblioteki – (x, y) lub None przy błędzie przeliczenia."""
+        lib_crs = self.library_crs()
+        if crs is None or not crs.isValid() or not lib_crs.isValid() or crs == lib_crs:
+            return pt.x(), pt.y()
+        try:
+            q = QgsCoordinateTransform(crs, lib_crs, self.project).transform(QgsPointXY(pt))
+        except QgsCsException:
+            return None
+        return q.x(), q.y()
+
+    def snap(self, canvas_point, canvas, tolerance_px=10):
+        """Punkt widocznej warstwy biblioteki najbliższy kliknięciu (w promieniu tolerance_px) albo None.
+        Uwzględnia filtr zestawu i punkty jeszcze niezapisane (bufor edycji)."""
+        if self.layer is None or not self._layer_visible():
+            return None
+        settings = canvas.mapSettings()
+        r = tolerance_px * canvas.mapUnitsPerPixel()
+        rect = QgsRectangle(canvas_point.x() - r, canvas_point.y() - r, canvas_point.x() + r, canvas_point.y() + r)
+        try:
+            rect = settings.mapToLayerCoordinates(self.layer, rect)
+            click = settings.mapToLayerCoordinates(self.layer, QgsPointXY(canvas_point))
+        except QgsCsException:
+            return None
+        best, best_d = None, None
+        for f in self.layer.getFeatures(QgsFeatureRequest().setFilterRect(rect)):
+            g = f.geometry()
+            if g is None or g.isEmpty() or not f["uid"]:
+                continue
+            pt = g.asPoint()
+            d = pt.sqrDist(click)
+            if best_d is None or d < best_d:
+                best, best_d = (f, pt), d
+        if best is None:
+            return None
+        f, pt = best
+        return lb.RefPoint(str(f["name"] or ""), pt.x(), pt.y(), uid=str(f["uid"]),
+                           alt_names=str(f["alt_names"] or ""), type=str(f["type"] or ""))
+
+    # --- zestawy ---------------------------------------------------------------------
+    def current_set(self):
+        return self.cmb_set.currentData()
+
+    def reload_sets(self, select=None):
+        self.invalidate_cache()
+        keep = select if select is not None else self.current_set()
+        self.cmb_set.blockSignals(True)
+        self.cmb_set.clear()
+        total = 0
+        sets = []
+        if self.path is not None:
+            try:
+                with self.library() as lib:
+                    sets = lib.sets()
+                    total = len(lib.points())
+            except lb.LibraryError as e:
+                self.status(self._library_error(e), "error")
+        self.cmb_set.addItem(tr("Wszystkie punkty ({n})").format(n=total), None)
+        for sid, name, desc, n in sets:
+            self.cmb_set.addItem(f"{name} ({n})", sid)
+            self.cmb_set.setItemData(self.cmb_set.count() - 1, desc or name, Qt.ItemDataRole.ToolTipRole)
+        idx = self.cmb_set.findData(keep) if keep is not None else 0
+        self.cmb_set.setCurrentIndex(max(idx, 0))
+        self.cmb_set.blockSignals(False)
+        self.apply_filter()
+
+    def apply_filter(self, *args):
+        sid = self.current_set()
+        if self.layer is not None:
+            if sid is None:
+                subset = ""
+            else:
+                try:
+                    with self.library() as lib:
+                        uids = lib.set_members(sid)
+                except lb.LibraryError as e:
+                    self.status(self._library_error(e), "error")
+                    uids = []
+                subset = f"\"uid\" IN ({', '.join(_quote(u) for u in uids)})" if uids else "0"
+            if self.layer.subsetString() != subset:
+                if self.layer.isEditable():
+                    # QGIS nie zmienia filtra warstwy w trakcie edycji – zastosuje go editingStopped
+                    self.status(tr("Filtr zestawu zostanie zastosowany po zakończeniu edycji warstwy biblioteki."), "warn")
+                else:
+                    self.layer.setSubsetString(subset)
+            self.layer.triggerRepaint()
+        self._update_info()
+        self._update_state()
+
+    def _update_info(self):
+        if self.path is None:
+            self.lbl_info.setText("")
+            return
+        sel = len(self.selected_uids())
+        used = len(self._used)
+        parts = [tr("zaznaczone na mapie: {n}").format(n=sel), tr("użyte w analizie: {n}").format(n=used)]
+        self.lbl_info.setText(" · ".join(parts))
+
+    def selected_uids(self):
+        if self.layer is None:
+            return []
+        return [f["uid"] for f in self.layer.selectedFeatures() if f["uid"]]
+
+    def _ask(self, text):
+        return QMessageBox.question(self, "QMapAnalyst", text) == QMessageBox.StandardButton.Yes
+
+    def _commit(self, stop_editing):
+        if self.layer.commitChanges(stop_editing):
+            return True
+        self.status(tr("Nie zapisano zmian warstwy biblioteki: {err}").format(
+            err="; ".join(self.layer.commitErrors())), "error")
+        return False
+
+    def _save_pending_edits(self):
+        """Zestawy odwołują się do punktów zapisanych w pliku – niezapisane edycje trzeba najpierw zapisać."""
+        if not (self.layer.isEditable() and self.layer.isModified()):
+            return True
+        if not self._ask(tr("Warstwa biblioteki ma niezapisane zmiany (np. nowe punkty). "
+                            "Zestawy obejmują tylko punkty zapisane w pliku. Zapisać zmiany teraz?")):
+            self.status(tr("Najpierw zapisz zmiany warstwy biblioteki."), "warn")
+            return False
+        return self._commit(False)
+
+    def _fill_missing_uids(self, feats):
+        """Punkty bez identyfikatora (np. wklejone z innej warstwy) – nadanie uid za zgodą użytkownika."""
+        missing = [f.id() for f in feats if not f["uid"]]
+        if not missing:
+            return True
+        if not self._ask(tr("Zaznaczone punkty bez identyfikatora: {n} (np. wklejone z innej warstwy). "
+                            "Nadać im identyfikatory?").format(n=len(missing))):
+            return False
+        if not self.layer.isEditable() and not self.layer.startEditing():
+            return False
+        idx = self.layer.fields().indexOf("uid")
+        for fid in missing:
+            self.layer.changeAttributeValue(fid, idx, str(uuid.uuid4()))
+        return True
+
+    def selection_for_set(self):
+        """uid zaznaczonych punktów gotowych do zestawu albo None (przerwano / brak zaznaczenia)."""
+        if self.layer is None:
+            return None
+        # najpierw uid w buforze edycji (plik wymaga uid), potem zapis zmian
+        if not self._fill_missing_uids(self.layer.selectedFeatures()):
+            return None
+        if not self._save_pending_edits():
+            return None
+        return self.selected_uids()
+
+    def _require_selection(self):
+        uids = self.selection_for_set()
+        if uids == []:
+            self.status(tr("Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS)."), "warn")
+        return uids or None
+
+    def new_set_dialog(self):
+        uids = self.selection_for_set() if self.layer is not None else []
+        if uids is None:
+            return
+        name, ok = QInputDialog.getText(self, tr("Nowy zestaw"),
+                                        tr("Nazwa zestawu (zaznaczonych punktów: {n}):").format(n=len(uids)))
+        if ok and name.strip():
+            self.create_set(name.strip(), uids)
+
+    def create_set(self, name, uids=()):
+        try:
+            with self.library() as lib:
+                sid = lib.add_set(name, uids=list(uids))
+        except lb.LibraryError as e:
+            self.status(self._library_error(e), "error")
+            return None
+        self.reload_sets(select=sid)
+        self.status(tr("Utworzono zestaw „{name}” ({n} pkt).").format(name=name, n=len(uids)), "ok")
+        return sid
+
+    def _change_members(self, add):
+        sid = self.current_set()
+        uids = self._require_selection()
+        if sid is None or not uids:
+            return
+        try:
+            with self.library() as lib:
+                (lib.add_to_set if add else lib.remove_from_set)(sid, uids)
+        except lb.LibraryError as e:
+            self.status(self._library_error(e), "error")
+            return
+        self.reload_sets(select=sid)
+        msg = tr("Dodano do zestawu: {n} pkt.") if add else tr("Usunięto z zestawu: {n} pkt.")
+        self.status(msg.format(n=len(uids)), "ok")
+
+    def add_selected_to_set(self):
+        self._change_members(True)
+
+    def remove_selected_from_set(self):
+        self._change_members(False)
+
+    def rename_set_dialog(self):
+        sid = self.current_set()
+        if sid is None:
+            return
+        old = self.cmb_set.currentText().rsplit(" (", 1)[0]
+        name, ok = QInputDialog.getText(self, tr("Zmień nazwę zestawu"), tr("Nowa nazwa:"), text=old)
+        if ok and name.strip():
+            self._modify_sets(lambda lib: lib.update_set(sid, name=name.strip()), sid)
+
+    def delete_set(self):
+        sid = self.current_set()
+        if sid is None:
+            return
+        name = self.cmb_set.currentText()
+        if QMessageBox.question(self, "QMapAnalyst", tr("Usunąć zestaw {name}? Punkty zostaną w bibliotece.").format(name=name)) \
+                != QMessageBox.StandardButton.Yes:
+            return
+        self._modify_sets(lambda lib: lib.delete_set(sid), None)
+        self.cmb_set.setCurrentIndex(0)
+
+    def _modify_sets(self, action, select):
+        try:
+            with self.library() as lib:
+                action(lib)
+        except lb.LibraryError as e:
+            self.status(self._library_error(e), "error")
+            return
+        self.reload_sets(select=select)
+
+    def cleanup(self):
+        pairs = [(self.project.layersWillBeRemoved, self._on_layers_removed)]
+        if self.layer is not None:
+            pairs.append((self.layer.selectionChanged, self._on_selection_changed))
+            pairs.append((self.layer.editingStopped, self.apply_filter))
+            pairs.append((self.layer.afterCommitChanges, self.invalidate_cache))
+        for sig, slot in pairs:
+            try:
+                sig.disconnect(slot)
+            except (TypeError, RuntimeError):
+                pass
+
+
+def analysis_years(a):
+    if a.year_from and a.year_to and a.year_to != a.year_from:
+        return f"{a.year_from}–{a.year_to}"
+    return str(a.year_from or a.year_to or "")
+
+
+class AnalysisDialog(QDialog):
+    """Opis mapy analizowanej w bibliotece (library.Analysis)."""
+
+    def __init__(self, analysis, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(tr("Opis mapy"))
+        self.analysis = analysis
+        form = QFormLayout(self)
+        self.ed_title = QLineEdit(analysis.title)
+        self.ed_author = QLineEdit(analysis.author)
+        self.sp_from = self._year(analysis.year_from)
+        self.sp_to = self._year(analysis.year_to)
+        self.sp_scale = QSpinBox()
+        self.sp_scale.setRange(0, 100000000)
+        self.sp_scale.setSingleStep(1000)
+        self.sp_scale.setPrefix("1 : ")
+        self.sp_scale.setSpecialValueText(tr("nieznana"))
+        self.sp_scale.setValue(analysis.scale or 0)
+        self.ed_sheet = QLineEdit(analysis.sheet)
+        self.sp_dpi = QDoubleSpinBox()
+        self.sp_dpi.setRange(0, 9600)
+        self.sp_dpi.setDecimals(0)
+        self.sp_dpi.setSpecialValueText(tr("nieznana"))
+        self.sp_dpi.setValue(analysis.dpi or 0)
+        self.ed_note = QLineEdit(analysis.note)
+        years = QHBoxLayout()
+        years.addWidget(self.sp_from)
+        years.addWidget(QLabel("–"))
+        years.addWidget(self.sp_to)
+        form.addRow(tr("Tytuł:"), self.ed_title)
+        form.addRow(tr("Autor / wydawca:"), self.ed_author)
+        form.addRow(tr("Rok (od – do):"), years)
+        form.addRow(tr("Skala nominalna:"), self.sp_scale)
+        form.addRow(tr("Arkusz:"), self.ed_sheet)
+        form.addRow(tr("Rozdzielczość skanu [DPI]:"), self.sp_dpi)
+        form.addRow(tr("Uwagi:"), self.ed_note)
+        scan = QLabel(escape(os.path.basename(analysis.scan_path or "")) or "–")
+        scan.setToolTip(analysis.scan_path or "")
+        form.addRow(tr("Skan:"), scan)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        form.addRow(buttons)
+
+    @staticmethod
+    def _year(value):
+        sp = QSpinBox()
+        sp.setRange(0, 2100)
+        sp.setSpecialValueText("?")
+        sp.setValue(value or 0)
+        return sp
+
+    def accept(self):
+        a = self.analysis
+        a.title = self.ed_title.text().strip()
+        a.author = self.ed_author.text().strip()
+        a.year_from = self.sp_from.value() or None
+        a.year_to = self.sp_to.value() or None
+        a.scale = self.sp_scale.value() or None
+        a.sheet = self.ed_sheet.text().strip()
+        a.dpi = self.sp_dpi.value() or None
+        a.note = self.ed_note.text().strip()
+        super().accept()

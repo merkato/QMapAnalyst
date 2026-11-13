@@ -1,5 +1,10 @@
 import os
+import sys
 import zipfile
+
+# konsola Windows (cp1250) nie zakoduje emoji w komunikatach
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 # Nazwa wtyczki (taki sam będzie folder główny wewnątrz pliku ZIP)
 PLUGIN_NAME = "QMapAnalyst"
@@ -32,6 +37,9 @@ def build_plugin():
                     continue
                 # ilustracje dokumentacji są dla GitHuba – w paczce zbędne (pliki binarne, ~2 MB)
                 if os.path.basename(root) == "docs" and file.lower().endswith(".png"):
+                    continue
+                # plany rozwoju (docs/plan_*.md) są dla repozytorium, nie dla użytkownika
+                if os.path.basename(root) == "docs" and file.startswith("plan_"):
                     continue
                 
                 # Pełna ścieżka do pliku na dysku

@@ -15,12 +15,12 @@ from html import escape
 
 import numpy as np
 
-from qgis.PyQt.QtCore import Qt, QCoreApplication, QEvent, QPoint, QRect, QTimer, QSize
-from qgis.PyQt.QtGui import QColor, QIcon, QPalette
+from qgis.PyQt.QtCore import Qt, QCoreApplication, QEvent, QModelIndex, QTimer, QSize
+from qgis.PyQt.QtGui import QColor, QIcon, QPalette, QStandardItem, QStandardItemModel
 from qgis.PyQt.QtWidgets import (
-    QAbstractItemView, QApplication, QCheckBox, QComboBox, QDockWidget, QDoubleSpinBox,
+    QAbstractItemView, QApplication, QCheckBox, QComboBox, QCompleter, QDockWidget, QDoubleSpinBox,
     QFileDialog, QFormLayout, QFrame, QGroupBox, QHBoxLayout, QHeaderView, QInputDialog, QLabel,
-    QLayout, QListWidget, QListWidgetItem, QMenu, QMessageBox, QProgressBar, QPushButton, QSizePolicy, QSlider,
+    QListWidget, QListWidgetItem, QMenu, QMessageBox, QProgressBar, QPushButton, QSizePolicy, QSlider,
     QScrollArea, QSpinBox, QSplitter, QTableWidget, QTableWidgetItem, QTabWidget, QTextBrowser, QToolButton,
     QVBoxLayout, QWidget, QWidgetAction, QLineEdit,
 )
@@ -40,6 +40,11 @@ from . import projections as pj
 from . import report
 from . import theme
 from .lang import num
+from .library import normalize as lib_normalize
+from .analysis_store import LibraryAnalysisMixin
+from .library import COMPUTABLE_STATUSES
+from .library_panel import LibraryPanel, status_labels as lib_status_labels, type_labels as lib_type_labels
+from .widgets import ComboDelegate, FlowLayout
 from .layers import (
     LayerRegistry, add_features, memory_layer, merge_segments, polyline, set_labels, split_lines,
     style_arrows, style_line, style_outline, style_points,
@@ -47,7 +52,7 @@ from .layers import (
 
 LOG_TAG = "QMapAnalyst"
 
-COL_ACT, COL_NAME, COL_OX, COL_OY, COL_RX, COL_RY, COL_ERR, COL_LOO, COL_W = range(9)
+COL_ACT, COL_NAME, COL_STATUS, COL_OX, COL_OY, COL_RX, COL_RY, COL_ERR, COL_LOO, COL_W, COL_NOTE = range(11)
 SETTINGS_NAMES = "QMapAnalyst/gcp_names"
 
 C_OLD = QColor(220, 40, 40)
@@ -88,8 +93,19 @@ class GCP:
     ref_y: float
     enabled: bool = True
     name: str = ""
+    uid: str = None              # punkt biblioteki (library.RefPoint.uid) lub None
+    status: str = "sure"         # identyfikacja na mapie: library.STATUSES (bez „absent”)
+    comment: str = ""
     old_marker: object = None
     ref_marker: object = None
+
+
+def _gcp_active(g):
+    """Punkt wchodzi do obliczeń: włączony i o statusie pozwalającym na obliczenia (nie „nieczytelny”)."""
+    return g.enabled and g.status in COMPUTABLE_STATUSES
+
+
+GCP.active = property(_gcp_active)
 
 
 class AnalysisState:
@@ -113,7 +129,7 @@ class AnalysisState:
 
     @cached_property
     def inverse_fit(self):
-        return me.fit_transform(self.fit.model, self.fit.dst, self.fit.src)
+        return me.fit_transform(self.fit.model, self.fit.dst, self.fit.src, self.fit.weights)
 
     @cached_property
     def inverse_warp(self):
@@ -159,66 +175,6 @@ def _button(text, icon_name=None, tip=None):
     if tip:
         b.setToolTip(tip)
     return b
-
-
-class FlowLayout(QLayout):
-    """Układ przepływowy: przyciski układają się w wierszach i zawijają przy wąskim panelu."""
-
-    def __init__(self, parent=None, margin=0, spacing=4):
-        super().__init__(parent)
-        self._items = []
-        self.setContentsMargins(margin, margin, margin, margin)
-        self.setSpacing(spacing)
-
-    def addItem(self, item):
-        self._items.append(item)
-
-    def count(self):
-        return len(self._items)
-
-    def itemAt(self, i):
-        return self._items[i] if 0 <= i < len(self._items) else None
-
-    def takeAt(self, i):
-        return self._items.pop(i) if 0 <= i < len(self._items) else None
-
-    def expandingDirections(self):
-        return Qt.Orientation(0)
-
-    def hasHeightForWidth(self):
-        return True
-
-    def heightForWidth(self, width):
-        return self._do_layout(QRect(0, 0, width, 0), True)
-
-    def setGeometry(self, rect):
-        super().setGeometry(rect)
-        self._do_layout(rect, False)
-
-    def sizeHint(self):
-        return self.minimumSize()
-
-    def minimumSize(self):
-        size = QSize()
-        for it in self._items:
-            size = size.expandedTo(it.minimumSize())
-        m = self.contentsMargins()
-        return size + QSize(m.left() + m.right(), m.top() + m.bottom())
-
-    def _do_layout(self, rect, test_only):
-        m = self.contentsMargins()
-        r = rect.adjusted(m.left(), m.top(), -m.right(), -m.bottom())
-        x, y, line_h = r.x(), r.y(), 0
-        sp = self.spacing()
-        for it in self._items:
-            hint = it.sizeHint()
-            if x + hint.width() > r.right() + 1 and line_h > 0:
-                x, y, line_h = r.x(), y + line_h + sp, 0
-            if not test_only:
-                it.setGeometry(QRect(QPoint(x, y), hint))
-            x += hint.width() + sp
-            line_h = max(line_h, hint.height())
-        return y + line_h - rect.y() + m.bottom()
 
 
 def _scrollable(widget):
@@ -272,7 +228,7 @@ def _num_item(value, digits=2, editable=False, color=None, tip=None):
 #  Panel
 # ---------------------------------------------------------------------------
 
-class QMapAnalystDockWidget(QDockWidget):
+class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
 
     def __init__(self, iface, parent=None):
         super().__init__("QMapAnalyst", parent)
@@ -295,6 +251,11 @@ class QMapAnalystDockWidget(QDockWidget):
         self._restoring_tool = False
         self._sync_lock = False
         self._pred_marker = None
+        self._lib_target = None        # punkt biblioteki czekający na wskazanie na mapie dawnej
+        self._lib_markers = []         # znaczniki celu (mapa główna, przewidywane położenie na skanie)
+        self._lib_skipped = set()      # „Następny z zestawu” – pominięte w tej sesji
+        self.absent = {}               # uid -> (nazwa, uwagi): punkty zestawu nieobecne na tej mapie
+        self.library_analysis = None   # library.Analysis bieżącej mapy (po zapisie / odczycie)
 
         self._hints = []
         self._theme_busy = False
@@ -325,6 +286,10 @@ class QMapAnalystDockWidget(QDockWidget):
             self.lbl_status.setStyleSheet(f"color: {col};")
         self.lbl_status.setText(text)
         self.lbl_status.setToolTip(text)
+
+    def _library_status(self, text, level="info"):
+        if hasattr(self, "lbl_status"):  # panel biblioteki powstaje przed paskiem stanu
+            self.set_status(text, level)
 
     def _hint(self, label, small=False):
         """Etykieta pomocnicza (przygaszona); kolor dobierany do tła w apply_theme_colors()."""
@@ -388,6 +353,12 @@ class QMapAnalystDockWidget(QDockWidget):
         self.tab_widget = QTabWidget()
         self.tab_widget.setDocumentMode(True)
         self.tab_widget.addTab(self._build_gcp_tab(), _icon("/mActionCapturePoint.svg"), self.tr("GCP"))
+        self.library_panel = LibraryPanel(status=self._library_status)
+        self.tab_widget.addTab(_scrollable(self.library_panel), _icon("/mGeoPackage.svg"), self.tr("Biblioteka"))
+        self.library_panel.libraryChanged.connect(self.update_enabled_state)
+        self.library_panel.saveAnalysisRequested.connect(self.save_library_analysis)
+        self.library_panel.openAnalysisRequested.connect(self.open_library_analysis)
+        self.library_panel.editAnalysisRequested.connect(self.edit_library_analysis)
         self.tab_widget.addTab(self._build_analysis_tab(), _icon("/mActionCalculateField.svg"), self.tr("Analiza"))
         self.tab_widget.addTab(self._build_projection_tab(), _icon("/mIconGlobe.svg"), self.tr("Odwzorowanie"))
         self.tab_widget.addTab(self._build_layers_tab(), _icon("/mActionAddLayer.svg"), self.tr("Warstwy"))
@@ -492,7 +463,7 @@ class QMapAnalystDockWidget(QDockWidget):
     def _build_gcp_tab(self):
         tab = QWidget()
         lay = QVBoxLayout(tab)
-        row = QHBoxLayout()
+        row = FlowLayout(spacing=4)  # zawija się w wąskim panelu
         self.btn_add_gcp = _button(self.tr("Dodaj pary"), "/mActionCapturePoint.svg",
                                    self.tr("Tryb dodawania par GCP (to samo co przycisk na pasku mapy dawnej)"))
         self.btn_add_gcp.setCheckable(True)
@@ -502,11 +473,15 @@ class QMapAnalystDockWidget(QDockWidget):
         self.btn_remove_gcp.clicked.connect(self.remove_selected_gcp)
         self.btn_toggle_gcp = _button(self.tr("Wł./wył."), None, self.tr("Przełącz aktywność zaznaczonych punktów"))
         self.btn_toggle_gcp.clicked.connect(self.toggle_selected_gcp)
+        self.btn_gcp_to_library = _button(self.tr("Do biblioteki"), "/mGeoPackage.svg", self.tr(
+            "Dodaj zaznaczone punkty GCP (ich współrzędne odniesienia) do biblioteki punktów i do zestawu wybranego "
+            "w zakładce Biblioteka. Punkt leżący już w bibliotece (do 1 m) zostanie powiązany, a nie zdublowany."))
+        self.btn_gcp_to_library.clicked.connect(self.add_selected_gcp_to_library)
         self.btn_load_gcp = _button("", "/mActionFileOpen.svg", self.tr("Wczytaj GCP (CSV / .points)…"))
         self.btn_load_gcp.clicked.connect(self.load_gcp_from_file)
         self.btn_save_gcp = _button("", "/mActionFileSave.svg", self.tr("Zapisz GCP (CSV / .points)…"))
         self.btn_save_gcp.clicked.connect(self.save_gcp_to_file)
-        for b in (self.btn_add_gcp, self.btn_remove_gcp, self.btn_toggle_gcp):
+        for b in (self.btn_add_gcp, self.btn_remove_gcp, self.btn_toggle_gcp, self.btn_gcp_to_library):
             row.addWidget(b)
         self.chk_names = QCheckBox(self.tr("Nazwy punktów"))
         self.chk_names.setToolTip(self.tr(
@@ -516,15 +491,17 @@ class QMapAnalystDockWidget(QDockWidget):
         self.chk_names.setChecked(QgsSettings().value(SETTINGS_NAMES, False, type=bool))
         self.chk_names.toggled.connect(self.on_names_toggled)
         row.addWidget(self.chk_names)
-        row.addStretch()
         row.addWidget(self.btn_load_gcp)
         row.addWidget(self.btn_save_gcp)
         lay.addLayout(row)
+        lay.addLayout(self._build_library_search_row())
 
-        self.tbl_gcp = QTableWidget(0, 9)
+        self.tbl_gcp = QTableWidget(0, 11)
         headers = [
             (self.tr("Akt."), self.tr("Punkt aktywny w obliczeniach")),
             (self.tr("Nazwa"), self.tr("Nazwa punktu (dwuklik – edycja)")),
+            (self.tr("Status"), self.tr("Identyfikacja punktu na tej mapie (dwuklik – zmiana): pewny, niepewny, "
+                                        "nieczytelny. Punkt nieczytelny nie wchodzi do obliczeń.")),
             (self.tr("X dawna"), self.tr("Współrzędna X na skanie [px]")),
             (self.tr("Y dawna"), self.tr("Współrzędna Y na skanie [px]")),
             (self.tr("X ref."), self.tr("Współrzędna X w układzie odniesienia")),
@@ -532,6 +509,7 @@ class QMapAnalystDockWidget(QDockWidget):
             (self.tr("Błąd"), self.tr("Odległość punktu transformowanego od referencyjnego")),
             (self.tr("LOO"), self.tr("Błąd walidacji krzyżowej: błąd punktu, gdy transformację wyznaczono bez niego")),
             ("w", self.tr("Reszta standaryzowana (test Baardy). |w| > 3,29 – punkt podejrzany o błąd grubej identyfikacji")),
+            (self.tr("Uwagi"), self.tr("Uwagi do punktu na tej mapie (dwuklik – edycja)")),
         ]
         for i, (txt, tip) in enumerate(headers):
             it = QTableWidgetItem(txt)
@@ -541,9 +519,12 @@ class QMapAnalystDockWidget(QDockWidget):
         hh.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         hh.setSectionResizeMode(COL_ACT, QHeaderView.ResizeMode.ResizeToContents)
         hh.setStretchLastSection(True)
-        for c, w in ((COL_NAME, 90), (COL_OX, 66), (COL_OY, 66), (COL_RX, 82), (COL_RY, 82), (COL_ERR, 58), (COL_LOO, 58)):
+        for c, w in ((COL_NAME, 90), (COL_STATUS, 78), (COL_W, 50), (COL_OX, 66), (COL_OY, 66), (COL_RX, 82), (COL_RY, 82), (COL_ERR, 58), (COL_LOO, 58)):
             self.tbl_gcp.setColumnWidth(c, w)
         self.tbl_gcp.setColumnHidden(COL_NAME, not self.chk_names.isChecked())
+        labels = lib_status_labels()
+        self.tbl_gcp.setItemDelegateForColumn(
+            COL_STATUS, ComboDelegate([(c, labels[c]) for c in ("sure", "uncertain", "illegible")], self.tbl_gcp))
         self.tbl_gcp.verticalHeader().setDefaultSectionSize(22)
         self.tbl_gcp.setAlternatingRowColors(True)
         self.tbl_gcp.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -559,6 +540,34 @@ class QMapAnalystDockWidget(QDockWidget):
         self._hint(hint, small=True)
         lay.addWidget(hint)
         return _scrollable(tab)
+
+    def _build_library_search_row(self):
+        row = QHBoxLayout()
+        self.ed_lib_search = QLineEdit()
+        self.ed_lib_search.setPlaceholderText(self.tr("Punkt z biblioteki – wpisz nazwę…"))
+        self.ed_lib_search.setToolTip(self.tr(
+            "Wyszukiwanie w bibliotece punktów (w zestawie wybranym w zakładce Biblioteka) po nazwie i nazwach dawnych. "
+            "Wybrany punkt staje się punktem odniesienia pary: wystarczy wskazać go na mapie dawnej. "
+            "Wyniki są uporządkowane także według odległości od przewidywanego położenia."))
+        self.ed_lib_search.setClearButtonEnabled(True)
+        self._lib_model = QStandardItemModel(self)
+        self._lib_completer = QCompleter(self._lib_model, self)
+        self._lib_completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
+        self._lib_completer.setMaxVisibleItems(12)
+        self._lib_completer.activated[QModelIndex].connect(self.on_lib_search_activated)
+        self.ed_lib_search.setCompleter(self._lib_completer)
+        self.ed_lib_search.textEdited.connect(self.update_lib_search)
+        self.btn_lib_next = _button(self.tr("Następny z zestawu"), "/mActionArrowRight.svg", self.tr(
+            "Kolejny punkt wybranego zestawu, którego nie ma jeszcze w analizie (najbliższy ostatnio dodanemu). "
+            "Ponowne kliknięcie pomija bieżący punkt."))
+        self.btn_lib_next.clicked.connect(self.next_library_point)
+        self.btn_lib_absent = _button(self.tr("Brak na mapie"), "/mActionHideSelectedLayers.svg", "")
+        self.btn_lib_absent.clicked.connect(self.mark_target_absent)
+        row.addWidget(self.ed_lib_search, 1)
+        row.addWidget(self.btn_lib_next)
+        row.addWidget(self.btn_lib_absent)
+        self.update_absent_label()
+        return row
 
     # --- analiza --------------------------------------------------------
     def _build_analysis_tab(self):
@@ -583,6 +592,14 @@ class QMapAnalystDockWidget(QDockWidget):
         self.spin_dpi.setToolTip(self.tr("Rozdzielczość skanu – służy do przeliczenia skali pikselowej na skalę mapy papierowej"))
         self.spin_dpi.valueChanged.connect(self.on_dpi_changed)
         form.addRow(self.tr("Rozdzielczość skanu:"), self.spin_dpi)
+        self.chk_weights = QCheckBox(self.tr("Wagi a priori (status punktu, niepewność współrzędnych)"))
+        self.chk_weights.setToolTip(self.tr(
+            "Wyrównanie ważone: punkt niepewny ma wagę 0,25 (ok. dwukrotnie większy błąd wskazania), a punkt biblioteki "
+            "o dużej niepewności współrzędnych (pole sigma_m) – wagę zmniejszoną względem typowego błędu mapy. "
+            "Reszty i RMSE pozostają geometryczne; σ₀, test Baardy, LOO i AICc uwzględniają wagi. "
+            "Wyłączone – wyniki jak w wersji 0.2."))
+        self.chk_weights.toggled.connect(self.on_settings_changed)
+        form.addRow(self.chk_weights)
         lay.addLayout(form)
 
         row = QHBoxLayout()
@@ -1018,6 +1035,11 @@ class QMapAnalystDockWidget(QDockWidget):
         self.btn_save_gcp.setEnabled(bool(self.gcps))
         self.btn_remove_gcp.setEnabled(bool(self.gcps))
         self.btn_toggle_gcp.setEnabled(bool(self.gcps))
+        has_lib = self.library_panel.path is not None
+        self.btn_gcp_to_library.setEnabled(bool(self.gcps) and has_lib)
+        self.ed_lib_search.setEnabled(has_lib)
+        self.btn_lib_next.setEnabled(has_lib)
+        self.btn_lib_absent.setEnabled(has_lib and self._lib_target is not None)
 
     # ------------------------------------------------------------------
     #  Układ odniesienia
@@ -1096,6 +1118,7 @@ class QMapAnalystDockWidget(QDockWidget):
         self.update_enabled_state()
         self.set_status(self.tr("Skan wczytany: {w} × {h} px. Dodaj lub wczytaj punkty GCP.").format(
             w=layer.width(), h=layer.height()), "ok")
+        self.on_scan_changed()
 
     def zoom_full_old(self):
         if self.old_raster_layer:
@@ -1250,6 +1273,7 @@ class QMapAnalystDockWidget(QDockWidget):
         else:
             self._remove_temp_marker()
             self._remove_pred_marker()
+            self._clear_lib_target()
             self._temp_old_point = None
             self._restore_main_tool()
             self.old_canvas.setMapTool(self.tool_pan_old)
@@ -1287,6 +1311,9 @@ class QMapAnalystDockWidget(QDockWidget):
     def on_old_canvas_clicked(self, point, button):
         if button != Qt.MouseButton.LeftButton:
             return
+        if self._lib_target is not None:
+            self._complete_library_pair(QgsPointXY(point), self._lib_target)
+            return
         self._temp_old_point = QgsPointXY(point)
         self._remove_temp_marker()
         self._temp_marker = self.create_marker(self.old_canvas, point, C_SEL, size=14)
@@ -1314,6 +1341,10 @@ class QMapAnalystDockWidget(QDockWidget):
     def on_ref_canvas_clicked(self, point, button):
         if button != Qt.MouseButton.LeftButton or self._temp_old_point is None:
             return
+        snapped = self.library_panel.snap(point, self.main_canvas)
+        if snapped is not None:
+            self._complete_library_pair(self._temp_old_point, snapped)
+            return
         ref = self._canvas_to_ref(point)
         old = self._temp_old_point
         self._temp_old_point = None
@@ -1339,6 +1370,168 @@ class QMapAnalystDockWidget(QDockWidget):
             self._restore_main_tool()
 
     # ------------------------------------------------------------------
+    #  Punkty z biblioteki
+    # ------------------------------------------------------------------
+    def predicted_old_point(self, x, y):
+        """Przewidywane położenie na skanie punktu o współrzędnych odniesienia (transformacja odwrotna)."""
+        st = self.analysis
+        if st is None:
+            return None
+        try:
+            p = st.inverse_warp.predict(np.array([[x, y]]))[0]
+        except (ValueError, np.linalg.LinAlgError, me.EngineError):
+            return None
+        return float(p[0]), float(p[1])
+
+    def _lib_search_anchor(self):
+        """Punkt odniesienia rankingu wyszukiwania (układ biblioteki): położenie przewidywane lub środek mapy."""
+        if self._temp_old_point is not None:
+            pred = self.predicted_ref_point(self._temp_old_point.x(), self._temp_old_point.y())
+            if pred is not None:
+                return self.library_panel.from_crs(QgsPointXY(*pred), self._ensure_ref_crs())
+        return self.library_panel.from_crs(self.main_canvas.center(), self.canvas_crs())
+
+    def update_lib_search(self, text):
+        self._lib_model.clear()
+        if not text.strip():
+            return
+        labels = lib_type_labels()
+        used = {g.uid for g in self.gcps if g.uid}
+        for p, dist in self.library_panel.search(text, near=self._lib_search_anchor()):
+            parts = [p.name]
+            if p.type:
+                parts.append(labels.get(p.type, p.type))
+            if dist is not None:
+                parts.append(f"{dist / 1000:.1f} km" if dist >= 1000 else f"{dist:.0f} m")
+            label = " · ".join(parts) + ("  ✓" if p.uid in used else "")
+            it = QStandardItem(label)
+            it.setData(p, Qt.ItemDataRole.UserRole)
+            if p.alt_names:
+                it.setToolTip(p.alt_names.replace("|", ", "))
+            self._lib_model.appendRow(it)
+        self._lib_completer.complete()
+
+    def on_lib_search_activated(self, index):
+        p = index.data(Qt.ItemDataRole.UserRole)
+        QTimer.singleShot(0, self.ed_lib_search.clear)
+        if p is not None:
+            self.choose_library_point(p)
+
+    def _clear_lib_target(self):
+        self._lib_target = None
+        if hasattr(self, "btn_lib_absent"):
+            self.btn_lib_absent.setEnabled(False)
+        for canvas, m in self._lib_markers:
+            try:
+                canvas.scene().removeItem(m)
+            except RuntimeError:
+                pass
+        self._lib_markers = []
+
+    def _gcp_index_of(self, uid):
+        return next((i for i, g in enumerate(self.gcps) if uid and g.uid == uid), None)
+
+    def _show_lib_target(self, p):
+        """Znaczniki celu: kwadrat na mapie głównej, kółko w przewidywanym miejscu na skanie."""
+        cpt = self.library_panel.to_crs(p, self.canvas_crs())
+        m = self.create_marker(self.main_canvas, cpt, C_SEL, size=22)
+        m.setIconType(QgsVertexMarker.IconType.ICON_BOX)
+        self._lib_markers.append((self.main_canvas, m))
+        self.main_canvas.setCenter(cpt)
+        self.main_canvas.refresh()
+        ref = self.library_panel.to_crs(p, self._ensure_ref_crs())
+        pred = self.predicted_old_point(ref.x(), ref.y())
+        if pred is None:
+            return False
+        opt = QgsPointXY(*pred)
+        om = self.create_marker(self.old_canvas, opt, C_SEL, size=26)
+        om.setIconType(QgsVertexMarker.IconType.ICON_CIRCLE)
+        self._lib_markers.append((self.old_canvas, om))
+        self.old_canvas.setCenter(opt)
+        self.old_canvas.refresh()
+        return True
+
+    @guarded
+    def choose_library_point(self, p):
+        """Punkt biblioteki jako punkt odniesienia pary: od razu (gdy wskazano już punkt na skanie)
+        albo po kliknięciu na mapie dawnej."""
+        if self._temp_old_point is not None:
+            self._complete_library_pair(self._temp_old_point, p)
+            return
+        if self.old_raster_layer is None:
+            self.set_status(self.tr("Najpierw wczytaj skan mapy dawnej."), "warn")
+            return
+        dup = self._gcp_index_of(p.uid)
+        if dup is not None:
+            self.set_status(self.tr("Punkt {name} jest już w analizie (#{n}).").format(name=p.name, n=dup + 1), "warn")
+            return
+        self._clear_lib_target()
+        self._lib_target = p
+        self.btn_lib_absent.setEnabled(True)
+        predicted = self._show_lib_target(p)
+        if not self.btn_capture.isChecked():
+            self.btn_capture.setChecked(True)
+        if predicted:
+            msg = self.tr("Punkt z biblioteki: {name}. Kliknij go na MAPIE DAWNEJ (żółte kółko – położenie przewidywane).")
+        else:
+            msg = self.tr("Punkt z biblioteki: {name}. Kliknij go na MAPIE DAWNEJ.")
+        self.set_status(msg.format(name=p.name))
+
+    def _complete_library_pair(self, old, p):
+        dup = self._gcp_index_of(p.uid)
+        self._temp_old_point = None
+        self._remove_temp_marker()
+        self._remove_pred_marker()
+        self._clear_lib_target()
+        if dup is not None:
+            self.set_status(self.tr("Punkt {name} jest już w analizie (#{n}).").format(name=p.name, n=dup + 1), "warn")
+        else:
+            ref = self.library_panel.to_crs(p, self._ensure_ref_crs())
+            self.add_gcp(old.x(), old.y(), ref.x(), ref.y(), name=p.name, uid=p.uid)
+            if self.absent.pop(p.uid, None) is not None:
+                self.update_absent_label()
+            self.gcps_changed()
+            self.set_status(self.tr("Dodano parę #{n}: {name} (z biblioteki). KROK 1/2: kliknij kolejny punkt na mapie dawnej.")
+                            .format(n=len(self.gcps), name=p.name), "ok")
+        if not self.btn_capture.isChecked():
+            self._restore_main_tool()
+
+    def _next_candidates(self, points):
+        """Brakujące punkty zestawu, od najbliższego ostatnio dodanemu GCP; (kandydaci, liczba brakujących)."""
+        used = {g.uid for g in self.gcps if g.uid}
+        missing = [p for p in points if p.uid not in used and p.uid not in self.absent]
+        cands = [p for p in missing if p.uid not in self._lib_skipped]
+        if not cands:
+            self._lib_skipped.clear()
+            cands = list(missing)
+        last = next((g for g in reversed(self.gcps) if g.uid), None) or (self.gcps[-1] if self.gcps else None)
+        anchor = None
+        if last is not None:
+            anchor = self.library_panel.from_crs(QgsPointXY(last.ref_x, last.ref_y), self._ensure_ref_crs())
+        if anchor is not None:
+            cands.sort(key=lambda p: (p.x - anchor[0]) ** 2 + (p.y - anchor[1]) ** 2)
+        else:
+            cands.sort(key=lambda p: lib_normalize(p.name))
+        return cands, len(missing)
+
+    @guarded
+    def next_library_point(self):
+        points = self.library_panel.set_points()
+        if points is None:
+            self.set_status(self.tr("Wybierz zestaw punktów w zakładce Biblioteka."), "warn")
+            return
+        if self._lib_target is not None:
+            self._lib_skipped.add(self._lib_target.uid)
+        cands, n_missing = self._next_candidates(points)
+        if not cands:
+            self._clear_lib_target()
+            self.set_status(self.tr("Wszystkie punkty zestawu są już w analizie."), "ok")
+            return
+        self.choose_library_point(cands[0])
+        if self._lib_target is not None:
+            self.set_status(self.lbl_status.text() + " " + self.tr("Brakuje jeszcze {n} pkt zestawu.").format(n=n_missing))
+
+    # ------------------------------------------------------------------
     #  Model punktów GCP
     # ------------------------------------------------------------------
     def create_marker(self, canvas, point, color, size=11):
@@ -1350,11 +1543,12 @@ class QMapAnalystDockWidget(QDockWidget):
         m.setPenWidth(2)
         return m
 
-    def add_gcp(self, ox, oy, rx, ry, enabled=True, name=""):
+    def add_gcp(self, ox, oy, rx, ry, enabled=True, name="", uid=None, status="sure", comment=""):
         self._ensure_ref_crs()
-        g = GCP(float(ox), float(oy), float(rx), float(ry), bool(enabled), str(name or ""))
-        g.old_marker = self.create_marker(self.old_canvas, QgsPointXY(g.old_x, g.old_y), C_OLD if enabled else C_OFF)
-        g.ref_marker = self.create_marker(self.main_canvas, self._ref_to_canvas(g.ref_x, g.ref_y), C_REF if enabled else C_OFF)
+        g = GCP(float(ox), float(oy), float(rx), float(ry), bool(enabled), str(name or ""), uid or None,
+                status if status in COMPUTABLE_STATUSES + ("illegible",) else "sure", str(comment or ""))
+        g.old_marker = self.create_marker(self.old_canvas, QgsPointXY(g.old_x, g.old_y), C_OLD if g.active else C_OFF)
+        g.ref_marker = self.create_marker(self.main_canvas, self._ref_to_canvas(g.ref_x, g.ref_y), C_REF if g.active else C_OFF)
         self.gcps.append(g)
         return g
 
@@ -1371,6 +1565,9 @@ class QMapAnalystDockWidget(QDockWidget):
         for g in self.gcps:
             self._drop_markers(g)
         self.gcps = []
+        self.absent = {}
+        if hasattr(self, "btn_lib_absent"):
+            self.update_absent_label()
 
     def update_markers(self):
         selected = self.selected_rows()
@@ -1379,7 +1576,7 @@ class QMapAnalystDockWidget(QDockWidget):
             for m, col in ((g.old_marker, C_OLD), (g.ref_marker, C_REF)):
                 if m is None:
                     continue
-                m.setColor(C_SEL if sel else (col if g.enabled else C_OFF))
+                m.setColor(C_SEL if sel else (col if g.active else C_OFF))
                 m.setIconSize(18 if sel else 11)
                 m.setPenWidth(3 if sel else 2)
                 m.update()
@@ -1388,6 +1585,28 @@ class QMapAnalystDockWidget(QDockWidget):
         for g in self.gcps:
             if g.ref_marker is not None:
                 g.ref_marker.setCenter(self._ref_to_canvas(g.ref_x, g.ref_y))
+
+    @guarded
+    def add_selected_gcp_to_library(self):
+        rows = self.selected_rows()
+        if not rows:
+            self.set_status(self.tr("Zaznacz punkty GCP w tabeli."), "warn")
+            return
+        items = [(self.gcps[r].name or self.tr("GCP {n}").format(n=r + 1), self.gcps[r].ref_x, self.gcps[r].ref_y,
+                  self.gcps[r].uid) for r in rows]
+        source = self.old_raster_layer.name() if self.old_raster_layer is not None else ""
+        res = self.library_panel.add_reference_points(items, self._ensure_ref_crs(), source)
+        if res is None:
+            return
+        uids, new, linked = res
+        for r, uid in zip(rows, uids):
+            self.gcps[r].uid = uid
+        self.refresh_table()
+        self.library_panel.set_used_uids(g.uid for g in self.gcps)
+        msg = self.tr("Biblioteka: nowe punkty – {new}, powiązane z istniejącymi – {linked}.").format(new=new, linked=linked)
+        if self.library_panel.current_set() is not None:
+            msg += " " + self.tr("Zestaw: {name}.").format(name=self.library_panel.cmb_set.currentText())
+        self.set_status(msg, "ok")
 
     def selected_rows(self):
         return sorted({i.row() for i in self.tbl_gcp.selectedIndexes()})
@@ -1402,9 +1621,10 @@ class QMapAnalystDockWidget(QDockWidget):
         self.refresh_table()
         self.update_markers()
         self.update_enabled_state()
+        self.library_panel.set_used_uids(g.uid for g in self.gcps)
         if self.chk_auto.isChecked():
             model = self.cmb_transform_type.currentData()
-            n_active = sum(1 for g in self.gcps if g.enabled)
+            n_active = sum(1 for g in self.gcps if g.active)
             if n_active >= me.MODELS[model]["min_pts"] or self.analysis is not None:
                 self._recalc_timer.start()
 
@@ -1427,8 +1647,14 @@ class QMapAnalystDockWidget(QDockWidget):
                 chk.setCheckState(Qt.CheckState.Checked if g.enabled else Qt.CheckState.Unchecked)
                 t.setItem(r, COL_ACT, chk)
                 nm = QTableWidgetItem(g.name)
+                if g.uid:
+                    nm.setToolTip(self.tr("Punkt biblioteki ({uid})").format(uid=g.uid))
                 nm.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable)
                 t.setItem(r, COL_NAME, nm)
+                t.setItem(r, COL_STATUS, self._status_item(g))
+                note = QTableWidgetItem(g.comment)
+                note.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable)
+                t.setItem(r, COL_NOTE, note)
                 t.setItem(r, COL_OX, _num_item(g.old_x, 2, True))
                 t.setItem(r, COL_OY, _num_item(g.old_y, 2, True))
                 t.setItem(r, COL_RX, _num_item(g.ref_x, 2, True))
@@ -1442,12 +1668,12 @@ class QMapAnalystDockWidget(QDockWidget):
                     t.setItem(r, COL_ERR, _num_item(float(fit.errors[k]), 2, color=col,
                                                     tip=f"vX = {fit.residuals[k, 0]:.2f}, vY = {fit.residuals[k, 1]:.2f} {unit}"))
                     t.setItem(r, COL_LOO, _num_item(float(fit.loo_errors[k]), 2))
-                    t.setItem(r, COL_W, _num_item(float(w), 2, color=bad if out else None))
+                    t.setItem(r, COL_W, _num_item(float(w), 2, color=bad if out else None, tip=self._weight_tip(fit, k)))
                 else:
                     for c in (COL_ERR, COL_LOO, COL_W):
                         it = _num_item(None)
-                        if not g.enabled:
-                            it.setText(self.tr("wył."))
+                        if not g.active:
+                            it.setText(self.tr("wył.") if not g.enabled else lib_status_labels()[g.status])
                             it.setForeground(off)
                         t.setItem(r, c, it)
         finally:
@@ -1460,12 +1686,11 @@ class QMapAnalystDockWidget(QDockWidget):
         if r >= len(self.gcps):
             return
         g = self.gcps[r]
+        if c in (COL_NAME, COL_NOTE, COL_STATUS):
+            self._on_description_changed(g, c, item)
+            return
         if c == COL_ACT:
             g.enabled = item.checkState() == Qt.CheckState.Checked
-        elif c == COL_NAME:
-            g.name = item.text().strip()
-            self.names_changed()
-            return
         elif c in (COL_OX, COL_OY, COL_RX, COL_RY):
             attr = {COL_OX: "old_x", COL_OY: "old_y", COL_RX: "ref_x", COL_RY: "ref_y"}[c]
             try:
@@ -1482,6 +1707,33 @@ class QMapAnalystDockWidget(QDockWidget):
         else:
             return
         self.gcps_changed()
+
+    def _on_description_changed(self, g, c, item):
+        """Nazwa, uwagi i status punktu (bez zmiany współrzędnych)."""
+        if c == COL_NAME:
+            g.name = item.text().strip()
+            self.names_changed()
+        elif c == COL_NOTE:
+            g.comment = item.text().strip()
+        else:
+            code = item.data(Qt.ItemDataRole.UserRole)
+            if code != g.status and code in COMPUTABLE_STATUSES + ("illegible",):
+                g.status = code
+                QTimer.singleShot(0, self.gcps_changed)   # tabela jest przebudowywana – nie w trakcie edycji
+
+    def _weight_tip(self, fit, k):
+        if fit.weights is None:
+            return None
+        return self.tr("Waga a priori p = {p}").format(p=num(float(fit.weights[k]), 3))
+
+    def _status_item(self, g):
+        it = QTableWidgetItem(lib_status_labels().get(g.status, g.status))
+        it.setData(Qt.ItemDataRole.UserRole, g.status)
+        it.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable)
+        key = {"uncertain": "warn", "illegible": "off"}.get(g.status)
+        if key is not None:
+            it.setForeground(fg_color(self.tbl_gcp, key))
+        return it
 
     def point_label(self, i):
         """Etykieta punktu w raportach: numer, a gdy jest nazwa – numer i nazwa."""
@@ -1538,7 +1790,7 @@ class QMapAnalystDockWidget(QDockWidget):
         self.gcps_changed()
 
     def active_arrays(self):
-        idx = [i for i, g in enumerate(self.gcps) if g.enabled]
+        idx = [i for i, g in enumerate(self.gcps) if g.active]
         old = np.array([[self.gcps[i].old_x, self.gcps[i].old_y] for i in idx], dtype=float).reshape(-1, 2)
         ref = np.array([[self.gcps[i].ref_x, self.gcps[i].ref_y] for i in idx], dtype=float).reshape(-1, 2)
         return old, ref, idx
@@ -1691,10 +1943,11 @@ class QMapAnalystDockWidget(QDockWidget):
             return
 
         with self.busy(self.tr("Obliczanie transformacji…")):
-            fit = me.fit_transform(model, old, ref)
             m_per_unit, unit = self.ref_units()
+            weights = self.apriori_point_weights(idx, model, old, ref, m_per_unit) if self.chk_weights.isChecked() else None
+            fit = me.fit_transform(model, old, ref, weights)
             st = AnalysisState(fit, idx, self._ensure_ref_crs(), [self.point_label(i) for i in idx], m_per_unit, unit)
-            st.comparison = me.compare_models(old, ref)
+            st.comparison = me.compare_models(old, ref, fit.weights)
             if len(idx) >= 5:
                 v = fit.residuals
                 st.moran = {
@@ -1707,16 +1960,7 @@ class QMapAnalystDockWidget(QDockWidget):
             self.analysis = st
             self.analysis_stale = False
 
-            span = float(np.max(np.ptp(ref, axis=0)))
-            if span > 0:
-                lo, hi = max(1, int(span * 0.02)), max(1000, int(span))
-                self.sld_confidence.blockSignals(True)
-                self.sld_confidence.setRange(lo, hi)
-                self.sld_confidence.setSingleStep(max(1, int(span / 100)))
-                if not (lo <= self.sld_confidence.value() <= hi):
-                    self.sld_confidence.setValue(int(span * 0.35))
-                self.sld_confidence.blockSignals(False)
-                self.on_slider_changed(self.sld_confidence.value())
+            self._fit_confidence_range(ref)
             self.spin_grid_step.setSuffix(f" {unit}")
 
             self.refresh_table()
@@ -1731,6 +1975,8 @@ class QMapAnalystDockWidget(QDockWidget):
             n=len(idx), s=num(st_["sigma0"], 2), r=num(st_["rmse"], 2), u=unit, m=report.fmt_scale(M))
         if n_out:
             msg += " · " + self.tr("punkty odstające: {k}").format(k=n_out)
+        if fit.weights is not None:
+            msg += " · " + self.tr("wagi a priori")
         if auto and self.btn_capture.isChecked():
             # w trakcie dodawania punktów zachowaj instrukcję dla użytkownika
             msg = self.tr("Para #{n} dodana ({m}). KROK 1/2: kliknij kolejny punkt na mapie dawnej.").format(
@@ -1738,6 +1984,20 @@ class QMapAnalystDockWidget(QDockWidget):
             if not self.btn_sync_views.isChecked():
                 msg += " " + self.tr("Włącz synchronizację widoków, aby mapa główna podążała za skanem.")
         self.set_status(msg, "warn" if n_out else "ok")
+
+    def _fit_confidence_range(self, ref):
+        """Zakres suwaka promienia obszaru wiarygodnego dopasowany do rozpiętości punktów."""
+        span = float(np.max(np.ptp(ref, axis=0)))
+        if span <= 0:
+            return
+        lo, hi = max(1, int(span * 0.02)), max(1000, int(span))
+        self.sld_confidence.blockSignals(True)
+        self.sld_confidence.setRange(lo, hi)
+        self.sld_confidence.setSingleStep(max(1, int(span / 100)))
+        if not (lo <= self.sld_confidence.value() <= hi):
+            self.sld_confidence.setValue(int(span * 0.35))
+        self.sld_confidence.blockSignals(False)
+        self.on_slider_changed(self.sld_confidence.value())
 
     def report_context(self, colors):
         st = self.analysis
@@ -1824,7 +2084,7 @@ class QMapAnalystDockWidget(QDockWidget):
             else:
                 vals = [None, None, None, None, None, 2]
             items.append((QgsGeometry.fromPointXY(QgsPointXY(g.ref_x, g.ref_y)),
-                          [i + 1, g.name or None, int(g.enabled), g.old_x, g.old_y, g.ref_x, g.ref_y] + vals))
+                          [i + 1, g.name or None, int(g.active), g.old_x, g.old_y, g.ref_x, g.ref_y] + vals))
         add_features(lyr, items)
         style_points(lyr)
         set_labels(lyr, "concat(\"id\", if(coalesce(\"name\", '') = '', '', ' ' || \"name\"))", QColor(30, 30, 30))
@@ -2302,12 +2562,20 @@ class QMapAnalystDockWidget(QDockWidget):
             (self.tr("Transformacja"), self.tr(me.MODELS[st.fit.model]["name"])),
             (self.tr("Rozdzielczość skanu"), f"{num(self.spin_dpi.value(), 0)} DPI"),
             (self.tr("Punkty GCP (aktywne / wszystkie)"), f"{st.fit.stats['n']} / {len(self.gcps)}"),
+            (self.tr("Wagi a priori"), self._weights_summary(st.fit)),
             (self.tr("Data analizy"), datetime.now().strftime("%Y-%m-%d %H:%M")),
             (self.tr("Wersja wtyczki"), f"QMapAnalyst {self.plugin_version()}".strip()),
         ]
         if self.analysis_stale:
             rows.append((self.tr("Uwaga"), self.tr("punkty GCP zmieniono po obliczeniu – wyniki mogą być nieaktualne")))
         return rows
+
+    def _weights_summary(self, fit):
+        if fit.weights is None:
+            return self.tr("nie (wszystkie punkty równoważne)")
+        w = fit.weights
+        return self.tr("tak – pewny 1, niepewny 0,25, niepewność współrzędnych z biblioteki; zakres {lo}–{hi}").format(
+            lo=num(float(w.min()), 3), hi=num(float(w.max()), 3))
 
     def report_gcp_rows(self):
         st = self.analysis
@@ -2316,7 +2584,7 @@ class QMapAnalystDockWidget(QDockWidget):
         rows = []
         for i, g in enumerate(self.gcps):
             k = pos.get(i)
-            r = {"id": i + 1, "name": g.name, "enabled": g.enabled, "ox": g.old_x, "oy": g.old_y, "rx": g.ref_x, "ry": g.ref_y}
+            r = {"id": i + 1, "name": g.name, "enabled": g.active, "ox": g.old_x, "oy": g.old_y, "rx": g.ref_x, "ry": g.ref_y}
             if k is not None:
                 r.update(vx=float(fit.residuals[k, 0]), vy=float(fit.residuals[k, 1]), err=float(fit.errors[k]),
                          loo=float(fit.loo_errors[k]), w=float(fit.std_residuals[k]))
@@ -2401,7 +2669,7 @@ class QMapAnalystDockWidget(QDockWidget):
         rows = []
         for i, g in enumerate(self.gcps):
             k = pos.get(i)
-            base = [i + 1, g.name, int(g.enabled), g.old_x, g.old_y, g.ref_x, g.ref_y]
+            base = [i + 1, g.name, int(g.active), g.old_x, g.old_y, g.ref_x, g.ref_y]
             if k is None or self.analysis_stale:
                 rows.append(base + [""] * 7)
             else:
@@ -2465,6 +2733,7 @@ class QMapAnalystDockWidget(QDockWidget):
             pass
         self._remove_temp_marker()
         self._remove_pred_marker()
+        self._clear_lib_target()
         for sig, slot in ((self.main_canvas.extentsChanged, self.sync_old_canvas_to_main),
                           (self.old_canvas.extentsChanged, self.sync_main_canvas_to_old)):
             try:
@@ -2472,6 +2741,7 @@ class QMapAnalystDockWidget(QDockWidget):
             except (TypeError, RuntimeError):
                 pass
         self.clear_all_gcp()
+        self.library_panel.cleanup()
         self.registry.clear_old()
         self.registry.disconnect_project()
         self.old_canvas.stopRendering()
