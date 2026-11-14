@@ -2557,12 +2557,12 @@ Update the reference coordinates of these points?</translation>
         <translation>Points of the chosen set × maps saved in the library: present, uncertain, outliers, illegible, not on map; points common to all maps; CSV/JSON export</translation>
     </message>
     <message>
-        <source>Seria map…</source>
-        <translation>Map series…</translation>
+        <source>Seria czasowa…</source>
+        <translation>Time series…</translation>
     </message>
     <message>
-        <source>Porównanie map zestawu: statystyki arkuszy (σ₀, RMSE, skala, obrót), błędy położenia punktów, podobieństwo reszt (ślad kopiowania), wektory błędów i trajektorie punktów na mapie</source>
-        <translation>Comparison of the set's maps: sheet statistics (σ₀, RMSE, scale, rotation), point position errors, residual similarity (a trace of copying), error vectors and point trajectories on the map</translation>
+        <source>Porównanie map z różnych lat dla zestawu (wydawnictwo wieloarkuszowe – jedna mapa): statystyki map (σ₀, RMSE, skala, obrót), błędy położenia punktów, podobieństwo reszt (ślad kopiowania), wektory błędów i trajektorie punktów na mapie</source>
+        <translation>Comparison of maps from different years for the set (a multi-sheet publication counts as one map): map statistics (σ₀, RMSE, scale, rotation), point position errors, residual similarity (a trace of copying), error vectors and point trajectories on the map</translation>
     </message>
     <message>
         <source>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Zestaw regionalny: zaznacz punkty na mapie i wybierz „Nowy zestaw z zaznaczonych…” z menu zestawów albo „Dodaj zaznaczone”.</source>
@@ -3089,6 +3089,14 @@ Update the reference coordinates of these points?</translation>
         <translation>Delete…</translation>
     </message>
     <message>
+        <source>Wydawnictwo wieloarkuszowe…</source>
+        <translation>Multi-sheet publication…</translation>
+    </message>
+    <message>
+        <source>Zgodność arkuszy zaznaczonej mapy: skala, obrót, RMSE, zakładki (punkty na dwóch arkuszach), skorowidz arkuszy na mapie współczesnej</source>
+        <translation>Consistency of the sheets of the selected map: scale, rotation, RMSE, overlaps (points on two sheets), sheet index on the modern map</translation>
+    </message>
+    <message>
         <source>Wczytaj</source>
         <translation>Load</translation>
     </message>
@@ -3193,16 +3201,16 @@ Update the reference coordinates of these points?</translation>
         <translation>Remove points from the set ({n}): {names}? The points will stay in the library.</translation>
     </message>
     <message>
-        <source>Seria map</source>
-        <translation>Map series</translation>
+        <source>Seria czasowa</source>
+        <translation>Time series</translation>
     </message>
     <message>
-        <source>Ten sam model dla wszystkich arkuszy – porównywalne statystyki i reszty</source>
-        <translation>The same model for all sheets – comparable statistics and residuals</translation>
+        <source>Ten sam model dla wszystkich map i ich arkuszy – porównywalne statystyki i reszty</source>
+        <translation>The same model for all maps and their sheets – comparable statistics and residuals</translation>
     </message>
     <message>
-        <source>Arkusze</source>
-        <translation>Sheets</translation>
+        <source>Mapy</source>
+        <translation>Maps</translation>
     </message>
     <message>
         <source>Podobieństwo reszt</source>
@@ -3221,8 +3229,8 @@ Update the reference coordinates of these points?</translation>
         <translation>Error vectors layer</translation>
     </message>
     <message>
-        <source>Dla każdego arkusza: odcinek od położenia odniesienia punktu w stronę, w którą mapa go przesuwa (po usunięciu transformacji)</source>
-        <translation>For each sheet: a segment from the reference position of the point towards where the map shifts it (after removing the transformation)</translation>
+        <source>Dla każdej mapy: odcinek od położenia odniesienia punktu w stronę, w którą mapa go przesuwa (po usunięciu transformacji)</source>
+        <translation>For each map: a segment from the reference position of the point towards where the map shifts it (after removing the transformation)</translation>
     </message>
     <message>
         <source>Warstwa trajektorii</source>
@@ -3237,32 +3245,32 @@ Update the reference coordinates of these points?</translation>
         <translation>Export…</translation>
     </message>
     <message>
-        <source>CSV arkuszy, CSV błędów punktów albo JSON z całą serią</source>
-        <translation>Sheets CSV, point errors CSV or JSON with the whole series</translation>
+        <source>CSV map, CSV błędów punktów albo JSON z całą serią</source>
+        <translation>Maps CSV, point errors CSV or JSON with the whole series</translation>
     </message>
     <message>
-        <source>Błąd położenia punktu: gdzie mapa umieszcza obiekt względem jego położenia w bibliotece, po usunięciu transformacji arkusza. Podobieństwo reszt: korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.</source>
-        <translation>Point position error: where the map places the object relative to its position in the library, after removing the sheet transformation. Residual similarity: vector correlation r of the errors of common points, p – permutation test.</translation>
+        <source>Błąd położenia punktu: gdzie mapa umieszcza obiekt względem jego położenia w bibliotece, po usunięciu transformacji arkusza (arkusze wydawnictwa wieloarkuszowego wyrównywane osobno). Podobieństwo reszt: korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.</source>
+        <translation>Point position error: where the map places the object relative to its position in the library, after removing the sheet transformation (the sheets of a multi-sheet publication are adjusted separately). Residual similarity: vector correlation r of the errors of common points, p – permutation test.</translation>
     </message>
     <message>
-        <source>Arkusze (CSV) (*.csv)</source>
-        <translation>Sheets (CSV) (*.csv)</translation>
+        <source>Mapy (CSV) (*.csv)</source>
+        <translation>Maps (CSV) (*.csv)</translation>
     </message>
     <message>
         <source>Błędy punktów (CSV) (*.csv)</source>
         <translation>Point errors (CSV) (*.csv)</translation>
     </message>
     <message>
-        <source>Eksport serii map</source>
-        <translation>Export map series</translation>
+        <source>Eksport serii czasowej</source>
+        <translation>Export time series</translation>
     </message>
     <message>
         <source>Model:</source>
         <translation>Model:</translation>
     </message>
     <message>
-        <source>Arkusz</source>
-        <translation>Sheet</translation>
+        <source>Arkusze</source>
+        <translation>Sheets</translation>
     </message>
     <message>
         <source>Maks. [m]</source>
@@ -3305,6 +3313,10 @@ Update the reference coordinates of these points?</translation>
         <translation>No pairs of maps with significantly similar errors.</translation>
     </message>
     <message>
+        <source>arkusze: {names}</source>
+        <translation>sheets: {names}</translation>
+    </message>
+    <message>
         <source>brak DPI</source>
         <translation>no DPI</translation>
     </message>
@@ -3313,16 +3325,8 @@ Update the reference coordinates of these points?</translation>
         <translation>too few points for the adjustment with the chosen model</translation>
     </message>
     <message>
-        <source>Mapy</source>
-        <translation>Maps</translation>
-    </message>
-    <message>
         <source>Średnio [m]</source>
         <translation>Mean [m]</translation>
-    </message>
-    <message>
-        <source>Zestaw „{name}”: punkty {n}, arkusze {m}</source>
-        <translation>Set “{name}”: {n} points, {m} sheets</translation>
     </message>
     <message>
         <source>Wektory błędów – {name} (× {k})</source>
@@ -3343,6 +3347,82 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>za mało punktów wspólnych do porównania (min. {k})</source>
         <translation>too few common points to compare (min. {k})</translation>
+    </message>
+    <message>
+        <source>Wydawnictwo wieloarkuszowe</source>
+        <translation>Multi-sheet publication</translation>
+    </message>
+    <message>
+        <source>Zakładki</source>
+        <translation>Overlaps</translation>
+    </message>
+    <message>
+        <source>Skorowidz arkuszy</source>
+        <translation>Sheet index</translation>
+    </message>
+    <message>
+        <source>Warstwa zasięgów arkuszy na mapie głównej (ramka mapy na skanie przeliczona transformacją arkusza) z numerem arkusza i statystyką</source>
+        <translation>A layer of sheet extents on the main map (the map frame on the scan transformed with the sheet transformation) with the sheet number and statistics</translation>
+    </message>
+    <message>
+        <source>Eksport wydawnictwa wieloarkuszowego</source>
+        <translation>Export multi-sheet publication</translation>
+    </message>
+    <message>
+        <source>Arkusz</source>
+        <translation>Sheet</translation>
+    </message>
+    <message>
+        <source>Zasięg</source>
+        <translation>Extent</translation>
+    </message>
+    <message>
+        <source>Punkt</source>
+        <translation>Point</translation>
+    </message>
+    <message>
+        <source>Arkusz A</source>
+        <translation>Sheet A</translation>
+    </message>
+    <message>
+        <source>Arkusz B</source>
+        <translation>Sheet B</translation>
+    </message>
+    <message>
+        <source>Rozbieżność [m]</source>
+        <translation>Discrepancy [m]</translation>
+    </message>
+    <message>
+        <source>Brak punktów wskazanych na dwóch arkuszach (zakładek).</source>
+        <translation>No points identified on two sheets (overlaps).</translation>
+    </message>
+    <message>
+        <source>„{title}”{years}: arkusze {n}</source>
+        <translation>“{title}”{years}: {n} sheets</translation>
+    </message>
+    <message>
+        <source>Skorowidz arkuszy – {title}</source>
+        <translation>Sheet index – {title}</translation>
+    </message>
+    <message>
+        <source>brak zasięgu – za mało punktów do wyrównania albo brak ramki mapy w arkuszu</source>
+        <translation>no extent – too few points for the adjustment or no map frame in the sheet</translation>
+    </message>
+    <message>
+        <source>Skala arkuszy: 1 : {a} – 1 : {b} (rozrzut {p} %).</source>
+        <translation>Sheet scale: 1 : {a} – 1 : {b} (spread {p} %).</translation>
+    </message>
+    <message>
+        <source>Obrót: {a}° – {b}°.</source>
+        <translation>Rotation: {a}° – {b}°.</translation>
+    </message>
+    <message>
+        <source>RMSE arkuszy: {a} – {b} m.</source>
+        <translation>Sheet RMSE: {a} – {b} m.</translation>
+    </message>
+    <message>
+        <source>Zakładki: {n} par wskazań; największa rozbieżność {d} m – {name} ({a} / {b}).</source>
+        <translation>Overlaps: {n} pairs of identifications; largest discrepancy {d} m – {name} ({a} / {b}).</translation>
     </message>
 </context>
 <context>

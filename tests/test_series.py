@@ -1,5 +1,5 @@
 """
-Testy trybu serii – porównanie map (bez GUI QGIS).
+Testy serii czasowej – porównanie map z różnych lat (bez GUI QGIS).
 
 Uruchomienie (OSGeo4W):  python-qgis.bat tests/test_series.py
 """
@@ -58,17 +58,23 @@ def make_library(path):
     return lib, sid, uid, ids, e_a
 
 
+def map_ids(lib, *aids):
+    return [lib.get_analysis(a).map_id for a in aids]
+
+
 def test_sheets_and_errors():
     lib, sid, uid, (a, b, c), e_a = make_library(os.path.join(TMP, "s.gpkg"))
     with lib:
         ser = sr.build_series(lib, sid, "affine", permutations=199)
-    assert [s.key for s in ser.sheets] == [a, b, c]
-    sa = ser.sheet(a)
+        ma, mb, mc = map_ids(lib, a, b, c)
+    assert [s.key for s in ser.maps] == [ma, mb, mc]
+    sa = ser.get(ma)
+    assert sa.sheet_count == 1 and sa.parts[0].analysis.analysis_id == a
     assert sa.fitted and sa.n == N and 100 < sa.rmse_m < 500 and sa.m_per_unit == 1.0
     # skala: 40 m/px przy 300 DPI → 1 : 472 441 (skos mapy błędów zmienia ją nieznacznie)
     assert abs(sa.scale_den / (PX * 300 / 0.0254) - 1) < 0.03, sa.scale_den
     assert abs(sa.rotation_deg - math.degrees(-0.05)) < 1.0 or abs(sa.rotation_deg - math.degrees(0.05)) < 1.0
-    assert math.isnan(ser.sheet(b).scale_den)                         # bez DPI
+    assert math.isnan(ser.get(mb).scale_den)                          # bez DPI
     # błąd położenia punktu ≈ wprowadzony błąd mapy (bez części wchłoniętej przez transformację)
     corr = sr.vector_correlation(np.array([complex(*sa.vec[uid[n]]) for n in e_a]),
                                  np.array([complex(*e_a[n]) for n in e_a]))
@@ -82,6 +88,7 @@ def test_copied_errors_detected():
     lib, sid, uid, (a, b, c), _e = make_library(os.path.join(TMP, "p.gpkg"))
     with lib:
         ser = sr.build_series(lib, sid, permutations=199)
+        a, b, c = map_ids(lib, a, b, c)
     pairs = {(p.a, p.b): p for p in ser.pairs}
     assert set(pairs) == {(a, b), (a, c), (b, c)}
     ab, ac = pairs[(a, b)], pairs[(a, c)]
@@ -96,17 +103,18 @@ def test_current_state_and_export():
     with lib:
         links = lib.links(c)[:6]                                        # bieżący stan C: tylko 6 punktów
         ser = sr.build_series(lib, sid, current=(lib.get_analysis(c), links), permutations=99)
-        assert ser.current_id == c and ser.sheet(c).n == 6
-        assert next(p for p in ser.pairs if (p.a, p.b) == (a, c)).n == 6
+        ma, mb, mc = map_ids(lib, a, b, c)
+        assert ser.current_id == mc and ser.get(mc).n == 6
+        assert next(p for p in ser.pairs if (p.a, p.b) == (ma, mc)).n == 6
         only = sr.build_series(lib, sid, analysis_ids={a, b}, permutations=99)
-        assert [s.key for s in only.sheets] == [a, b]
-    text = sr.sheets_csv(ser).splitlines()
-    assert text[0].startswith("analysis_id,map,sheet,year_from") and text[1].split(",")[1] == "Mapa A"
+        assert [s.key for s in only.maps] == [ma, mb]
+    text = sr.maps_csv(ser).splitlines()
+    assert text[0].startswith("key,map,sheets,year_from") and text[1].split(",")[1] == "Mapa A"
     pts = sr.points_csv(ser).splitlines()
     assert pts[0].endswith(",maps,mean_m") and len(pts) == N + 1
     data = json.loads(sr.to_json(ser))
-    assert len(data["sheets"]) == 3 and data["pairs"][0]["similar"] is True
-    assert data["sheets"][1]["scale_den"] is None
+    assert len(data["maps"]) == 3 and data["pairs"][0]["similar"] is True
+    assert data["maps"][1]["scale_den"] is None and data["maps"][0]["analysis_ids"] == [a]
 
 
 def test_unknown_set():
@@ -117,7 +125,28 @@ def test_unknown_set():
         except lb.LibraryError:
             pass
         sid = lib.add_set("pusty")
-        assert sr.build_series(lib, sid).sheets == []
+        assert sr.build_series(lib, sid).maps == []
+
+
+def test_multisheet_publication_is_one_map():
+    """Wydawnictwo wieloarkuszowe: arkusze wyrównane osobno, w serii – jeden element; pary tylko między mapami."""
+    lib, sid, uid, (a, b, c), _e = make_library(os.path.join(TMP, "m.gpkg"))
+    with lib:
+        links = lib.links(a)
+        mid = lib.get_analysis(a).map_id
+        # arkusz 2 tej samej mapy: punkty P08–P14 (P08–P09 – zakładka, także na arkuszu 1), inny obrót skanu
+        a2 = lib.save_analysis(lb.Analysis(sheet="2", map_id=mid, ref_crs="EPSG:2180"))
+        lib.save_links(a2, [lb.Link(-ln.y_old, -ln.x_old, ln.ref_x, ln.ref_y, uid=ln.uid, name=ln.name)
+                            for ln in links[8:]])
+        lib.save_links(a, links[:10])                                     # arkusz 1: P00–P09
+        ser = sr.build_series(lib, sid, permutations=99)
+    keys = [m.key for m in ser.maps]
+    assert len(keys) == 3 and keys[0] == mid, keys
+    z = ser.get(mid)
+    assert z.sheet_count == 2 and z.n == 10 + 7 and len(z.vec) == N   # wszystkie punkty zestawu na mapie
+    assert sorted(p.analysis.analysis_id for p in z.parts) == [a, a2]
+    assert math.isfinite(z.rmse_m) and min(p.rmse_m for p in z.parts) <= z.rmse_m <= max(p.rmse_m for p in z.parts)
+    assert all((p.a, p.b) != (mid, mid) for p in ser.pairs) and len(ser.pairs) == 3
 
 
 if __name__ == "__main__":

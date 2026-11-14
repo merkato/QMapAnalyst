@@ -241,12 +241,16 @@ class MapsDialog(QDialog):
         self.btn_edit.clicked.connect(self.edit)
         self.btn_delete = QPushButton(tr("Usuń…"))
         self.btn_delete.clicked.connect(self.delete)
+        self.btn_publication = QPushButton(tr("Wydawnictwo wieloarkuszowe…"))
+        self.btn_publication.setToolTip(tr("Zgodność arkuszy zaznaczonej mapy: skala, obrót, RMSE, zakładki (punkty na "
+                                           "dwóch arkuszach), skorowidz arkuszy na mapie współczesnej"))
+        self.btn_publication.clicked.connect(self.publication)
         self.btn_open = QPushButton(tr("Wczytaj"))
         self.btn_open.setToolTip(tr("Wczytaj punkty zaznaczonego arkusza (dwuklik)"))
         self.btn_open.clicked.connect(self.open_sheet)
         close = QPushButton(tr("Zamknij"))
         close.clicked.connect(self.reject)
-        for b in (self.btn_new_map, self.btn_new_sheet, self.btn_edit, self.btn_delete, self.btn_open):
+        for b in (self.btn_new_map, self.btn_new_sheet, self.btn_edit, self.btn_delete, self.btn_publication, self.btn_open):
             row.addWidget(b)
         row.addStretch()
         row.addWidget(close)
@@ -266,6 +270,7 @@ class MapsDialog(QDialog):
         except lb.LibraryError as e:
             self.lbl_info.setText(self.panel._library_error(e))
             return
+        self._sheet_counts = {m.map_id: len(sheets[m.map_id]) for m in maps}
         cur = self.host.library_analysis.analysis_id if self.host.library_analysis is not None else None
         bold = QFont()
         bold.setBold(True)
@@ -313,6 +318,8 @@ class MapsDialog(QDialog):
         self.btn_edit.setEnabled(kind is not None)
         self.btn_delete.setEnabled(kind is not None)
         self.btn_open.setEnabled(kind == "sheet")
+        mid = self._selected_map_id() if kind is not None else None
+        self.btn_publication.setEnabled(mid is not None and getattr(self, "_sheet_counts", {}).get(mid, 0) >= 2)
 
     def _run(self, fn):
         try:
@@ -397,6 +404,15 @@ class MapsDialog(QDialog):
         if cur is not None and cur.analysis_id in analysis_ids:
             self.host.library_analysis = None
             self.host.update_analysis_label()
+
+    def publication(self):
+        mid = self._selected_map_id()
+        if mid is None:
+            return
+        from .publication_dialog import PublicationDialog
+        dlg = PublicationDialog(self.panel, mid, self.host, self)
+        if dlg.exec() == QDialog.DialogCode.Accepted and dlg.chosen_analysis is not None:
+            self.accept()                    # arkusz wczytany z okna wydawnictwa
 
     def open_sheet(self):
         kind, ident = self.selected()

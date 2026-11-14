@@ -1,5 +1,5 @@
 """
-Okno „Seria map” (offscreen):
+Okno „Seria czasowa” (offscreen):
     set QT_QPA_PLATFORM=offscreen && python-qgis.bat tests/library_series_qgis.py
 """
 import faulthandler; faulthandler.enable()  # noqa: E702
@@ -74,7 +74,7 @@ assert p.item(0, 0).font().bold() and not p.item(1, 0).font().bold()
 assert "Podobne błędy" in dlg.lbl_summary.text() and "Mapa A (1770) → Mapa B (1800)" in dlg.lbl_summary.text()
 pts = dlg.tbl_points
 assert pts.rowCount() == 15 and pts.columnCount() == 5 and pts.item(0, 3).text() == "3"
-assert "Zestaw „S”: punkty 15, arkusze 3" == dlg.lbl_title.text()
+assert "Zestaw „S”: punkty 15, mapy 3" == dlg.lbl_title.text()
 
 # warstwy na mapie głównej
 dlg.sp_scale.setValue(5)
@@ -93,9 +93,9 @@ out = os.path.join(TMP, "seria")
 QFileDialog.getSaveFileName = staticmethod(lambda *a_, **k: (out, "JSON (*.json)"))
 dlg.export()
 assert json.load(open(out + ".json", encoding="utf-8"))["pairs"][0]["similar"] is True
-QFileDialog.getSaveFileName = staticmethod(lambda *a_, **k: (out, "Arkusze (CSV) (*.csv)"))
+QFileDialog.getSaveFileName = staticmethod(lambda *a_, **k: (out, "Mapy (CSV) (*.csv)"))
 dlg.export()
-assert open(out + ".csv", encoding="utf-8-sig").readline().startswith("analysis_id,map")
+assert open(out + ".csv", encoding="utf-8-sig").readline().startswith("key,map,sheets")
 
 # stan bieżący: niezapisane punkty w panelu GCP jako dodatkowy arkusz
 with ts.lb.Library.open(path) as lib:

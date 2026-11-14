@@ -2,7 +2,7 @@
 
 Gałąź: `feature/v0.3.0`. Koncepcja pełna (biblioteka + serie): 13.11.2026.
 Zakres 0.3.0: biblioteka punktów, zestawy regionalne, jakość punktu dla wskazanej mapy.
-Tryb serii – później (0.3.x / 0.4), liczony na żądanie.
+Seria czasowa (porównanie map z różnych lat) i wydawnictwa wieloarkuszowe (zgodność arkuszy jednej mapy) – liczone na żądanie.
 
 ## Ustalenia
 
@@ -98,11 +98,16 @@ Stan:
   skan, obrys na obu mapach), zasięg na mapie współczesnej liczony z bieżącej transformacji
   (`coverage.footprint`), „Następny z zestawu” pomija punkty spoza zasięgu, kod `outside` w macierzy
   (`library.point_in_polygon`, `crs_transformer`) (`tests/library_frame_qgis.py`).
-- tryb serii (część 1): `series.py` bez QGIS – arkusze zestawu wyrównane jednym modelem (σ₀, RMSE, błąd maks. w m,
+- seria czasowa (część 1): `series.py` bez QGIS – arkusze zestawu wyrównane jednym modelem (σ₀, RMSE, błąd maks. w m,
   skala z DPI, obrót, skale osi, odstające), wektory błędu położenia punktów (T(skan) − odniesienie) w układzie
   biblioteki, podobieństwo reszt par arkuszy (korelacja wektorowa r, test permutacyjny – ślad kopiowania);
-  okno „Seria map” (`series_dialog.py`): tabele arkuszy, par i błędów punktów, warstwy wektorów błędów
+  okno „Seria czasowa” (`series_dialog.py`): tabele arkuszy, par i błędów punktów, warstwy wektorów błędów
   i trajektorii punktów, eksport CSV/JSON (`tests/test_series.py`, `tests/library_series_qgis.py`).
+- rozróżnienie: **seria czasowa** – mapy z różnych lat, wydawnictwo wieloarkuszowe to jeden element (arkusze
+  wyrównywane osobno, wyniki łączone – `series.merge_sheets`); **wydawnictwo wieloarkuszowe** – osobny tryb
+  (`publication.py`, `publication_dialog.py`, z okna „Mapy i arkusze”): zgodność arkuszy (rozrzut skali, obrotu,
+  RMSE), zakładki (rozbieżność położeń punktu wskazanego na dwóch arkuszach), skorowidz arkuszy
+  (`tests/test_publication.py`, `tests/library_publication_qgis.py`).
 
 ## Etapy
 
@@ -122,7 +127,7 @@ Stan:
    zestaw z punktów analizy lub zasięgu mapy, mniej przycisków.
 9. Pilot „Kielecczyzna-18” na danych użytkownika.
 10. Wydanie 0.3.0: instrukcja, PR do `main`, wersja bez `-dev`.
-Później: tryb serii (statystyki, trajektorie, kopiowanie błędów, raport), import z sieci (Overpass, PRNG),
+Później: raport serii czasowej i wydawnictwa (HTML/PDF), import z sieci (Overpass, PRNG),
 wagi w estymacji odwzorowania.
 
 Na bieżąco: tłumaczenia EN, testy, dokumentacja.

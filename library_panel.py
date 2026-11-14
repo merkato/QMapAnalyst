@@ -277,9 +277,10 @@ class LibraryPanel(QWidget):
             "Punkty wybranego zestawu × mapy zapisane w bibliotece: obecne, niepewne, odstające, nieczytelne, "
             "brak na mapie; punkty wspólne wszystkim mapom; eksport CSV/JSON"))
         self.btn_coverage.clicked.connect(self.coverage_dialog)
-        self.btn_series = _tool("/mActionShowRasterCalculator.svg", tr("Seria map…"), tr(
-            "Porównanie map zestawu: statystyki arkuszy (σ₀, RMSE, skala, obrót), błędy położenia punktów, "
-            "podobieństwo reszt (ślad kopiowania), wektory błędów i trajektorie punktów na mapie"))
+        self.btn_series = _tool("/mActionShowRasterCalculator.svg", tr("Seria czasowa…"), tr(
+            "Porównanie map z różnych lat dla zestawu (wydawnictwo wieloarkuszowe – jedna mapa): statystyki map "
+            "(σ₀, RMSE, skala, obrót), błędy położenia punktów, podobieństwo reszt (ślad kopiowania), wektory "
+            "błędów i trajektorie punktów na mapie"))
         self.btn_series.clicked.connect(self.series_dialog)
         for b in (self.btn_import, self.btn_coverage, self.btn_series):
             row.addWidget(b)

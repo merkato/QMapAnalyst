@@ -1,6 +1,7 @@
 """
-Okno „Seria map”: porównanie map zestawu – statystyki arkuszy, podobieństwo reszt (ślad kopiowania),
-błędy położenia punktów; warstwy wektorów błędów i trajektorii punktów na mapie głównej; eksport.
+Okno „Seria czasowa”: porównanie map z różnych lat dla zestawu – statystyki map (wydawnictwo wieloarkuszowe
+to jeden element), podobieństwo reszt (ślad kopiowania), błędy położenia punktów; warstwy wektorów błędów
+i trajektorii punktów na mapie głównej; eksport.
 """
 
 import math
@@ -59,14 +60,14 @@ def _table(columns):
 
 
 class SeriesDialog(QDialog):
-    """Seria map zestawu wybranego w panelu biblioteki."""
+    """Seria czasowa zestawu wybranego w panelu biblioteki."""
 
     def __init__(self, panel, parent=None):
         super().__init__(parent)
         self.panel = panel
         self.series = None
         self.current_dirty = False
-        self.setWindowTitle(tr("Seria map"))
+        self.setWindowTitle(tr("Seria czasowa"))
         self.resize(900, 600)
         lay = QVBoxLayout(self)
         top = QHBoxLayout()
@@ -77,16 +78,16 @@ class SeriesDialog(QDialog):
         for key, meta in me.MODELS.items():
             self.cmb_model.addItem(QCoreApplication.translate("QMapAnalystEngine", meta["name"]), key)
         self.cmb_model.setCurrentIndex(self.cmb_model.findData("affine"))
-        self.cmb_model.setToolTip(tr("Ten sam model dla wszystkich arkuszy – porównywalne statystyki i reszty"))
+        self.cmb_model.setToolTip(tr("Ten sam model dla wszystkich map i ich arkuszy – porównywalne statystyki i reszty"))
         self.cmb_model.currentIndexChanged.connect(self.refresh)
         top.addWidget(self.cmb_model)
         lay.addLayout(top)
 
         self.tabs = QTabWidget()
-        self.tbl_sheets = _table([tr("Mapa"), tr("Arkusz"), tr("Punkty"), "σ₀ [m]", "RMSE [m]", tr("Maks. [m]"),
+        self.tbl_sheets = _table([tr("Mapa"), tr("Arkusze"), tr("Punkty"), "σ₀ [m]", "RMSE [m]", tr("Maks. [m]"),
                                   tr("Skala"), tr("Obrót [°]"), tr("Skale osi X/Y"), tr("Odstające")])
         self.tbl_sheets.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.tabs.addTab(self.tbl_sheets, tr("Arkusze"))
+        self.tabs.addTab(self.tbl_sheets, tr("Mapy"))
         self.tbl_pairs = _table([tr("Mapa wcześniejsza"), tr("Mapa późniejsza"), tr("Punkty wspólne"), "r", "p",
                                  tr("Śr. różnica [m]")])
         self.tbl_pairs.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
@@ -110,7 +111,7 @@ class SeriesDialog(QDialog):
         self.sp_scale.setToolTip(tr("Wektory błędów na mapie są powiększone, by były widoczne w skali mapy współczesnej"))
         row.addWidget(self.sp_scale)
         self.btn_vectors = QPushButton(tr("Warstwa wektorów błędów"))
-        self.btn_vectors.setToolTip(tr("Dla każdego arkusza: odcinek od położenia odniesienia punktu w stronę, w którą "
+        self.btn_vectors.setToolTip(tr("Dla każdej mapy: odcinek od położenia odniesienia punktu w stronę, w którą "
                                        "mapa go przesuwa (po usunięciu transformacji)"))
         self.btn_vectors.clicked.connect(self.add_vectors_layer)
         self.btn_traj = QPushButton(tr("Warstwa trajektorii"))
@@ -120,7 +121,7 @@ class SeriesDialog(QDialog):
         row.addWidget(self.btn_traj)
         row.addStretch()
         self.btn_export = QPushButton(tr("Eksport…"))
-        self.btn_export.setToolTip(tr("CSV arkuszy, CSV błędów punktów albo JSON z całą serią"))
+        self.btn_export.setToolTip(tr("CSV map, CSV błędów punktów albo JSON z całą serią"))
         self.btn_export.clicked.connect(self.export)
         close = QPushButton(tr("Zamknij"))
         close.clicked.connect(self.reject)
@@ -154,16 +155,24 @@ class SeriesDialog(QDialog):
             label += " *"
         return label
 
+    def _sheets_text(self, s):
+        """Numer arkusza (jeden arkusz) albo liczba arkuszy wydawnictwa z listą w podpowiedzi."""
+        parts = s.parts or [s]
+        names = [p.analysis.sheet or "?" for p in parts]
+        if len(parts) == 1:
+            return names[0] if parts[0].analysis.sheet else "", None
+        return str(len(parts)), tr("arkusze: {names}").format(names=", ".join(names))
+
     def _fill_sheets(self):
         t = self.tbl_sheets
         ser = self.series
-        t.setRowCount(len(ser.sheets))
-        for r, s in enumerate(ser.sheets):
-            a = s.analysis
+        t.setRowCount(len(ser.maps))
+        for r, s in enumerate(ser.maps):
+            sheets, sheets_tip = self._sheets_text(s)
             scale = f"1 : {s.scale_den:,.0f}".replace(",", " ") if math.isfinite(s.scale_den) else (
                 tr("brak DPI") if s.fitted else "–")
             cells = [_item(self._label(s), align=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-                     _item(a.sheet or ""), _item(str(s.n)), _item(_num(s.sigma0_m)), _item(_num(s.rmse_m)),
+                     _item(sheets, sheets_tip), _item(str(s.n)), _item(_num(s.sigma0_m)), _item(_num(s.rmse_m)),
                      _item(_num(s.max_m)), _item(scale), _item(_num(s.rotation_deg, 2)), _item(_num(s.axis_ratio, 3)),
                      _item(str(len(s.outliers)) if s.fitted else "–",
                            ", ".join(self._name(u) for u in s.outliers) or None)]
@@ -178,7 +187,7 @@ class SeriesDialog(QDialog):
     def _fill_pairs(self):
         t = self.tbl_pairs
         ser = self.series
-        by_key = {s.key: s for s in ser.sheets}
+        by_key = {s.key: s for s in ser.maps}
         pairs = [p for p in ser.pairs if p.n > 0]
         t.setRowCount(len(pairs))
         bold = QFont()
@@ -201,13 +210,13 @@ class SeriesDialog(QDialog):
         ser = self.series
         t = self.tbl_points
         t.clear()
-        t.setColumnCount(len(ser.sheets) + 2)
-        t.setHorizontalHeaderLabels([self._label(s) for s in ser.sheets] + [tr("Mapy"), tr("Średnio [m]")])
+        t.setColumnCount(len(ser.maps) + 2)
+        t.setHorizontalHeaderLabels([self._label(s) for s in ser.maps] + [tr("Mapy"), tr("Średnio [m]")])
         t.setRowCount(len(ser.points))
-        vmax = max((v for s in ser.sheets for v in s.err_m.values()), default=0.0) or 1.0
+        vmax = max((v for s in ser.maps for v in s.err_m.values()), default=0.0) or 1.0
         for r, p in enumerate(ser.points):
             t.setVerticalHeaderItem(r, QTableWidgetItem(p.name))
-            for c, s in enumerate(ser.sheets):
+            for c, s in enumerate(ser.maps):
                 v = s.err_m.get(p.uid)
                 it = _item(_num(v) if v is not None else "")
                 if v is not None:
@@ -217,21 +226,21 @@ class SeriesDialog(QDialog):
                         it.setToolTip(tr("odstający (test Baardy)"))
                 t.setItem(r, c, it)
             n, mean, _v = ser.point_summary(p.uid)
-            t.setItem(r, len(ser.sheets), _item(str(n)))
-            t.setItem(r, len(ser.sheets) + 1, _item(_num(mean)))
+            t.setItem(r, len(ser.maps), _item(str(n)))
+            t.setItem(r, len(ser.maps) + 1, _item(_num(mean)))
 
     def _fill_summary(self):
         ser = self.series
-        self.lbl_title.setText(tr("Zestaw „{name}”: punkty {n}, arkusze {m}").format(
-            name=ser.set_name, n=len(ser.points), m=len(ser.sheets)))
-        if not ser.sheets:
+        self.lbl_title.setText(tr("Zestaw „{name}”: punkty {n}, mapy {m}").format(
+            name=ser.set_name, n=len(ser.points), m=len(ser.maps)))
+        if not ser.maps:
             self.lbl_summary.setText(tr("Żadna analiza zapisana w bibliotece nie zawiera punktów tego zestawu."))
             return
-        by_key = {s.key: s for s in ser.sheets}
+        by_key = {s.key: s for s in ser.maps}
         similar = ser.similar_pairs()
         lines = [tr("Błąd położenia punktu: gdzie mapa umieszcza obiekt względem jego położenia w bibliotece, po usunięciu "
-                    "transformacji arkusza. Podobieństwo reszt: korelacja wektorowa r błędów punktów wspólnych, p – test "
-                    "permutacyjny.")]
+                    "transformacji arkusza (arkusze wydawnictwa wieloarkuszowego wyrównywane osobno). Podobieństwo reszt: "
+                    "korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.")]
         if similar:
             lines.append(tr("Podobne błędy (możliwe kopiowanie): {pairs}").format(
                 pairs="; ".join(f"{self._label(by_key[p.a])} → {self._label(by_key[p.b])} (r = {p.r:.2f})" for p in similar)))
@@ -262,7 +271,7 @@ class SeriesDialog(QDialog):
 
     def add_vectors_layer(self):
         ser = self.series
-        if ser is None or not ser.sheets:
+        if ser is None or not ser.maps:
             return None
         k = self.sp_scale.value()
         layer = self._new_layer("LineString", tr("Wektory błędów – {name} (× {k})").format(name=ser.set_name, k=k))
@@ -272,24 +281,24 @@ class SeriesDialog(QDialog):
         layer.updateFields()
         names = {p.uid: p.name for p in ser.points}
         feats = []
-        for s in ser.sheets:
+        for s in ser.maps:
             label = self._label(s)
             for uid, (x, y) in s.pos.items():
                 dx, dy = s.vec[uid]
                 f = QgsFeature(layer.fields())
                 f.setGeometry(QgsGeometry.fromPolylineXY([QgsPointXY(x, y), QgsPointXY(x + k * dx, y + k * dy)]))
-                f.setAttributes([names.get(uid, ""), uid, label, s.analysis.sheet, s.analysis.year_from or None,
+                f.setAttributes([names.get(uid, ""), uid, label, self._sheets_text(s)[0], s.column.year_from or None,
                                  round(s.err_m[uid], 2), int(uid in s.outliers)])
                 feats.append(f)
         pr.addFeatures(feats)
         layer.updateExtents()
-        self._style_by_map(layer, "map", [(self._label(s), self._label(s)) for s in ser.sheets], arrows=True)
+        self._style_by_map(layer, "map", [(self._label(s), self._label(s)) for s in ser.maps], arrows=True)
         QgsProject.instance().addMapLayer(layer)
         return layer
 
     def add_trajectories_layer(self):
         ser = self.series
-        if ser is None or not ser.sheets:
+        if ser is None or not ser.maps:
             return None
         k = self.sp_scale.value()
         layer = self._new_layer("LineString", tr("Trajektorie punktów – {name} (× {k})").format(name=ser.set_name, k=k))
@@ -325,8 +334,8 @@ class SeriesDialog(QDialog):
         ser = self.series
         if ser is None:
             return
-        flt_sheets, flt_points, flt_json = tr("Arkusze (CSV) (*.csv)"), tr("Błędy punktów (CSV) (*.csv)"), "JSON (*.json)"
-        path, flt = QFileDialog.getSaveFileName(self, tr("Eksport serii map"), f"{ser.set_name}_seria",
+        flt_sheets, flt_points, flt_json = tr("Mapy (CSV) (*.csv)"), tr("Błędy punktów (CSV) (*.csv)"), "JSON (*.json)"
+        path, flt = QFileDialog.getSaveFileName(self, tr("Eksport serii czasowej"), f"{ser.set_name}_seria",
                                                 ";;".join((flt_sheets, flt_points, flt_json)))
         if not path:
             return
@@ -334,7 +343,7 @@ class SeriesDialog(QDialog):
         ext = ".json" if kind == "json" else ".csv"
         if not path.lower().endswith(ext):
             path += ext
-        text = sr.to_json(ser) if kind == "json" else (sr.points_csv(ser) if kind == "points" else sr.sheets_csv(ser))
+        text = sr.to_json(ser) if kind == "json" else (sr.points_csv(ser) if kind == "points" else sr.maps_csv(ser))
         with open(path, "w", encoding="utf-8" if kind == "json" else "utf-8-sig", newline="") as f:
             f.write(text)
         self.lbl_summary.setText(tr("Zapisano: {f}").format(f=path))

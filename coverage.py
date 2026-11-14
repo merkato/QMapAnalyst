@@ -1,5 +1,5 @@
 """
-Macierz pokrycia punkt × mapa dla zestawu punktów biblioteki (pierwszy element trybu serii).
+Macierz pokrycia punkt × mapa dla zestawu punktów biblioteki (pierwszy krok serii czasowej).
 
 Komórka opisuje punkt na danej mapie:
     sure / uncertain  – zidentyfikowany (pewny / niepewny) i aktywny,

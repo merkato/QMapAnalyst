@@ -2557,12 +2557,12 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Punkty wybranego zestawu × mapy zapisane w bibliotece: obecne, niepewne, odstające, nieczytelne, brak na mapie; punkty wspólne wszystkim mapom; eksport CSV/JSON</translation>
     </message>
     <message>
-        <source>Seria map…</source>
-        <translation>Seria map…</translation>
+        <source>Seria czasowa…</source>
+        <translation>Seria czasowa…</translation>
     </message>
     <message>
-        <source>Porównanie map zestawu: statystyki arkuszy (σ₀, RMSE, skala, obrót), błędy położenia punktów, podobieństwo reszt (ślad kopiowania), wektory błędów i trajektorie punktów na mapie</source>
-        <translation>Porównanie map zestawu: statystyki arkuszy (σ₀, RMSE, skala, obrót), błędy położenia punktów, podobieństwo reszt (ślad kopiowania), wektory błędów i trajektorie punktów na mapie</translation>
+        <source>Porównanie map z różnych lat dla zestawu (wydawnictwo wieloarkuszowe – jedna mapa): statystyki map (σ₀, RMSE, skala, obrót), błędy położenia punktów, podobieństwo reszt (ślad kopiowania), wektory błędów i trajektorie punktów na mapie</source>
+        <translation>Porównanie map z różnych lat dla zestawu (wydawnictwo wieloarkuszowe – jedna mapa): statystyki map (σ₀, RMSE, skala, obrót), błędy położenia punktów, podobieństwo reszt (ślad kopiowania), wektory błędów i trajektorie punktów na mapie</translation>
     </message>
     <message>
         <source>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Zestaw regionalny: zaznacz punkty na mapie i wybierz „Nowy zestaw z zaznaczonych…” z menu zestawów albo „Dodaj zaznaczone”.</source>
@@ -3089,6 +3089,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Usuń…</translation>
     </message>
     <message>
+        <source>Wydawnictwo wieloarkuszowe…</source>
+        <translation>Wydawnictwo wieloarkuszowe…</translation>
+    </message>
+    <message>
+        <source>Zgodność arkuszy zaznaczonej mapy: skala, obrót, RMSE, zakładki (punkty na dwóch arkuszach), skorowidz arkuszy na mapie współczesnej</source>
+        <translation>Zgodność arkuszy zaznaczonej mapy: skala, obrót, RMSE, zakładki (punkty na dwóch arkuszach), skorowidz arkuszy na mapie współczesnej</translation>
+    </message>
+    <message>
         <source>Wczytaj</source>
         <translation>Wczytaj</translation>
     </message>
@@ -3193,16 +3201,16 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Usunąć z zestawu punkty ({n}): {names}? Punkty zostaną w bibliotece.</translation>
     </message>
     <message>
-        <source>Seria map</source>
-        <translation>Seria map</translation>
+        <source>Seria czasowa</source>
+        <translation>Seria czasowa</translation>
     </message>
     <message>
-        <source>Ten sam model dla wszystkich arkuszy – porównywalne statystyki i reszty</source>
-        <translation>Ten sam model dla wszystkich arkuszy – porównywalne statystyki i reszty</translation>
+        <source>Ten sam model dla wszystkich map i ich arkuszy – porównywalne statystyki i reszty</source>
+        <translation>Ten sam model dla wszystkich map i ich arkuszy – porównywalne statystyki i reszty</translation>
     </message>
     <message>
-        <source>Arkusze</source>
-        <translation>Arkusze</translation>
+        <source>Mapy</source>
+        <translation>Mapy</translation>
     </message>
     <message>
         <source>Podobieństwo reszt</source>
@@ -3221,8 +3229,8 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Warstwa wektorów błędów</translation>
     </message>
     <message>
-        <source>Dla każdego arkusza: odcinek od położenia odniesienia punktu w stronę, w którą mapa go przesuwa (po usunięciu transformacji)</source>
-        <translation>Dla każdego arkusza: odcinek od położenia odniesienia punktu w stronę, w którą mapa go przesuwa (po usunięciu transformacji)</translation>
+        <source>Dla każdej mapy: odcinek od położenia odniesienia punktu w stronę, w którą mapa go przesuwa (po usunięciu transformacji)</source>
+        <translation>Dla każdej mapy: odcinek od położenia odniesienia punktu w stronę, w którą mapa go przesuwa (po usunięciu transformacji)</translation>
     </message>
     <message>
         <source>Warstwa trajektorii</source>
@@ -3237,32 +3245,32 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Eksport…</translation>
     </message>
     <message>
-        <source>CSV arkuszy, CSV błędów punktów albo JSON z całą serią</source>
-        <translation>CSV arkuszy, CSV błędów punktów albo JSON z całą serią</translation>
+        <source>CSV map, CSV błędów punktów albo JSON z całą serią</source>
+        <translation>CSV map, CSV błędów punktów albo JSON z całą serią</translation>
     </message>
     <message>
-        <source>Błąd położenia punktu: gdzie mapa umieszcza obiekt względem jego położenia w bibliotece, po usunięciu transformacji arkusza. Podobieństwo reszt: korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.</source>
-        <translation>Błąd położenia punktu: gdzie mapa umieszcza obiekt względem jego położenia w bibliotece, po usunięciu transformacji arkusza. Podobieństwo reszt: korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.</translation>
+        <source>Błąd położenia punktu: gdzie mapa umieszcza obiekt względem jego położenia w bibliotece, po usunięciu transformacji arkusza (arkusze wydawnictwa wieloarkuszowego wyrównywane osobno). Podobieństwo reszt: korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.</source>
+        <translation>Błąd położenia punktu: gdzie mapa umieszcza obiekt względem jego położenia w bibliotece, po usunięciu transformacji arkusza (arkusze wydawnictwa wieloarkuszowego wyrównywane osobno). Podobieństwo reszt: korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.</translation>
     </message>
     <message>
-        <source>Arkusze (CSV) (*.csv)</source>
-        <translation>Arkusze (CSV) (*.csv)</translation>
+        <source>Mapy (CSV) (*.csv)</source>
+        <translation>Mapy (CSV) (*.csv)</translation>
     </message>
     <message>
         <source>Błędy punktów (CSV) (*.csv)</source>
         <translation>Błędy punktów (CSV) (*.csv)</translation>
     </message>
     <message>
-        <source>Eksport serii map</source>
-        <translation>Eksport serii map</translation>
+        <source>Eksport serii czasowej</source>
+        <translation>Eksport serii czasowej</translation>
     </message>
     <message>
         <source>Model:</source>
         <translation>Model:</translation>
     </message>
     <message>
-        <source>Arkusz</source>
-        <translation>Arkusz</translation>
+        <source>Arkusze</source>
+        <translation>Arkusze</translation>
     </message>
     <message>
         <source>Maks. [m]</source>
@@ -3305,6 +3313,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Brak par map o istotnie podobnych błędach.</translation>
     </message>
     <message>
+        <source>arkusze: {names}</source>
+        <translation>arkusze: {names}</translation>
+    </message>
+    <message>
         <source>brak DPI</source>
         <translation>brak DPI</translation>
     </message>
@@ -3313,16 +3325,8 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>za mało punktów do wyrównania wybranym modelem</translation>
     </message>
     <message>
-        <source>Mapy</source>
-        <translation>Mapy</translation>
-    </message>
-    <message>
         <source>Średnio [m]</source>
         <translation>Średnio [m]</translation>
-    </message>
-    <message>
-        <source>Zestaw „{name}”: punkty {n}, arkusze {m}</source>
-        <translation>Zestaw „{name}”: punkty {n}, arkusze {m}</translation>
     </message>
     <message>
         <source>Wektory błędów – {name} (× {k})</source>
@@ -3343,6 +3347,82 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>za mało punktów wspólnych do porównania (min. {k})</source>
         <translation>za mało punktów wspólnych do porównania (min. {k})</translation>
+    </message>
+    <message>
+        <source>Wydawnictwo wieloarkuszowe</source>
+        <translation>Wydawnictwo wieloarkuszowe</translation>
+    </message>
+    <message>
+        <source>Zakładki</source>
+        <translation>Zakładki</translation>
+    </message>
+    <message>
+        <source>Skorowidz arkuszy</source>
+        <translation>Skorowidz arkuszy</translation>
+    </message>
+    <message>
+        <source>Warstwa zasięgów arkuszy na mapie głównej (ramka mapy na skanie przeliczona transformacją arkusza) z numerem arkusza i statystyką</source>
+        <translation>Warstwa zasięgów arkuszy na mapie głównej (ramka mapy na skanie przeliczona transformacją arkusza) z numerem arkusza i statystyką</translation>
+    </message>
+    <message>
+        <source>Eksport wydawnictwa wieloarkuszowego</source>
+        <translation>Eksport wydawnictwa wieloarkuszowego</translation>
+    </message>
+    <message>
+        <source>Arkusz</source>
+        <translation>Arkusz</translation>
+    </message>
+    <message>
+        <source>Zasięg</source>
+        <translation>Zasięg</translation>
+    </message>
+    <message>
+        <source>Punkt</source>
+        <translation>Punkt</translation>
+    </message>
+    <message>
+        <source>Arkusz A</source>
+        <translation>Arkusz A</translation>
+    </message>
+    <message>
+        <source>Arkusz B</source>
+        <translation>Arkusz B</translation>
+    </message>
+    <message>
+        <source>Rozbieżność [m]</source>
+        <translation>Rozbieżność [m]</translation>
+    </message>
+    <message>
+        <source>Brak punktów wskazanych na dwóch arkuszach (zakładek).</source>
+        <translation>Brak punktów wskazanych na dwóch arkuszach (zakładek).</translation>
+    </message>
+    <message>
+        <source>„{title}”{years}: arkusze {n}</source>
+        <translation>„{title}”{years}: arkusze {n}</translation>
+    </message>
+    <message>
+        <source>Skorowidz arkuszy – {title}</source>
+        <translation>Skorowidz arkuszy – {title}</translation>
+    </message>
+    <message>
+        <source>brak zasięgu – za mało punktów do wyrównania albo brak ramki mapy w arkuszu</source>
+        <translation>brak zasięgu – za mało punktów do wyrównania albo brak ramki mapy w arkuszu</translation>
+    </message>
+    <message>
+        <source>Skala arkuszy: 1 : {a} – 1 : {b} (rozrzut {p} %).</source>
+        <translation>Skala arkuszy: 1 : {a} – 1 : {b} (rozrzut {p} %).</translation>
+    </message>
+    <message>
+        <source>Obrót: {a}° – {b}°.</source>
+        <translation>Obrót: {a}° – {b}°.</translation>
+    </message>
+    <message>
+        <source>RMSE arkuszy: {a} – {b} m.</source>
+        <translation>RMSE arkuszy: {a} – {b} m.</translation>
+    </message>
+    <message>
+        <source>Zakładki: {n} par wskazań; największa rozbieżność {d} m – {name} ({a} / {b}).</source>
+        <translation>Zakładki: {n} par wskazań; największa rozbieżność {d} m – {name} ({a} / {b}).</translation>
     </message>
 </context>
 <context>
