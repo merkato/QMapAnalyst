@@ -277,7 +277,7 @@ class LibraryPanel(QWidget):
             "Punkty wybranego zestawu × mapy zapisane w bibliotece: obecne, niepewne, odstające, nieczytelne, "
             "brak na mapie; punkty wspólne wszystkim mapom; eksport CSV/JSON"))
         self.btn_coverage.clicked.connect(self.coverage_dialog)
-        self.btn_series = _tool("/mActionShowRasterCalculator.svg", tr("Seria czasowa…"), tr(
+        self.btn_series = _tool("/mTemporalNavigationAnimated.svg", tr("Seria czasowa…"), tr(
             "Porównanie map z różnych lat dla zestawu (wydawnictwo wieloarkuszowe – jedna mapa): statystyki map "
             "(σ₀, RMSE, skala, obrót), błędy położenia punktów, podobieństwo reszt (ślad kopiowania), wektory "
             "błędów i trajektorie punktów na mapie"))
@@ -524,6 +524,7 @@ class LibraryPanel(QWidget):
         if self.layer is not None:
             QgsExpressionContextUtils.setLayerVariable(self.layer, USED_VAR, "|".join(sorted(uids)))
             self.layer.triggerRepaint()
+        self._update_info()
 
     # --- punkty z analizy ----------------------------------------------------------------
     def library_crs(self):

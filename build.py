@@ -36,7 +36,7 @@ def build_plugin():
                 if any(file.endswith(ext) for ext in EXCLUDE_EXTS):
                     continue
                 # ilustracje dokumentacji są dla GitHuba – w paczce zbędne (pliki binarne, ~2 MB)
-                if os.path.basename(root) == "docs" and file.lower().endswith(".png"):
+                if os.path.basename(root) == "docs" and file.lower().endswith((".png", ".jpg")):
                     continue
                 # plany rozwoju (docs/plan_*.md) są dla repozytorium, nie dla użytkownika
                 if os.path.basename(root) == "docs" and file.startswith("plan_"):

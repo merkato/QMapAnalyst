@@ -88,6 +88,8 @@ class SeriesDialog(QDialog):
         self.tbl_sheets = _table([tr("Mapa"), tr("Arkusze"), tr("Punkty"), "σ₀ [m]", "RMSE [m]", tr("Maks. [m]"),
                                   tr("Skala"), tr("Obrót [°]"), tr("Skale osi X/Y"), tr("Odstające")])
         self.tbl_sheets.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.tbl_sheets.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
+        self.tbl_sheets.setTextElideMode(Qt.TextElideMode.ElideMiddle)
         self.tabs.addTab(self.tbl_sheets, tr("Mapy"))
         self.tbl_pairs = _table([tr("Mapa wcześniejsza"), tr("Mapa późniejsza"), tr("Punkty wspólne"), "r", "p",
                                  tr("Śr. różnica [m]")])
@@ -221,6 +223,9 @@ class SeriesDialog(QDialog):
                 cells[2].setToolTip(tr("za mało punktów do wyrównania wybranym modelem"))
             for c, it in enumerate(cells):
                 t.setItem(r, c, it)
+        # długie nazwy arkuszy nie mogą zabierać miejsca nazwie mapy
+        t.resizeColumnToContents(1)
+        t.setColumnWidth(1, min(t.columnWidth(1), 140))
 
     def _name(self, uid):
         return next((p.name for p in self.series.points if p.uid == uid), "?")

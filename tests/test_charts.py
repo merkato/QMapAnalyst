@@ -28,7 +28,8 @@ def texts(root):
 
 def test_helpers():
     assert ch.metres_label(250) == "250 m" and ch.metres_label(1000) == "1 km" and ch.metres_label(2500) == "2,5 km"
-    assert ch.metres_label(20000) == "20 km"
+    assert ch.metres_label(20000) == "20 km" and ch.metres_label(11752) == "12 km" and ch.metres_label(3725.6) == "3,7 km"
+    assert ch.metres_label(316.3) == "316 m"
     assert ch._log_ticks(20, 2000) == [20, 50, 100, 200, 500, 1000, 2000]
     lo, hi = ch._log_domain([45, 31200])
     assert lo == 20 and hi == 50000, (lo, hi)

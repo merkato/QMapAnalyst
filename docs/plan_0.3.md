@@ -129,7 +129,7 @@ Stan:
 8. Obsługa zestawów: zestaw roboczy oddzielony od filtra mapy, okno punktów zestawu, wybór zestawu w zakładce GCP,
    zestaw z punktów analizy lub zasięgu mapy, mniej przycisków.
 9. Pilot „Kielecczyzna-18” na danych użytkownika.
-10. Wydanie 0.3.0: instrukcja, PR do `main`, wersja bez `-dev`.
+10. Wydanie 0.3.0 „Falkenberg” (14.11.2026): instrukcja ze zrzutami (`tests/doc_screenshots_library.py`), PR do `main`, release.
 Później: import z sieci (Overpass, PRNG),
 wagi w estymacji odwzorowania.
 

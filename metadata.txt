@@ -2,21 +2,21 @@
 name=QMapAnalyst
 qgisMinimumVersion=3.34
 qgisMaximumVersion=4.99
-description=Cartometric analysis of historical maps: Helmert, affine and polynomial transformations with full statistics, outlier detection, distortion grids and isolines, and estimation of the map projection the map was drawn in.
-version=0.3.0-dev
+description=Cartometric analysis of historical maps: Helmert, affine and polynomial transformations with full statistics, outlier detection, distortion grids and isolines, estimation of the map projection, a reference point library and comparison of map series.
+version=0.3.0
 author=Tomasz Nycz
 email=tomasz@nycz.beskidy.pl
-about=Modern QGIS plugin inspired by MapAnalyst, built with Python, NumPy and SciPy (Qt5 and Qt6). Computes Helmert, affine and 2nd-order polynomial transformations between a historical map scan and a reference map with standard errors, cross-validation, Baarda outlier test, model comparison (AICc), spatial autocorrelation of residuals and Tissot-based local distortion analysis. Estimates the most likely map projection (Bonne, Cassini-Soldner, equidistant conic, Sanson-Flamsteed, trapezoidal, Mercator and more) and draws its graticule on the scan.
+about=Modern QGIS plugin inspired by MapAnalyst, built with Python, NumPy and SciPy (Qt5 and Qt6). Computes Helmert, affine and 2nd-order polynomial transformations between a historical map scan and a reference map with standard errors, cross-validation, Baarda outlier test, model comparison (AICc), spatial autocorrelation of residuals and Tissot-based local distortion analysis. Estimates the most likely map projection (Bonne, Cassini-Soldner, equidistant conic, Sanson-Flamsteed, trapezoidal, Mercator and more) and draws its graticule on the scan. Keeps a reference point library (GeoPackage) with regional point sets and per-map point quality, and compares maps: coverage matrix, time series of maps from different years (accuracy, position errors, residual similarity as a trace of copying, error vectors and trajectories) and multi-sheet publications, with PDF/HTML reports and charts.
 repository=https://github.com/merkato/QMapAnalyst
 tracker=https://github.com/merkato/QMapAnalyst/issues
 homepage=https://github.com/merkato/QMapAnalyst
-tags=history,historical maps,mapanalyst,transformation,helmert,affine,rbf,cartometry,georeferencing,map projection,accuracy
+tags=history,historical maps,mapanalyst,transformation,helmert,affine,rbf,cartometry,georeferencing,map projection,accuracy,hgis,time series,gazetteer
 category=Raster
 hasProcessingProvider=no
 supportsQt6=True
-experimental=True
+experimental=False
 deprecated=False
-changelog=0.3.0-dev
+changelog=0.3.0 "Falkenberg"
     - New: library of reference points (GeoPackage) – regional point sets, import from layers/CSV, snapping, search, "next from set"
     - New: point identification status per map (sure / uncertain / illegible / not on map) and optional a priori weights
     - New: maps and sheets in the library, map frame (extent) on the scan and on the modern map, coverage matrix point × map

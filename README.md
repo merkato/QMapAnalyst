@@ -4,6 +4,33 @@
 
 ![QMapAnalyst panel: reference grid, scale isolines and displacement vectors on an Austrian cadastral sheet (1:2880)](docs/results_en.png)
 
+## 🆕 What's new in 0.3.0 „Falkenberg”
+
+Version 0.3 turns QMapAnalyst from a single-map tool into a workbench for **series of maps**:
+
+* **Reference point library** – one GeoPackage file with your control points (towns, churches, confluences…), historical names and coordinate uncertainty, grouped into **regional point sets**. Import from any vector layer (PRNG, OSM, BDOT10k) or CSV with duplicate detection; snapping, name search (also historical names, no diacritics needed) and **“Next from set”** with the predicted position on the scan.
+* **Point quality per map** – status *sure / uncertain / illegible / not on map* with comments, optional **a priori weights** (status × coordinate uncertainty), links to the library kept in GCP files.
+* **Maps and sheets** – map descriptions shared by all sheets, a **map frame** on the scan shown as the map extent on the modern map, and a **coverage matrix** point × map (present, uncertain, outlier, not on map, outside the sheet).
+* **Time series** – maps from different years compared with one model: accuracy over time, point position errors, **residual similarity** (vector correlation with a permutation test – a trace of copying), error vectors and point trajectories on the map.
+* **Multi-sheet publications** – sheet consistency (scale, rotation, RMSE), overlaps (points identified on two sheets) and a sheet index on the modern map.
+* **Reports and charts** – PDF and HTML reports with charts, and every chart as SVG and PNG for slides.
+
+| Library point on the GCP tab | Coverage matrix |
+|---|---|
+| ![GCP tab with library points: link icons, point set, map frame](docs/gcp_library_en.png) | ![Coverage matrix point × map](docs/coverage_en.png) |
+
+| Map accuracy over time | Error similarity between maps |
+|---|---|
+| ![Map accuracy over time](docs/chart_dokladnosc_en.png) | ![Error similarity matrix](docs/chart_podobienstwo_en.png) |
+
+![Position error vectors of four maps of the Kielce region (1585–1843)](docs/chart_wektory_en.png)
+
+| Map extent on the modern map | Error vectors on the modern map |
+|---|---|
+| ![Map frame of a TKKP sheet transformed to the modern map](docs/frame_main.jpg) | ![Position error vectors of four maps (×3)](docs/series_vectors_main.jpg) |
+
+*Screenshots 0.3: point set „TKKP” (Kielce region) – Polonia et Silesia (1585), Rizzi Zannoni, Carte de la Pologne (1772), Karte von West-Galizien (1801–1808) and the Topographic Map of the Kingdom of Poland 1:126 000 (1822–1843); background © OpenStreetMap contributors.*
+
 ## 🌟 Key features
 
 * **Transformations:** Helmert (4 parameters), affine (6) and 2nd-order polynomial (12), all fitted by least squares.
@@ -21,6 +48,7 @@
   * a PDF with one map page per overlay
   * a georeferenced TIFF view
   * CSV tables of points and of the projection ranking
+* **Library, series and publications (0.3):** reference point library with regional sets, point status per map, maps and sheets, map frames, coverage matrix, time series of maps and multi-sheet publications with reports and charts – see above.
 * **Workflow:**
   * continuous GCP capture and in-table coordinate editing
   * zoom to a point and synchronised views
@@ -57,6 +85,7 @@
 4. **Projection tab:** estimate the map projection, inspect the ranking and its parameters, and draw the graticule on the scan.
 5. **Layers tab:** generate result layers on the main map and on the scan.
 6. **Export tab:** save a PDF report, TIFF and CSV files.
+7. **Library tab (0.3):** open or create a point library, choose a point set, save the analysis as a sheet of a map, then open the **coverage matrix**, the **time series** or – from *Maps and sheets* – a **multi-sheet publication**.
 
 | GCP table | Analysis report | Projection estimation |
 |---|---|---|
@@ -78,13 +107,17 @@ A detailed manual (in Polish) is available in [docs/manual_qmapanalyst.md](docs/
 ```bash
 # engine tests (no GUI) – OSGeo4W shell
 python-qgis.bat tests/test_engine.py
-# full offscreen smoke test of the panel
+# library, coverage, series, publications, charts (no GUI)
+python-qgis.bat tests/test_library.py
+python-qgis.bat tests/test_series.py
+python-qgis.bat tests/test_charts.py
+# full offscreen smoke test of the panel (and tests/library_*_qgis.py)
 set QT_QPA_PLATFORM=offscreen && python-qgis.bat tests/smoke_qgis.py
 # regenerate translations (.ts/.qm)
 python-qgis.bat i18n/build_translations.py
 ```
 
-Module layout: `math_engine.py` (transformations and statistics), `projections.py` (projection estimation), `report.py` (HTML reports), `layers.py` (result layer registry and styles), `export.py` (PDF/CSV), `dockwidget.py` (UI).
+Module layout: `math_engine.py` (transformations and statistics), `projections.py` (projection estimation), `report.py` (HTML reports), `layers.py` (result layer registry and styles), `export.py` (PDF/CSV), `dockwidget.py` (UI). Version 0.3: `library.py` (point library, GeoPackage), `coverage.py`, `series.py`, `publication.py` and `charts.py` (computations and SVG charts without QGIS), `library_panel.py`, `maps_dialog.py`, `coverage_dialog.py`, `series_dialog.py`, `publication_dialog.py`, `series_report.py` (UI and reports).
 
 ## 📄 License
 

@@ -98,10 +98,13 @@ def _wrap(label, width_chars=18, max_lines=3):
 
 
 def metres_label(v):
+    """Długość czytelnie: 250 m, 2,5 km, 12 km (od 10 km – w pełnych kilometrach)."""
     if v >= 1000:
         km = v / 1000
-        return f"{km:g} km" if km >= 10 or km == int(km) else f"{km:.1f} km".replace(".", ",")
-    return f"{v:g} m"
+        if km >= 10:
+            return f"{km:.0f} km"
+        return f"{km:.0f} km" if abs(km - round(km)) < 0.05 else f"{km:.1f} km".replace(".", ",")
+    return f"{v:.0f} m" if v >= 1 else f"{v:g} m"
 
 
 def _log_ticks(lo, hi):
