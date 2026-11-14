@@ -13,7 +13,7 @@ from qgis.PyQt.QtWidgets import (
     QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout,
 )
 from qgis.core import (
-    QgsCategorizedSymbolRenderer, QgsCoordinateReferenceSystem, QgsFeature, QgsField, QgsGeometry, QgsLineSymbol,
+    Qgis, QgsCategorizedSymbolRenderer, QgsCoordinateReferenceSystem, QgsFeature, QgsField, QgsGeometry, QgsLineSymbol,
     QgsMarkerLineSymbolLayer, QgsMarkerSymbol, QgsPointXY, QgsProject, QgsRendererCategory, QgsSingleSymbolRenderer,
     QgsVectorLayer,
 )
@@ -396,9 +396,7 @@ class SeriesDialog(QDialog):
 
 
 def _enum_placement(vertices=False):
-    """Umieszczenie znaczników na linii: ostatni wierzchołek (grot) albo wszystkie wierzchołki."""
-    from qgis.core import Qgis
-    flags = getattr(Qgis, "MarkerLinePlacement", None)
-    if flags is not None:
-        return flags.Vertex if vertices else flags.LastVertex
-    return QgsMarkerLineSymbolLayer.Vertex if vertices else QgsMarkerLineSymbolLayer.LastVertex
+    """Umieszczenie znaczników na linii: ostatni wierzchołek (grot) albo wszystkie wierzchołki.
+    Qgis.MarkerLinePlacement – od QGIS 3.24 (wtyczka wymaga 3.34); bez płaskich wyliczeń (Qt6)."""
+    placement = Qgis.MarkerLinePlacement
+    return placement.Vertex if vertices else placement.LastVertex
