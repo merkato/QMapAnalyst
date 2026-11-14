@@ -98,6 +98,11 @@ Stan:
   skan, obrys na obu mapach), zasięg na mapie współczesnej liczony z bieżącej transformacji
   (`coverage.footprint`), „Następny z zestawu” pomija punkty spoza zasięgu, kod `outside` w macierzy
   (`library.point_in_polygon`, `crs_transformer`) (`tests/library_frame_qgis.py`).
+- tryb serii (część 1): `series.py` bez QGIS – arkusze zestawu wyrównane jednym modelem (σ₀, RMSE, błąd maks. w m,
+  skala z DPI, obrót, skale osi, odstające), wektory błędu położenia punktów (T(skan) − odniesienie) w układzie
+  biblioteki, podobieństwo reszt par arkuszy (korelacja wektorowa r, test permutacyjny – ślad kopiowania);
+  okno „Seria map” (`series_dialog.py`): tabele arkuszy, par i błędów punktów, warstwy wektorów błędów
+  i trajektorii punktów, eksport CSV/JSON (`tests/test_series.py`, `tests/library_series_qgis.py`).
 
 ## Etapy
 

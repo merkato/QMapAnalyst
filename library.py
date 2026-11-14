@@ -248,6 +248,18 @@ def crs_transformer(src, dst):
     return transform
 
 
+def crs_metres_per_unit(text):
+    """Metry na jednostkę układu (WKT, authid…); nan – układ geograficzny lub nieznany."""
+    srs = osr.SpatialReference()
+    try:
+        with _exceptions():
+            if not text or srs.SetFromUserInput(text) != 0 or srs.IsGeographic():
+                return float("nan")
+            return float(srs.GetLinearUnits())
+    except RuntimeError:
+        return float("nan")
+
+
 def file_sha256(path, chunk=1 << 20):
     h = hashlib.sha256()
     with open(path, "rb") as f:

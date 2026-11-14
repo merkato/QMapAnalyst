@@ -2557,6 +2557,14 @@ Update the reference coordinates of these points?</translation>
         <translation>Points of the chosen set × maps saved in the library: present, uncertain, outliers, illegible, not on map; points common to all maps; CSV/JSON export</translation>
     </message>
     <message>
+        <source>Seria map…</source>
+        <translation>Map series…</translation>
+    </message>
+    <message>
+        <source>Porównanie map zestawu: statystyki arkuszy (σ₀, RMSE, skala, obrót), błędy położenia punktów, podobieństwo reszt (ślad kopiowania), wektory błędów i trajektorie punktów na mapie</source>
+        <translation>Comparison of the set's maps: sheet statistics (σ₀, RMSE, scale, rotation), point position errors, residual similarity (a trace of copying), error vectors and point trajectories on the map</translation>
+    </message>
+    <message>
         <source>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Zestaw regionalny: zaznacz punkty na mapie i wybierz „Nowy zestaw z zaznaczonych…” z menu zestawów albo „Dodaj zaznaczone”.</source>
         <translation>Add and correct points with the QGIS editing tools on the library layer – the identifier is assigned automatically. Regional set: select points on the map and choose “New set from selected…” from the set menu or “Add selected”.</translation>
     </message>
@@ -3183,6 +3191,158 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Usunąć z zestawu punkty ({n}): {names}? Punkty zostaną w bibliotece.</source>
         <translation>Remove points from the set ({n}): {names}? The points will stay in the library.</translation>
+    </message>
+    <message>
+        <source>Seria map</source>
+        <translation>Map series</translation>
+    </message>
+    <message>
+        <source>Ten sam model dla wszystkich arkuszy – porównywalne statystyki i reszty</source>
+        <translation>The same model for all sheets – comparable statistics and residuals</translation>
+    </message>
+    <message>
+        <source>Arkusze</source>
+        <translation>Sheets</translation>
+    </message>
+    <message>
+        <source>Podobieństwo reszt</source>
+        <translation>Residual similarity</translation>
+    </message>
+    <message>
+        <source>Błędy punktów</source>
+        <translation>Point errors</translation>
+    </message>
+    <message>
+        <source>Wektory błędów na mapie są powiększone, by były widoczne w skali mapy współczesnej</source>
+        <translation>Error vectors on the map are exaggerated to be visible at the scale of the modern map</translation>
+    </message>
+    <message>
+        <source>Warstwa wektorów błędów</source>
+        <translation>Error vectors layer</translation>
+    </message>
+    <message>
+        <source>Dla każdego arkusza: odcinek od położenia odniesienia punktu w stronę, w którą mapa go przesuwa (po usunięciu transformacji)</source>
+        <translation>For each sheet: a segment from the reference position of the point towards where the map shifts it (after removing the transformation)</translation>
+    </message>
+    <message>
+        <source>Warstwa trajektorii</source>
+        <translation>Trajectories layer</translation>
+    </message>
+    <message>
+        <source>Dla każdego punktu: łamana przez położenia, które nadają mu kolejne mapy (wg roku)</source>
+        <translation>For each point: a polyline through the positions given to it by successive maps (by year)</translation>
+    </message>
+    <message>
+        <source>Eksport…</source>
+        <translation>Export…</translation>
+    </message>
+    <message>
+        <source>CSV arkuszy, CSV błędów punktów albo JSON z całą serią</source>
+        <translation>Sheets CSV, point errors CSV or JSON with the whole series</translation>
+    </message>
+    <message>
+        <source>Błąd położenia punktu: gdzie mapa umieszcza obiekt względem jego położenia w bibliotece, po usunięciu transformacji arkusza. Podobieństwo reszt: korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.</source>
+        <translation>Point position error: where the map places the object relative to its position in the library, after removing the sheet transformation. Residual similarity: vector correlation r of the errors of common points, p – permutation test.</translation>
+    </message>
+    <message>
+        <source>Arkusze (CSV) (*.csv)</source>
+        <translation>Sheets (CSV) (*.csv)</translation>
+    </message>
+    <message>
+        <source>Błędy punktów (CSV) (*.csv)</source>
+        <translation>Point errors (CSV) (*.csv)</translation>
+    </message>
+    <message>
+        <source>Eksport serii map</source>
+        <translation>Export map series</translation>
+    </message>
+    <message>
+        <source>Model:</source>
+        <translation>Model:</translation>
+    </message>
+    <message>
+        <source>Arkusz</source>
+        <translation>Sheet</translation>
+    </message>
+    <message>
+        <source>Maks. [m]</source>
+        <translation>Max. [m]</translation>
+    </message>
+    <message>
+        <source>Obrót [°]</source>
+        <translation>Rotation [°]</translation>
+    </message>
+    <message>
+        <source>Skale osi X/Y</source>
+        <translation>Axis scales X/Y</translation>
+    </message>
+    <message>
+        <source>Odstające</source>
+        <translation>Outliers</translation>
+    </message>
+    <message>
+        <source>Mapa wcześniejsza</source>
+        <translation>Earlier map</translation>
+    </message>
+    <message>
+        <source>Mapa późniejsza</source>
+        <translation>Later map</translation>
+    </message>
+    <message>
+        <source>Punkty wspólne</source>
+        <translation>Common points</translation>
+    </message>
+    <message>
+        <source>Śr. różnica [m]</source>
+        <translation>Mean difference [m]</translation>
+    </message>
+    <message>
+        <source>Powiększenie wektorów:</source>
+        <translation>Vector magnification:</translation>
+    </message>
+    <message>
+        <source>Brak par map o istotnie podobnych błędach.</source>
+        <translation>No pairs of maps with significantly similar errors.</translation>
+    </message>
+    <message>
+        <source>brak DPI</source>
+        <translation>no DPI</translation>
+    </message>
+    <message>
+        <source>za mało punktów do wyrównania wybranym modelem</source>
+        <translation>too few points for the adjustment with the chosen model</translation>
+    </message>
+    <message>
+        <source>Mapy</source>
+        <translation>Maps</translation>
+    </message>
+    <message>
+        <source>Średnio [m]</source>
+        <translation>Mean [m]</translation>
+    </message>
+    <message>
+        <source>Zestaw „{name}”: punkty {n}, arkusze {m}</source>
+        <translation>Set “{name}”: {n} points, {m} sheets</translation>
+    </message>
+    <message>
+        <source>Wektory błędów – {name} (× {k})</source>
+        <translation>Error vectors – {name} (× {k})</translation>
+    </message>
+    <message>
+        <source>Trajektorie punktów – {name} (× {k})</source>
+        <translation>Point trajectories – {name} (× {k})</translation>
+    </message>
+    <message>
+        <source>Błędy punktów wspólnych są do siebie podobne – możliwe kopiowanie treści (albo wspólny błąd punktów odniesienia)</source>
+        <translation>The errors of common points are similar – possible copying of content (or a common error of reference points)</translation>
+    </message>
+    <message>
+        <source>Podobne błędy (możliwe kopiowanie): {pairs}</source>
+        <translation>Similar errors (possible copying): {pairs}</translation>
+    </message>
+    <message>
+        <source>za mało punktów wspólnych do porównania (min. {k})</source>
+        <translation>too few common points to compare (min. {k})</translation>
     </message>
 </context>
 <context>

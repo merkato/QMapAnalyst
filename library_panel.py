@@ -277,7 +277,11 @@ class LibraryPanel(QWidget):
             "Punkty wybranego zestawu × mapy zapisane w bibliotece: obecne, niepewne, odstające, nieczytelne, "
             "brak na mapie; punkty wspólne wszystkim mapom; eksport CSV/JSON"))
         self.btn_coverage.clicked.connect(self.coverage_dialog)
-        for b in (self.btn_import, self.btn_coverage):
+        self.btn_series = _tool("/mActionShowRasterCalculator.svg", tr("Seria map…"), tr(
+            "Porównanie map zestawu: statystyki arkuszy (σ₀, RMSE, skala, obrót), błędy położenia punktów, "
+            "podobieństwo reszt (ślad kopiowania), wektory błędów i trajektorie punktów na mapie"))
+        self.btn_series.clicked.connect(self.series_dialog)
+        for b in (self.btn_import, self.btn_coverage, self.btn_series):
             row.addWidget(b)
         lay.addLayout(row)
 
@@ -351,7 +355,8 @@ class LibraryPanel(QWidget):
             w.setEnabled(has)
         for b in (self.btn_set_add, self.btn_set_remove):
             b.setEnabled(has and sid is not None and self.layer is not None)
-        for b in (self.act_set_rename, self.act_set_delete, self.act_set_points, self.btn_coverage, self.chk_set_only):
+        for b in (self.act_set_rename, self.act_set_delete, self.act_set_points, self.btn_coverage, self.btn_series,
+                  self.chk_set_only):
             b.setEnabled(has and sid is not None)
         for b in (self.btn_an_save, self.btn_an_open, self.btn_an_meta):
             b.setEnabled(has)
@@ -599,6 +604,15 @@ class LibraryPanel(QWidget):
         dlg = CoverageDialog(self, self)
         if dlg.exec() == QDialog.DialogCode.Accepted and dlg.chosen_analysis is not None:
             self.openAnalysisIdRequested.emit(dlg.chosen_analysis)
+
+    def series_dialog(self):
+        if self.current_set() is None:
+            self.status(tr("Wybierz zestaw punktów."), "warn")
+            return
+        if self.layer is not None and not self._save_pending_edits():
+            return
+        from .series_dialog import SeriesDialog
+        SeriesDialog(self, self).exec()
 
     def import_dialog(self):
         from .import_dialog import ImportDialog

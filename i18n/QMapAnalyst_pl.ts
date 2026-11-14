@@ -2557,6 +2557,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Punkty wybranego zestawu × mapy zapisane w bibliotece: obecne, niepewne, odstające, nieczytelne, brak na mapie; punkty wspólne wszystkim mapom; eksport CSV/JSON</translation>
     </message>
     <message>
+        <source>Seria map…</source>
+        <translation>Seria map…</translation>
+    </message>
+    <message>
+        <source>Porównanie map zestawu: statystyki arkuszy (σ₀, RMSE, skala, obrót), błędy położenia punktów, podobieństwo reszt (ślad kopiowania), wektory błędów i trajektorie punktów na mapie</source>
+        <translation>Porównanie map zestawu: statystyki arkuszy (σ₀, RMSE, skala, obrót), błędy położenia punktów, podobieństwo reszt (ślad kopiowania), wektory błędów i trajektorie punktów na mapie</translation>
+    </message>
+    <message>
         <source>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Zestaw regionalny: zaznacz punkty na mapie i wybierz „Nowy zestaw z zaznaczonych…” z menu zestawów albo „Dodaj zaznaczone”.</source>
         <translation>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Zestaw regionalny: zaznacz punkty na mapie i wybierz „Nowy zestaw z zaznaczonych…” z menu zestawów albo „Dodaj zaznaczone”.</translation>
     </message>
@@ -3183,6 +3191,158 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Usunąć z zestawu punkty ({n}): {names}? Punkty zostaną w bibliotece.</source>
         <translation>Usunąć z zestawu punkty ({n}): {names}? Punkty zostaną w bibliotece.</translation>
+    </message>
+    <message>
+        <source>Seria map</source>
+        <translation>Seria map</translation>
+    </message>
+    <message>
+        <source>Ten sam model dla wszystkich arkuszy – porównywalne statystyki i reszty</source>
+        <translation>Ten sam model dla wszystkich arkuszy – porównywalne statystyki i reszty</translation>
+    </message>
+    <message>
+        <source>Arkusze</source>
+        <translation>Arkusze</translation>
+    </message>
+    <message>
+        <source>Podobieństwo reszt</source>
+        <translation>Podobieństwo reszt</translation>
+    </message>
+    <message>
+        <source>Błędy punktów</source>
+        <translation>Błędy punktów</translation>
+    </message>
+    <message>
+        <source>Wektory błędów na mapie są powiększone, by były widoczne w skali mapy współczesnej</source>
+        <translation>Wektory błędów na mapie są powiększone, by były widoczne w skali mapy współczesnej</translation>
+    </message>
+    <message>
+        <source>Warstwa wektorów błędów</source>
+        <translation>Warstwa wektorów błędów</translation>
+    </message>
+    <message>
+        <source>Dla każdego arkusza: odcinek od położenia odniesienia punktu w stronę, w którą mapa go przesuwa (po usunięciu transformacji)</source>
+        <translation>Dla każdego arkusza: odcinek od położenia odniesienia punktu w stronę, w którą mapa go przesuwa (po usunięciu transformacji)</translation>
+    </message>
+    <message>
+        <source>Warstwa trajektorii</source>
+        <translation>Warstwa trajektorii</translation>
+    </message>
+    <message>
+        <source>Dla każdego punktu: łamana przez położenia, które nadają mu kolejne mapy (wg roku)</source>
+        <translation>Dla każdego punktu: łamana przez położenia, które nadają mu kolejne mapy (wg roku)</translation>
+    </message>
+    <message>
+        <source>Eksport…</source>
+        <translation>Eksport…</translation>
+    </message>
+    <message>
+        <source>CSV arkuszy, CSV błędów punktów albo JSON z całą serią</source>
+        <translation>CSV arkuszy, CSV błędów punktów albo JSON z całą serią</translation>
+    </message>
+    <message>
+        <source>Błąd położenia punktu: gdzie mapa umieszcza obiekt względem jego położenia w bibliotece, po usunięciu transformacji arkusza. Podobieństwo reszt: korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.</source>
+        <translation>Błąd położenia punktu: gdzie mapa umieszcza obiekt względem jego położenia w bibliotece, po usunięciu transformacji arkusza. Podobieństwo reszt: korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.</translation>
+    </message>
+    <message>
+        <source>Arkusze (CSV) (*.csv)</source>
+        <translation>Arkusze (CSV) (*.csv)</translation>
+    </message>
+    <message>
+        <source>Błędy punktów (CSV) (*.csv)</source>
+        <translation>Błędy punktów (CSV) (*.csv)</translation>
+    </message>
+    <message>
+        <source>Eksport serii map</source>
+        <translation>Eksport serii map</translation>
+    </message>
+    <message>
+        <source>Model:</source>
+        <translation>Model:</translation>
+    </message>
+    <message>
+        <source>Arkusz</source>
+        <translation>Arkusz</translation>
+    </message>
+    <message>
+        <source>Maks. [m]</source>
+        <translation>Maks. [m]</translation>
+    </message>
+    <message>
+        <source>Obrót [°]</source>
+        <translation>Obrót [°]</translation>
+    </message>
+    <message>
+        <source>Skale osi X/Y</source>
+        <translation>Skale osi X/Y</translation>
+    </message>
+    <message>
+        <source>Odstające</source>
+        <translation>Odstające</translation>
+    </message>
+    <message>
+        <source>Mapa wcześniejsza</source>
+        <translation>Mapa wcześniejsza</translation>
+    </message>
+    <message>
+        <source>Mapa późniejsza</source>
+        <translation>Mapa późniejsza</translation>
+    </message>
+    <message>
+        <source>Punkty wspólne</source>
+        <translation>Punkty wspólne</translation>
+    </message>
+    <message>
+        <source>Śr. różnica [m]</source>
+        <translation>Śr. różnica [m]</translation>
+    </message>
+    <message>
+        <source>Powiększenie wektorów:</source>
+        <translation>Powiększenie wektorów:</translation>
+    </message>
+    <message>
+        <source>Brak par map o istotnie podobnych błędach.</source>
+        <translation>Brak par map o istotnie podobnych błędach.</translation>
+    </message>
+    <message>
+        <source>brak DPI</source>
+        <translation>brak DPI</translation>
+    </message>
+    <message>
+        <source>za mało punktów do wyrównania wybranym modelem</source>
+        <translation>za mało punktów do wyrównania wybranym modelem</translation>
+    </message>
+    <message>
+        <source>Mapy</source>
+        <translation>Mapy</translation>
+    </message>
+    <message>
+        <source>Średnio [m]</source>
+        <translation>Średnio [m]</translation>
+    </message>
+    <message>
+        <source>Zestaw „{name}”: punkty {n}, arkusze {m}</source>
+        <translation>Zestaw „{name}”: punkty {n}, arkusze {m}</translation>
+    </message>
+    <message>
+        <source>Wektory błędów – {name} (× {k})</source>
+        <translation>Wektory błędów – {name} (× {k})</translation>
+    </message>
+    <message>
+        <source>Trajektorie punktów – {name} (× {k})</source>
+        <translation>Trajektorie punktów – {name} (× {k})</translation>
+    </message>
+    <message>
+        <source>Błędy punktów wspólnych są do siebie podobne – możliwe kopiowanie treści (albo wspólny błąd punktów odniesienia)</source>
+        <translation>Błędy punktów wspólnych są do siebie podobne – możliwe kopiowanie treści (albo wspólny błąd punktów odniesienia)</translation>
+    </message>
+    <message>
+        <source>Podobne błędy (możliwe kopiowanie): {pairs}</source>
+        <translation>Podobne błędy (możliwe kopiowanie): {pairs}</translation>
+    </message>
+    <message>
+        <source>za mało punktów wspólnych do porównania (min. {k})</source>
+        <translation>za mało punktów wspólnych do porównania (min. {k})</translation>
     </message>
 </context>
 <context>
