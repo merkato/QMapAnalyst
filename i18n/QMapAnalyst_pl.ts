@@ -168,6 +168,10 @@
         <translation>Wyszukiwanie w bibliotece punktów (w zestawie wybranym w zakładce Biblioteka) po nazwie i nazwach dawnych. Wybrany punkt staje się punktem odniesienia pary: wystarczy wskazać go na mapie dawnej. Wyniki są uporządkowane także według odległości od przewidywanego położenia.</translation>
     </message>
     <message>
+        <source>Zestaw roboczy (ten sam co w zakładce Biblioteka): źródło „Następnego z zestawu” i wyszukiwarki</source>
+        <translation>Zestaw roboczy (ten sam co w zakładce Biblioteka): źródło „Następnego z zestawu” i wyszukiwarki</translation>
+    </message>
+    <message>
         <source>Następny z zestawu</source>
         <translation>Następny z zestawu</translation>
     </message>
@@ -2437,24 +2441,48 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Pokaż punkty biblioteki na mapie głównej QGIS (styl według typu, etykiety z nazwą). Punkty użyte w bieżącej analizie mają żółtą obwódkę.</translation>
     </message>
     <message>
-        <source>Pokaż na mapie tylko punkty wybranego zestawu</source>
-        <translation>Pokaż na mapie tylko punkty wybranego zestawu</translation>
+        <source>Zestaw roboczy: do niego dodajesz i z niego usuwasz punkty; z niego pochodzą „Następny z zestawu”, wyszukiwarka i macierz pokrycia. Punkty spoza zestawu są na mapie przygaszone (albo ukryte – „Tylko punkty zestawu”).</source>
+        <translation>Zestaw roboczy: do niego dodajesz i z niego usuwasz punkty; z niego pochodzą „Następny z zestawu”, wyszukiwarka i macierz pokrycia. Punkty spoza zestawu są na mapie przygaszone (albo ukryte – „Tylko punkty zestawu”).</translation>
     </message>
     <message>
-        <source>Importuj…</source>
-        <translation>Importuj…</translation>
+        <source>Zestawy</source>
+        <translation>Zestawy</translation>
     </message>
     <message>
-        <source>Import punktów z warstwy wektorowej projektu (np. PRNG, OSM, BDOT10k) lub pliku CSV – z dopasowaniem pól, rozpoznawaniem typów i pomijaniem duplikatów</source>
-        <translation>Import punktów z warstwy wektorowej projektu (np. PRNG, OSM, BDOT10k) lub pliku CSV – z dopasowaniem pól, rozpoznawaniem typów i pomijaniem duplikatów</translation>
+        <source>Operacje na zestawach</source>
+        <translation>Operacje na zestawach</translation>
     </message>
     <message>
-        <source>Nowy zestaw</source>
-        <translation>Nowy zestaw</translation>
+        <source>Nowy zestaw z zaznaczonych…</source>
+        <translation>Nowy zestaw z zaznaczonych…</translation>
     </message>
     <message>
         <source>Załóż zestaw z punktów zaznaczonych na warstwie biblioteki (lub pusty)</source>
         <translation>Załóż zestaw z punktów zaznaczonych na warstwie biblioteki (lub pusty)</translation>
+    </message>
+    <message>
+        <source>Nowy zestaw z punktów analizy…</source>
+        <translation>Nowy zestaw z punktów analizy…</translation>
+    </message>
+    <message>
+        <source>Punkty zestawu…</source>
+        <translation>Punkty zestawu…</translation>
+    </message>
+    <message>
+        <source>Zmień nazwę…</source>
+        <translation>Zmień nazwę…</translation>
+    </message>
+    <message>
+        <source>Usuń zestaw…</source>
+        <translation>Usuń zestaw…</translation>
+    </message>
+    <message>
+        <source>Tylko punkty zestawu</source>
+        <translation>Tylko punkty zestawu</translation>
+    </message>
+    <message>
+        <source>Ukryj na mapie punkty spoza wybranego zestawu. Bez tej opcji są przygaszone i można je zaznaczyć, by dodać do zestawu.</source>
+        <translation>Ukryj na mapie punkty spoza wybranego zestawu. Bez tej opcji są przygaszone i można je zaznaczyć, by dodać do zestawu.</translation>
     </message>
     <message>
         <source>Dodaj zaznaczone</source>
@@ -2473,12 +2501,12 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Usuń zaznaczone punkty z wybranego zestawu (punkty zostają w bibliotece)</translation>
     </message>
     <message>
-        <source>Zmień nazwę</source>
-        <translation>Zmień nazwę</translation>
+        <source>Importuj…</source>
+        <translation>Importuj…</translation>
     </message>
     <message>
-        <source>Zmień nazwę wybranego zestawu</source>
-        <translation>Zmień nazwę wybranego zestawu</translation>
+        <source>Import punktów z warstwy wektorowej projektu (np. PRNG, OSM, BDOT10k) lub pliku CSV – z dopasowaniem pól, rozpoznawaniem typów i pomijaniem duplikatów</source>
+        <translation>Import punktów z warstwy wektorowej projektu (np. PRNG, OSM, BDOT10k) lub pliku CSV – z dopasowaniem pól, rozpoznawaniem typów i pomijaniem duplikatów</translation>
     </message>
     <message>
         <source>Macierz pokrycia…</source>
@@ -2489,16 +2517,8 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Punkty wybranego zestawu × mapy zapisane w bibliotece: obecne, niepewne, odstające, nieczytelne, brak na mapie; punkty wspólne wszystkim mapom; eksport CSV/JSON</translation>
     </message>
     <message>
-        <source>Usuń zestaw</source>
-        <translation>Usuń zestaw</translation>
-    </message>
-    <message>
-        <source>Usuń wybrany zestaw (punkty zostają w bibliotece)</source>
-        <translation>Usuń wybrany zestaw (punkty zostają w bibliotece)</translation>
-    </message>
-    <message>
-        <source>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Aby utworzyć zestaw regionalny, zaznacz punkty na mapie i kliknij „Nowy zestaw”.</source>
-        <translation>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Aby utworzyć zestaw regionalny, zaznacz punkty na mapie i kliknij „Nowy zestaw”.</translation>
+        <source>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Zestaw regionalny: zaznacz punkty na mapie i wybierz „Nowy zestaw z zaznaczonych…” z menu zestawów albo „Dodaj zaznaczone”.</source>
+        <translation>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Zestaw regionalny: zaznacz punkty na mapie i wybierz „Nowy zestaw z zaznaczonych…” z menu zestawów albo „Dodaj zaznaczone”.</translation>
     </message>
     <message>
         <source>Zapisz analizę</source>
@@ -2543,6 +2563,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Układ współrzędnych biblioteki</source>
         <translation>Układ współrzędnych biblioteki</translation>
+    </message>
+    <message>
+        <source>Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS).</source>
+        <translation>Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS).</translation>
+    </message>
+    <message>
+        <source>Nowy zestaw</source>
+        <translation>Nowy zestaw</translation>
     </message>
     <message>
         <source>Dodano do zestawu: {n} pkt.</source>
@@ -2597,8 +2625,8 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Najpierw zapisz zmiany warstwy biblioteki.</translation>
     </message>
     <message>
-        <source>Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS).</source>
-        <translation>Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS).</translation>
+        <source>Bieżąca analiza nie ma punktów powiązanych z biblioteką.</source>
+        <translation>Bieżąca analiza nie ma punktów powiązanych z biblioteką.</translation>
     </message>
     <message>
         <source>Zapisz ją, aby punkty były widoczne w macierzy pokrycia.</source>
@@ -2633,8 +2661,16 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Nie zapisano zmian warstwy biblioteki: {err}</translation>
     </message>
     <message>
+        <source>Punkty spoza zestawu są ukryte – wyłącz „Tylko punkty zestawu”, aby je zaznaczyć.</source>
+        <translation>Punkty spoza zestawu są ukryte – wyłącz „Tylko punkty zestawu”, aby je zaznaczyć.</translation>
+    </message>
+    <message>
         <source>Nazwa zestawu (zaznaczonych punktów: {n}):</source>
         <translation>Nazwa zestawu (zaznaczonych punktów: {n}):</translation>
+    </message>
+    <message>
+        <source>Nazwa zestawu (punktów analizy: {n}):</source>
+        <translation>Nazwa zestawu (punktów analizy: {n}):</translation>
     </message>
     <message>
         <source>Utworzono zestaw „{name}” ({n} pkt).</source>
@@ -3059,6 +3095,50 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>(bez numeru arkusza)</source>
         <translation>(bez numeru arkusza)</translation>
+    </message>
+    <message>
+        <source>Punkty zestawu</source>
+        <translation>Punkty zestawu</translation>
+    </message>
+    <message>
+        <source>Dwuklik – pokaż punkt na mapie głównej i zaznacz go na warstwie biblioteki.</source>
+        <translation>Dwuklik – pokaż punkt na mapie głównej i zaznacz go na warstwie biblioteki.</translation>
+    </message>
+    <message>
+        <source>Pokaż na mapie</source>
+        <translation>Pokaż na mapie</translation>
+    </message>
+    <message>
+        <source>Usuń z zestawu</source>
+        <translation>Usuń z zestawu</translation>
+    </message>
+    <message>
+        <source>Usuń zaznaczone wiersze z zestawu – punkty zostają w bibliotece</source>
+        <translation>Usuń zaznaczone wiersze z zestawu – punkty zostają w bibliotece</translation>
+    </message>
+    <message>
+        <source>Nazwa</source>
+        <translation>Nazwa</translation>
+    </message>
+    <message>
+        <source>Nazwy dawne</source>
+        <translation>Nazwy dawne</translation>
+    </message>
+    <message>
+        <source>Typ</source>
+        <translation>Typ</translation>
+    </message>
+    <message>
+        <source>W analizie</source>
+        <translation>W analizie</translation>
+    </message>
+    <message>
+        <source>Zestaw „{name}”: punkty {n}, w bieżącej analizie {m}</source>
+        <translation>Zestaw „{name}”: punkty {n}, w bieżącej analizie {m}</translation>
+    </message>
+    <message>
+        <source>Usunąć z zestawu punkty ({n}): {names}? Punkty zostaną w bibliotece.</source>
+        <translation>Usunąć z zestawu punkty ({n}): {names}? Punkty zostaną w bibliotece.</translation>
     </message>
 </context>
 <context>

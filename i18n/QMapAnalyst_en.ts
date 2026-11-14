@@ -168,6 +168,10 @@
         <translation>Search the point library (within the set chosen on the Library tab) by name and historical names. The chosen point becomes the reference point of the pair: just click it on the historical map. Results are also ordered by distance from the predicted position.</translation>
     </message>
     <message>
+        <source>Zestaw roboczy (ten sam co w zakładce Biblioteka): źródło „Następnego z zestawu” i wyszukiwarki</source>
+        <translation>Working set (the same as in the Library tab): the source of “Next from set” and the search</translation>
+    </message>
+    <message>
         <source>Następny z zestawu</source>
         <translation>Next from set</translation>
     </message>
@@ -2437,24 +2441,48 @@ Update the reference coordinates of these points?</translation>
         <translation>Show library points on the QGIS main map (styled by type, labelled with names). Points used in the current analysis have a yellow outline.</translation>
     </message>
     <message>
-        <source>Pokaż na mapie tylko punkty wybranego zestawu</source>
-        <translation>Show only the points of the selected set on the map</translation>
+        <source>Zestaw roboczy: do niego dodajesz i z niego usuwasz punkty; z niego pochodzą „Następny z zestawu”, wyszukiwarka i macierz pokrycia. Punkty spoza zestawu są na mapie przygaszone (albo ukryte – „Tylko punkty zestawu”).</source>
+        <translation>Working set: points are added to and removed from it; “Next from set”, the search and the coverage matrix use it. Points outside the set are dimmed on the map (or hidden – “Set points only”).</translation>
     </message>
     <message>
-        <source>Importuj…</source>
-        <translation>Import…</translation>
+        <source>Zestawy</source>
+        <translation>Sets</translation>
     </message>
     <message>
-        <source>Import punktów z warstwy wektorowej projektu (np. PRNG, OSM, BDOT10k) lub pliku CSV – z dopasowaniem pól, rozpoznawaniem typów i pomijaniem duplikatów</source>
-        <translation>Import points from a project vector layer (e.g. PRNG, OSM, BDOT10k) or a CSV file – with field matching, type recognition and skipping of duplicates</translation>
+        <source>Operacje na zestawach</source>
+        <translation>Set operations</translation>
     </message>
     <message>
-        <source>Nowy zestaw</source>
-        <translation>New set</translation>
+        <source>Nowy zestaw z zaznaczonych…</source>
+        <translation>New set from selected…</translation>
     </message>
     <message>
         <source>Załóż zestaw z punktów zaznaczonych na warstwie biblioteki (lub pusty)</source>
         <translation>Create a set from the points selected on the library layer (or an empty one)</translation>
+    </message>
+    <message>
+        <source>Nowy zestaw z punktów analizy…</source>
+        <translation>New set from analysis points…</translation>
+    </message>
+    <message>
+        <source>Punkty zestawu…</source>
+        <translation>Set points…</translation>
+    </message>
+    <message>
+        <source>Zmień nazwę…</source>
+        <translation>Rename…</translation>
+    </message>
+    <message>
+        <source>Usuń zestaw…</source>
+        <translation>Delete set…</translation>
+    </message>
+    <message>
+        <source>Tylko punkty zestawu</source>
+        <translation>Set points only</translation>
+    </message>
+    <message>
+        <source>Ukryj na mapie punkty spoza wybranego zestawu. Bez tej opcji są przygaszone i można je zaznaczyć, by dodać do zestawu.</source>
+        <translation>Hide points outside the chosen set on the map. Without this option they are dimmed and can be selected to add them to the set.</translation>
     </message>
     <message>
         <source>Dodaj zaznaczone</source>
@@ -2473,12 +2501,12 @@ Update the reference coordinates of these points?</translation>
         <translation>Remove the selected points from the chosen set (the points stay in the library)</translation>
     </message>
     <message>
-        <source>Zmień nazwę</source>
-        <translation>Rename</translation>
+        <source>Importuj…</source>
+        <translation>Import…</translation>
     </message>
     <message>
-        <source>Zmień nazwę wybranego zestawu</source>
-        <translation>Rename the chosen set</translation>
+        <source>Import punktów z warstwy wektorowej projektu (np. PRNG, OSM, BDOT10k) lub pliku CSV – z dopasowaniem pól, rozpoznawaniem typów i pomijaniem duplikatów</source>
+        <translation>Import points from a project vector layer (e.g. PRNG, OSM, BDOT10k) or a CSV file – with field matching, type recognition and skipping of duplicates</translation>
     </message>
     <message>
         <source>Macierz pokrycia…</source>
@@ -2489,16 +2517,8 @@ Update the reference coordinates of these points?</translation>
         <translation>Points of the chosen set × maps saved in the library: present, uncertain, outliers, illegible, not on map; points common to all maps; CSV/JSON export</translation>
     </message>
     <message>
-        <source>Usuń zestaw</source>
-        <translation>Delete set</translation>
-    </message>
-    <message>
-        <source>Usuń wybrany zestaw (punkty zostają w bibliotece)</source>
-        <translation>Delete the chosen set (the points stay in the library)</translation>
-    </message>
-    <message>
-        <source>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Aby utworzyć zestaw regionalny, zaznacz punkty na mapie i kliknij „Nowy zestaw”.</source>
-        <translation>Add and correct points with the QGIS editing tools on the library layer – the identifier is assigned automatically. To create a regional set, select points on the map and click “New set”.</translation>
+        <source>Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator nadawany jest automatycznie. Zestaw regionalny: zaznacz punkty na mapie i wybierz „Nowy zestaw z zaznaczonych…” z menu zestawów albo „Dodaj zaznaczone”.</source>
+        <translation>Add and correct points with the QGIS editing tools on the library layer – the identifier is assigned automatically. Regional set: select points on the map and choose “New set from selected…” from the set menu or “Add selected”.</translation>
     </message>
     <message>
         <source>Zapisz analizę</source>
@@ -2543,6 +2563,14 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Układ współrzędnych biblioteki</source>
         <translation>Library coordinate reference system</translation>
+    </message>
+    <message>
+        <source>Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS).</source>
+        <translation>Select points on the library layer (QGIS selection tool).</translation>
+    </message>
+    <message>
+        <source>Nowy zestaw</source>
+        <translation>New set</translation>
     </message>
     <message>
         <source>Dodano do zestawu: {n} pkt.</source>
@@ -2597,8 +2625,8 @@ Update the reference coordinates of these points?</translation>
         <translation>Save the library layer changes first.</translation>
     </message>
     <message>
-        <source>Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS).</source>
-        <translation>Select points on the library layer (QGIS selection tool).</translation>
+        <source>Bieżąca analiza nie ma punktów powiązanych z biblioteką.</source>
+        <translation>The current analysis has no points linked to the library.</translation>
     </message>
     <message>
         <source>Zapisz ją, aby punkty były widoczne w macierzy pokrycia.</source>
@@ -2633,8 +2661,16 @@ Update the reference coordinates of these points?</translation>
         <translation>Library layer changes were not saved: {err}</translation>
     </message>
     <message>
+        <source>Punkty spoza zestawu są ukryte – wyłącz „Tylko punkty zestawu”, aby je zaznaczyć.</source>
+        <translation>Points outside the set are hidden – turn off “Set points only” to select them.</translation>
+    </message>
+    <message>
         <source>Nazwa zestawu (zaznaczonych punktów: {n}):</source>
         <translation>Set name (selected points: {n}):</translation>
+    </message>
+    <message>
+        <source>Nazwa zestawu (punktów analizy: {n}):</source>
+        <translation>Set name (analysis points: {n}):</translation>
     </message>
     <message>
         <source>Utworzono zestaw „{name}” ({n} pkt).</source>
@@ -3059,6 +3095,50 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>(bez numeru arkusza)</source>
         <translation>(no sheet number)</translation>
+    </message>
+    <message>
+        <source>Punkty zestawu</source>
+        <translation>Set points</translation>
+    </message>
+    <message>
+        <source>Dwuklik – pokaż punkt na mapie głównej i zaznacz go na warstwie biblioteki.</source>
+        <translation>Double-click – show the point on the main map and select it on the library layer.</translation>
+    </message>
+    <message>
+        <source>Pokaż na mapie</source>
+        <translation>Show on map</translation>
+    </message>
+    <message>
+        <source>Usuń z zestawu</source>
+        <translation>Remove from set</translation>
+    </message>
+    <message>
+        <source>Usuń zaznaczone wiersze z zestawu – punkty zostają w bibliotece</source>
+        <translation>Remove the selected rows from the set – the points stay in the library</translation>
+    </message>
+    <message>
+        <source>Nazwa</source>
+        <translation>Name</translation>
+    </message>
+    <message>
+        <source>Nazwy dawne</source>
+        <translation>Historical names</translation>
+    </message>
+    <message>
+        <source>Typ</source>
+        <translation>Type</translation>
+    </message>
+    <message>
+        <source>W analizie</source>
+        <translation>In analysis</translation>
+    </message>
+    <message>
+        <source>Zestaw „{name}”: punkty {n}, w bieżącej analizie {m}</source>
+        <translation>Set “{name}”: {n} points, {m} in the current analysis</translation>
+    </message>
+    <message>
+        <source>Usunąć z zestawu punkty ({n}): {names}? Punkty zostaną w bibliotece.</source>
+        <translation>Remove points from the set ({n}): {names}? The points will stay in the library.</translation>
     </message>
 </context>
 <context>

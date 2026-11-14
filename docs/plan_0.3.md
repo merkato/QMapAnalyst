@@ -89,6 +89,11 @@ Stan:
   arkusza z listą map (`maps_dialog.AnalysisDialog`), okno „Mapy i arkusze” (`MapsDialog`), macierz pokrycia
   według arkusza lub mapy (`build_coverage(..., by=…)`, łączenie arkuszy wg `PRIORITY`)
   (`tests/test_library.py`, `tests/test_coverage.py`, `tests/library_maps_qgis.py`).
+- powiązanie z biblioteką w plikach GCP: CSV i plik towarzyszący `.points` z kolumnami uid, status, comment;
+  „brak na mapie” w pliku towarzyszącym (`gcp_io.full`, `has_links`, `absent_entries`).
+- etap 8 – zestawy: zestaw roboczy oddzielony od filtra mapy (przygaszanie punktów spoza zestawu – zmienna
+  warstwy `qma_set_uids`, „Tylko punkty zestawu”), menu zestawów, zestaw z punktów analizy, okno „Punkty
+  zestawu” (`sets_dialog.py`), lista zestawów w zakładce GCP (`tests/library_sets_qgis.py`).
 
 ## Etapy
 

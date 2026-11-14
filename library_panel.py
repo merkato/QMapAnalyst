@@ -18,12 +18,12 @@ from qgis.PyQt.QtCore import QCoreApplication, Qt, pyqtSignal
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QFileDialog, QFrame, QHBoxLayout,
-    QInputDialog, QLabel, QMessageBox, QToolButton, QVBoxLayout, QWidget,
+    QInputDialog, QLabel, QMenu, QMessageBox, QToolButton, QVBoxLayout, QWidget,
 )
 from qgis.core import (
     QgsApplication, QgsCategorizedSymbolRenderer, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsCsException, QgsDefaultValue,
     QgsEditorWidgetSetup, QgsExpressionContextUtils, QgsFeatureRequest, QgsPointXY, QgsRectangle, QgsFieldConstraints, QgsMarkerSymbol, QgsProject,
-    QgsProperty, QgsRendererCategory, QgsSettings, QgsSymbolLayer, QgsVectorLayer,
+    QgsProperty, QgsRendererCategory, QgsSettings, QgsSymbol, QgsSymbolLayer, QgsVectorLayer,
 )
 
 from . import importer as im
@@ -35,6 +35,10 @@ from .widgets import FlowLayout
 SETTINGS_PATH = "QMapAnalyst/library_path"
 LAYER_PROP = "qmapanalyst/library"      # właściwość warstwy: ścieżka pliku biblioteki
 USED_VAR = "qma_used_uids"              # zmienna warstwy: uid punktów użytych w analizie („|”)
+SET_VAR = "qma_set_uids"                # zmienna warstwy: uid punktów zestawu – pozostałe przygaszone („|”)
+SETTINGS_SET_ONLY = "QMapAnalyst/library_set_only"
+STYLE_PROP = "qmapanalyst/style"        # wersja stylu warstwy (styl starszej wersji jest odświeżany)
+STYLE_VERSION = "2"
 
 # kształt, kolor wypełnienia, rozmiar [mm]
 TYPE_SYMBOLS = {
@@ -53,6 +57,8 @@ TYPE_SYMBOLS = {
     "other": ("circle", "#757575", 2.4),
 }
 _USED = f"array_contains(string_to_array(coalesce(@{USED_VAR}, ''), '|'), \"uid\")"
+_IN_SET = (f"coalesce(@{SET_VAR}, '') = '' or array_contains(string_to_array(@{SET_VAR}, '|'), \"uid\") "
+           f"or {_USED}")
 
 
 def tr(text):
@@ -108,6 +114,9 @@ def _symbol(shape, color, size):
     props.setProperty(_enum(QgsSymbolLayer, "Property", "Size"),
                       QgsProperty.fromExpression(f"if({_USED}, {size * 1.45:.2f}, {size})"))
     sl.setDataDefinedProperties(props)
+    # punkty spoza wybranego zestawu (gdy mapa nie jest filtrowana) – przygaszone
+    sym.setDataDefinedProperty(_enum(QgsSymbol, "Property", "Opacity"),
+                               QgsProperty.fromExpression(f"if({_IN_SET}, 100, 25)"))
     return sym
 
 
@@ -117,6 +126,7 @@ def style_library_layer(layer):
     cats.append(QgsRendererCategory(None, _symbol("circle", "#9e9e9e", 2.2), tr("bez typu")))
     layer.setRenderer(QgsCategorizedSymbolRenderer("type", cats))
     set_labels(layer, '"name"', QColor(25, 25, 25), size=8.0)
+    layer.setCustomProperty(STYLE_PROP, STYLE_VERSION)
 
 
 def configure_form(layer):
@@ -171,6 +181,7 @@ class LibraryPanel(QWidget):
     mapsRequested = pyqtSignal()
     editAnalysisRequested = pyqtSignal()
     openAnalysisIdRequested = pyqtSignal(int)
+    setChanged = pyqtSignal()                # zmiana wybranego zestawu lub listy zestawów
 
     def __init__(self, status=None, parent=None):
         super().__init__(parent)
@@ -184,6 +195,7 @@ class LibraryPanel(QWidget):
         self._cache = None          # (punkty, {set_id: [uid]}) – do wyszukiwania i „następnego z zestawu”
         # bieżący stan analizy w panelu GCP: () -> (Analysis lub None, [Link], niezapisane) – dla macierzy pokrycia
         self.current_analysis = None
+        self.canvas = None          # mapa główna (przybliżanie do punktu) – ustawia panel QMapAnalyst
         self._build()
         self.project.layersWillBeRemoved.connect(self._on_layers_removed)
         path = QgsSettings().value(SETTINGS_PATH, "", type=str)
@@ -218,9 +230,42 @@ class LibraryPanel(QWidget):
         self.cmb_set = QComboBox()
         self.cmb_set.setMinimumContentsLength(12)
         self.cmb_set.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
-        self.cmb_set.setToolTip(tr("Pokaż na mapie tylko punkty wybranego zestawu"))
+        self.cmb_set.setToolTip(tr("Zestaw roboczy: do niego dodajesz i z niego usuwasz punkty; z niego pochodzą "
+                                   "„Następny z zestawu”, wyszukiwarka i macierz pokrycia. Punkty spoza zestawu są na "
+                                   "mapie przygaszone (albo ukryte – „Tylko punkty zestawu”)."))
         self.cmb_set.currentIndexChanged.connect(self.apply_filter)
         row.addWidget(self.cmb_set, 1)
+        self.btn_set_menu = _tool("/mActionOptions.svg", tr("Zestawy"), tr("Operacje na zestawach"))
+        self.btn_set_menu.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        menu = QMenu(self.btn_set_menu)
+        self.act_set_new = menu.addAction(QgsApplication.getThemeIcon("/mActionNewTableRow.svg"),
+                                          tr("Nowy zestaw z zaznaczonych…"), self.new_set_dialog)
+        self.act_set_new.setToolTip(tr("Załóż zestaw z punktów zaznaczonych na warstwie biblioteki (lub pusty)"))
+        self.act_set_from_analysis = menu.addAction(QgsApplication.getThemeIcon("/mActionNewTableRow.svg"),
+                                                    tr("Nowy zestaw z punktów analizy…"), self.new_set_from_analysis)
+        menu.addSeparator()
+        self.act_set_points = menu.addAction(QgsApplication.getThemeIcon("/mActionOpenTable.svg"),
+                                             tr("Punkty zestawu…"), self.set_points_dialog)
+        self.act_set_rename = menu.addAction(QgsApplication.getThemeIcon("/mActionEditTable.svg"),
+                                             tr("Zmień nazwę…"), self.rename_set_dialog)
+        self.act_set_delete = menu.addAction(QgsApplication.getThemeIcon("/mActionDeleteSelected.svg"),
+                                             tr("Usuń zestaw…"), self.delete_set)
+        self.btn_set_menu.setMenu(menu)
+        row.addWidget(self.btn_set_menu)
+        lay.addLayout(row)
+
+        row = FlowLayout(spacing=2)
+        self.chk_set_only = QCheckBox(tr("Tylko punkty zestawu"))
+        self.chk_set_only.setToolTip(tr("Ukryj na mapie punkty spoza wybranego zestawu. Bez tej opcji są przygaszone "
+                                        "i można je zaznaczyć, by dodać do zestawu."))
+        self.chk_set_only.setChecked(QgsSettings().value(SETTINGS_SET_ONLY, False, type=bool))
+        self.chk_set_only.toggled.connect(self.on_set_only_toggled)
+        self.btn_set_add = _tool("/mActionAdd.svg", tr("Dodaj zaznaczone"), tr("Dodaj zaznaczone punkty do wybranego zestawu"))
+        self.btn_set_add.clicked.connect(self.add_selected_to_set)
+        self.btn_set_remove = _tool("/mActionRemove.svg", tr("Usuń zaznaczone"), tr("Usuń zaznaczone punkty z wybranego zestawu (punkty zostają w bibliotece)"))
+        self.btn_set_remove.clicked.connect(self.remove_selected_from_set)
+        for w in (self.chk_set_only, self.btn_set_add, self.btn_set_remove):
+            row.addWidget(w)
         lay.addLayout(row)
 
         row = FlowLayout(spacing=2)
@@ -228,22 +273,11 @@ class LibraryPanel(QWidget):
             "Import punktów z warstwy wektorowej projektu (np. PRNG, OSM, BDOT10k) lub pliku CSV – "
             "z dopasowaniem pól, rozpoznawaniem typów i pomijaniem duplikatów"))
         self.btn_import.clicked.connect(self.import_dialog)
-        self.btn_set_new = _tool("/mActionNewTableRow.svg", tr("Nowy zestaw"),
-                                 tr("Załóż zestaw z punktów zaznaczonych na warstwie biblioteki (lub pusty)"))
-        self.btn_set_new.clicked.connect(self.new_set_dialog)
-        self.btn_set_add = _tool("/mActionAdd.svg", tr("Dodaj zaznaczone"), tr("Dodaj zaznaczone punkty do wybranego zestawu"))
-        self.btn_set_add.clicked.connect(self.add_selected_to_set)
-        self.btn_set_remove = _tool("/mActionRemove.svg", tr("Usuń zaznaczone"), tr("Usuń zaznaczone punkty z wybranego zestawu (punkty zostają w bibliotece)"))
-        self.btn_set_remove.clicked.connect(self.remove_selected_from_set)
-        self.btn_set_rename = _tool("/mActionEditTable.svg", tr("Zmień nazwę"), tr("Zmień nazwę wybranego zestawu"))
-        self.btn_set_rename.clicked.connect(self.rename_set_dialog)
         self.btn_coverage = _tool("/mActionOpenTable.svg", tr("Macierz pokrycia…"), tr(
             "Punkty wybranego zestawu × mapy zapisane w bibliotece: obecne, niepewne, odstające, nieczytelne, "
             "brak na mapie; punkty wspólne wszystkim mapom; eksport CSV/JSON"))
         self.btn_coverage.clicked.connect(self.coverage_dialog)
-        self.btn_set_delete = _tool("/mActionDeleteSelected.svg", tr("Usuń zestaw"), tr("Usuń wybrany zestaw (punkty zostają w bibliotece)"))
-        self.btn_set_delete.clicked.connect(self.delete_set)
-        for b in (self.btn_import, self.btn_coverage, self.btn_set_new, self.btn_set_add, self.btn_set_remove, self.btn_set_rename, self.btn_set_delete):
+        for b in (self.btn_import, self.btn_coverage):
             row.addWidget(b)
         lay.addLayout(row)
 
@@ -253,8 +287,8 @@ class LibraryPanel(QWidget):
         self.lbl_info.setWordWrap(True)
         lay.addWidget(self.lbl_info)
         hint = QLabel(tr("Punkty dodajesz i poprawiasz narzędziami edycji QGIS na warstwie biblioteki – identyfikator "
-                         "nadawany jest automatycznie. Aby utworzyć zestaw regionalny, zaznacz punkty na mapie "
-                         "i kliknij „Nowy zestaw”."))
+                         "nadawany jest automatycznie. Zestaw regionalny: zaznacz punkty na mapie i wybierz "
+                         "„Nowy zestaw z zaznaczonych…” z menu zestawów albo „Dodaj zaznaczone”."))
         hint.setWordWrap(True)
         hint.setStyleSheet("color: palette(placeholder-text); font-size: 8pt;")
         lay.addWidget(hint)
@@ -312,11 +346,12 @@ class LibraryPanel(QWidget):
             self.lbl_file.setText(tr("Brak biblioteki punktów – otwórz istniejący plik lub załóż nowy."))
             self.lbl_file.setToolTip("")
         sid = self.current_set()
-        for w in (self.chk_layer, self.cmb_set, self.btn_set_new, self.btn_import):
+        for w in (self.chk_layer, self.cmb_set, self.btn_set_menu, self.btn_import, self.act_set_new,
+                  self.act_set_from_analysis):
             w.setEnabled(has)
         for b in (self.btn_set_add, self.btn_set_remove):
             b.setEnabled(has and sid is not None and self.layer is not None)
-        for b in (self.btn_set_rename, self.btn_set_delete, self.btn_coverage):
+        for b in (self.act_set_rename, self.act_set_delete, self.act_set_points, self.btn_coverage, self.chk_set_only):
             b.setEnabled(has and sid is not None)
         for b in (self.btn_an_save, self.btn_an_open, self.btn_an_meta):
             b.setEnabled(has)
@@ -427,6 +462,8 @@ class LibraryPanel(QWidget):
         return None
 
     def _prepare_layer(self, layer):
+        if layer.customProperty(STYLE_PROP) != STYLE_VERSION:
+            style_library_layer(layer)          # warstwa z projektu zapisanego starszą wersją
         configure_form(layer)
         layer.selectionChanged.connect(self._on_selection_changed)
         layer.editingStopped.connect(self.apply_filter)
@@ -735,28 +772,37 @@ class LibraryPanel(QWidget):
         self.cmb_set.blockSignals(False)
         self.apply_filter()
 
+    def on_set_only_toggled(self, checked):
+        QgsSettings().setValue(SETTINGS_SET_ONLY, bool(checked))
+        self.apply_filter()
+
     def apply_filter(self, *args):
+        """Zestaw roboczy na mapie: filtr warstwy („Tylko punkty zestawu”) albo przygaszenie pozostałych."""
         sid = self.current_set()
         if self.layer is not None:
-            if sid is None:
-                subset = ""
-            else:
+            uids = []
+            if sid is not None:
                 try:
                     with self.library() as lib:
                         uids = lib.set_members(sid)
                 except lb.LibraryError as e:
                     self.status(self._library_error(e), "error")
-                    uids = []
-                subset = f"\"uid\" IN ({', '.join(_quote(u) for u in uids)})" if uids else "0"
+            only = sid is not None and self.chk_set_only.isChecked()
+            subset = (f"\"uid\" IN ({', '.join(_quote(u) for u in uids)})" if uids else "0") if only else ""
             if self.layer.subsetString() != subset:
                 if self.layer.isEditable():
                     # QGIS nie zmienia filtra warstwy w trakcie edycji – zastosuje go editingStopped
                     self.status(tr("Filtr zestawu zostanie zastosowany po zakończeniu edycji warstwy biblioteki."), "warn")
                 else:
                     self.layer.setSubsetString(subset)
+            dim = "|".join(sorted(uids)) if sid is not None and not only else ""
+            if sid is not None and not only and not uids:
+                dim = "-"                       # pusty zestaw – wszystkie punkty przygaszone
+            QgsExpressionContextUtils.setLayerVariable(self.layer, SET_VAR, dim)
             self.layer.triggerRepaint()
         self._update_info()
         self._update_state()
+        self.setChanged.emit()
 
     def _update_info(self):
         if self.path is None:
@@ -821,7 +867,10 @@ class LibraryPanel(QWidget):
     def _require_selection(self):
         uids = self.selection_for_set()
         if uids == []:
-            self.status(tr("Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS)."), "warn")
+            msg = tr("Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS).")
+            if self.chk_set_only.isChecked():
+                msg += " " + tr("Punkty spoza zestawu są ukryte – wyłącz „Tylko punkty zestawu”, aby je zaznaczyć.")
+            self.status(msg, "warn")
         return uids or None
 
     def new_set_dialog(self):
@@ -832,6 +881,26 @@ class LibraryPanel(QWidget):
                                         tr("Nazwa zestawu (zaznaczonych punktów: {n}):").format(n=len(uids)))
         if ok and name.strip():
             self.create_set(name.strip(), uids)
+
+    def new_set_from_analysis(self):
+        """Zestaw z punktów biblioteki bieżącej analizy (także „brak na mapie”)."""
+        analysis, links, _dirty = self.current_analysis() if self.current_analysis is not None else (None, [], False)
+        uids = list(dict.fromkeys(ln.uid for ln in links if ln.uid))
+        if not uids:
+            self.status(tr("Bieżąca analiza nie ma punktów powiązanych z biblioteką."), "warn")
+            return None
+        default = analysis.title if analysis is not None else ""
+        name, ok = QInputDialog.getText(self, tr("Nowy zestaw"), tr("Nazwa zestawu (punktów analizy: {n}):").format(n=len(uids)),
+                                        text=default)
+        if ok and name.strip():
+            return self.create_set(name.strip(), uids)
+        return None
+
+    def set_points_dialog(self):
+        if self.current_set() is None:
+            return
+        from .sets_dialog import SetPointsDialog
+        SetPointsDialog(self, self).exec()
 
     def create_set(self, name, uids=()):
         try:

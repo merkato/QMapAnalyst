@@ -361,6 +361,9 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self.library_panel.libraryChanged.connect(self.update_analysis_label)
         self.library_panel.libraryChanged.connect(self.refresh_table)
         self.library_panel.current_analysis = self.current_analysis_state
+        self.library_panel.canvas = self.main_canvas
+        self.library_panel.setChanged.connect(self._sync_set_combo)
+        self._sync_set_combo()
         self.library_panel.mapsRequested.connect(self.show_maps_dialog)
         self.library_panel.editAnalysisRequested.connect(self.edit_library_analysis)
         self.library_panel.openAnalysisIdRequested.connect(self.open_library_analysis)
@@ -567,6 +570,12 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self._lib_completer.activated[QModelIndex].connect(self.on_lib_search_activated)
         self.ed_lib_search.setCompleter(self._lib_completer)
         self.ed_lib_search.textEdited.connect(self.update_lib_search)
+        self.cmb_lib_set = QComboBox()
+        self.cmb_lib_set.setMinimumContentsLength(8)
+        self.cmb_lib_set.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.cmb_lib_set.setToolTip(self.tr("Zestaw roboczy (ten sam co w zakładce Biblioteka): źródło „Następnego z zestawu” "
+                                            "i wyszukiwarki"))
+        self.cmb_lib_set.activated.connect(self.on_lib_set_chosen)
         self.btn_lib_next = _button(self.tr("Następny z zestawu"), "/mActionArrowRight.svg", self.tr(
             "Kolejny punkt wybranego zestawu, którego nie ma jeszcze w analizie (najbliższy ostatnio dodanemu). "
             "Ponowne kliknięcie pomija bieżący punkt."))
@@ -576,6 +585,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self.btn_lib_save = _button(self.tr("Zapisz analizę"), "/mActionFileSave.svg", "")
         self.btn_lib_save.clicked.connect(lambda: self.save_library_analysis())
         row.addWidget(self.ed_lib_search, 1)
+        row.addWidget(self.cmb_lib_set)
         row.addWidget(self.btn_lib_next)
         row.addWidget(self.btn_lib_absent)
         row.addWidget(self.btn_lib_save)
@@ -1431,6 +1441,21 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         QTimer.singleShot(0, self.ed_lib_search.clear)
         if p is not None:
             self.choose_library_point(p)
+
+    def _sync_set_combo(self):
+        """Lista zestawów w zakładce GCP = lista w zakładce Biblioteka."""
+        src, c = self.library_panel.cmb_set, self.cmb_lib_set
+        c.blockSignals(True)
+        c.clear()
+        for i in range(src.count()):
+            c.addItem(src.itemText(i), src.itemData(i))
+        c.setCurrentIndex(src.currentIndex())
+        c.blockSignals(False)
+        c.setEnabled(self.library_panel.path is not None)
+        self._lib_skipped.clear()
+
+    def on_lib_set_chosen(self, index):
+        self.library_panel.cmb_set.setCurrentIndex(index)
 
     def _clear_lib_target(self):
         self._lib_target = None

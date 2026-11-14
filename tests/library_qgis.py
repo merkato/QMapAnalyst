@@ -55,8 +55,10 @@ QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.StandardButton.Y
 warnings = []
 QMessageBox.warning = staticmethod(lambda *a, **k: warnings.append(a[2]))
 
+SET_ONLY_BEFORE = QgsSettings().value(lp.SETTINGS_SET_ONLY, False, type=bool)
 dock = dock_mod.QMapAnalystDockWidget(iface)
 panel = dock.library_panel
+panel.chk_set_only.setChecked(True)        # ten test sprawdza filtrowanie mapy po zestawie
 tabs = [dock.tab_widget.tabText(i) for i in range(dock.tab_widget.count())]
 assert "Biblioteka" in tabs, tabs
 assert panel.path is None and not panel.chk_layer.isEnabled()
@@ -237,5 +239,6 @@ dock2.cleanup()
 
 project.removeAllMapLayers()
 QgsSettings().remove(lp.SETTINGS_PATH)
+QgsSettings().setValue(lp.SETTINGS_SET_ONLY, SET_ONLY_BEFORE)
 shutil.rmtree(TMP, ignore_errors=True)
 print("LIBRARY UI OK")
