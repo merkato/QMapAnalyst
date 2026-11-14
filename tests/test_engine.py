@@ -248,20 +248,21 @@ def test_points_qgis_written_file():
             "641000,480000.25,2210.5,-2800.125,0,0,0,0\n")
     crs, rows, skipped = gcp_io.parse_gcp_text(text, "mapa.tif.points")
     assert crs == WKT and skipped == 0
-    assert rows[0] == (1534.25, -1022.75, 637012.123456789, 486514.5, True, "")
+    assert rows[0][:6] == (1534.25, -1022.75, 637012.123456789, 486514.5, True, "")
+    assert rows[0][6:] == ("", "sure", "")
     assert rows[1][4] is False
 
 
 def test_points_legacy_and_headerless():
     legacy = "mapX\tmapY\tpixelX\tpixelY\tenable\n500000\t300000\t10.5\t-20.5\t1\n"
     _, rows, _ = gcp_io.parse_gcp_text(legacy, "a.points")
-    assert rows == [(10.5, -20.5, 500000.0, 300000.0, True, "")]
+    assert [r[:6] for r in rows] == [(10.5, -20.5, 500000.0, 300000.0, True, "")]
     noheader = "500000,300000,10.5,-20.5,1\n500100,300100,11.5,-21.5,0\n"
     _, rows, _ = gcp_io.parse_gcp_text(noheader, "b.points")
     assert rows[0][:4] == (10.5, -20.5, 500000.0, 300000.0) and rows[1][4] is False
     csv_pl = "x_old;y_old;x_ref;y_ref;enable\n10,5;-20,5;500000,25;300000;1\nzly;wiersz;;;\n"
     _, rows, skipped = gcp_io.parse_gcp_text(csv_pl, "c.csv")
-    assert rows == [(10.5, -20.5, 500000.25, 300000.0, True, "")] and skipped == 1
+    assert [r[:6] for r in rows] == [(10.5, -20.5, 500000.25, 300000.0, True, "")] and skipped == 1
 
 
 def test_points_roundtrip_readable_by_qgis():
@@ -292,7 +293,7 @@ def test_names_sidecar_roundtrip_and_matching():
     names = gcp_io.parse_names(gcp_io.format_names(NAMED))
     assert [n[1] for n in names] == ["Kościół, wieża", "", 'Młyn "Dolny"']
     plain = [g[:5] for g in NAMED]
-    assert gcp_io.assign_names(plain, names) == NAMED
+    assert [g[:6] for g in gcp_io.assign_names(plain, names)] == NAMED
     # Georeferencer: kolejność zmieniona, jeden punkt usunięty, jeden dodany
     edited = [plain[2], (5.0, -5.0, 1.0, 1.0, True), plain[0]]
     got = gcp_io.assign_names(edited, names)
@@ -309,8 +310,36 @@ def test_csv_with_names():
     text = gcp_io.format_csv(NAMED)
     assert text.splitlines()[0] == "x_old,y_old,x_ref,y_ref,enable,name"
     _, rows, skipped = gcp_io.parse_gcp_text(text, "x.csv")
-    assert skipped == 0 and rows == NAMED
+    assert skipped == 0 and [r[:6] for r in rows] == NAMED
     assert "name" not in gcp_io.format_csv([g[:5] for g in NAMED])
+    assert "uid" not in text                                        # bez powiązań – bez kolumn biblioteki
+
+
+LINKED = [(1534.25, -1022.75, 637012.1, 486514.5, True, "Iłża", "uid-1", "uncertain", "sygnatura zatarta"),
+          (2210.5, -2800.125, 641000.0, 480000.25, False, "", "", "sure", ""),
+          (900.0, -400.0, 630000.0, 490000.0, True, "Wąchock", "uid-2", "illegible", "")]
+
+
+def test_library_links_in_csv_and_sidecar():
+    # CSV: kolumny uid, status, comment
+    text = gcp_io.format_csv(LINKED)
+    assert text.splitlines()[0] == "x_old,y_old,x_ref,y_ref,enable,name,uid,status,comment"
+    _, rows, skipped = gcp_io.parse_gcp_text(text, "x.csv")
+    assert skipped == 0 and rows == LINKED
+    # plik towarzyszący .points: powiązania i „brak na mapie”
+    side = gcp_io.format_names(LINKED, absent=[("uid-3", "Łagów", "pominięty")])
+    names = gcp_io.parse_names(side)
+    assert gcp_io.absent_entries(names) == [("uid-3", "Łagów", "pominięty")]
+    plain = [g[:5] for g in LINKED]
+    assert gcp_io.assign_names(plain, names) == LINKED
+    # wiersz „brak na mapie” pomijany przy odczycie pliku towarzyszącego jako listy GCP
+    _, rows, skipped = gcp_io.parse_gcp_text(side, "a.points.names.csv")
+    assert len(rows) == 3 and skipped == 1 and rows[0][6] == "uid-1"
+    # starszy plik nazw (bez kolumn biblioteki) nadal działa
+    old = "id,name,sourceX,sourceY,mapX,mapY\n1,Iłża,1534.25,-1022.75,637012.1,486514.5\n"
+    got = gcp_io.assign_names(plain[:1], gcp_io.parse_names(old))
+    assert got[0][5:] == ("Iłża", "", "sure", "")
+    assert gcp_io.has_links(LINKED) and not gcp_io.has_links([g[:6] for g in LINKED])
 
 
 def test_theme_contrast_on_qgis_backgrounds():

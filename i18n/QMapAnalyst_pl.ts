@@ -988,6 +988,14 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Współrzędne przeliczono z układu {crs}.</translation>
     </message>
     <message>
+        <source>Powiązane z biblioteką: {n}.</source>
+        <translation>Powiązane z biblioteką: {n}.</translation>
+    </message>
+    <message>
+        <source>Powiązania bez punktu w bibliotece pominięto (liczba: {n}).</source>
+        <translation>Powiązania bez punktu w bibliotece pominięto (liczba: {n}).</translation>
+    </message>
+    <message>
         <source>Pominięto niepoprawne wiersze (liczba: {n}).</source>
         <translation>Pominięto niepoprawne wiersze (liczba: {n}).</translation>
     </message>
@@ -1044,8 +1052,8 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Niepoprawna wartość liczbowa – przywrócono poprzednią.</translation>
     </message>
     <message>
-        <source>Nazwy punktów zapisano w pliku {f}.</source>
-        <translation>Nazwy punktów zapisano w pliku {f}.</translation>
+        <source>Nazwy punktów i powiązania z biblioteką zapisano w pliku {f}.</source>
+        <translation>Nazwy punktów i powiązania z biblioteką zapisano w pliku {f}.</translation>
     </message>
     <message>
         <source>Zbyt gęsta siatka (linie: {n}) – zwiększ oczko siatki.</source>
@@ -2877,6 +2885,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>(puste – nie wskazany) · dwuklik – wczytaj analizę · * – stan bieżący, niezapisany</translation>
     </message>
     <message>
+        <source>odstające nie badane – za mało punktów do wyrównania</source>
+        <translation>odstające nie badane – za mało punktów do wyrównania</translation>
+    </message>
+    <message>
         <source>Żadna analiza zapisana w bibliotece nie zawiera punktów tego zestawu.</source>
         <translation>Żadna analiza zapisana w bibliotece nie zawiera punktów tego zestawu.</translation>
     </message>
@@ -2889,8 +2901,12 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Ta analiza jest otwarta w panelu GCP.</translation>
     </message>
     <message>
-        <source>odstające nie badane – za mało punktów do wyrównania</source>
-        <translation>odstające nie badane – za mało punktów do wyrównania</translation>
+        <source>stan bieżący z panelu GCP</source>
+        <translation>stan bieżący z panelu GCP</translation>
+    </message>
+    <message>
+        <source>punkty zestawu na mapie: {n}</source>
+        <translation>punkty zestawu na mapie: {n}</translation>
     </message>
     <message>
         <source>bieżąca analiza</source>
@@ -2905,20 +2921,12 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zapisano: {f}</translation>
     </message>
     <message>
-        <source>stan bieżący z panelu GCP</source>
-        <translation>stan bieżący z panelu GCP</translation>
-    </message>
-    <message>
-        <source>punkty zestawu na mapie: {n}</source>
-        <translation>punkty zestawu na mapie: {n}</translation>
+        <source>arkusze: {n}</source>
+        <translation>arkusze: {n}</translation>
     </message>
     <message>
         <source>Odstające na co najmniej dwóch mapach (czerwone) – sprawdź identyfikację lub położenie: {names}</source>
         <translation>Odstające na co najmniej dwóch mapach (czerwone) – sprawdź identyfikację lub położenie: {names}</translation>
-    </message>
-    <message>
-        <source>arkusze: {n}</source>
-        <translation>arkusze: {n}</translation>
     </message>
     <message>
         <source>nieznana</source>

@@ -988,6 +988,14 @@ No – append the new points to the existing ones.</translation>
         <translation>Coordinates were transformed from {crs}.</translation>
     </message>
     <message>
+        <source>Powiązane z biblioteką: {n}.</source>
+        <translation>Linked to the library: {n}.</translation>
+    </message>
+    <message>
+        <source>Powiązania bez punktu w bibliotece pominięto (liczba: {n}).</source>
+        <translation>Links without a point in the library were skipped (count: {n}).</translation>
+    </message>
+    <message>
         <source>Pominięto niepoprawne wiersze (liczba: {n}).</source>
         <translation>Skipped {n} invalid rows.</translation>
     </message>
@@ -1044,8 +1052,8 @@ No – append the new points to the existing ones.</translation>
         <translation>Invalid number – the previous value was restored.</translation>
     </message>
     <message>
-        <source>Nazwy punktów zapisano w pliku {f}.</source>
-        <translation>Point names were saved to {f}.</translation>
+        <source>Nazwy punktów i powiązania z biblioteką zapisano w pliku {f}.</source>
+        <translation>Point names and library links were saved in the file {f}.</translation>
     </message>
     <message>
         <source>Zbyt gęsta siatka (linie: {n}) – zwiększ oczko siatki.</source>
@@ -2877,6 +2885,10 @@ Update the reference coordinates of these points?</translation>
         <translation>(empty – not identified) · double-click – load the analysis · * – current, unsaved state</translation>
     </message>
     <message>
+        <source>odstające nie badane – za mało punktów do wyrównania</source>
+        <translation>outliers not tested – too few points for the adjustment</translation>
+    </message>
+    <message>
         <source>Żadna analiza zapisana w bibliotece nie zawiera punktów tego zestawu.</source>
         <translation>No analysis saved in the library contains points of this set.</translation>
     </message>
@@ -2889,8 +2901,12 @@ Update the reference coordinates of these points?</translation>
         <translation>This analysis is open in the GCP panel.</translation>
     </message>
     <message>
-        <source>odstające nie badane – za mało punktów do wyrównania</source>
-        <translation>outliers not tested – too few points for the adjustment</translation>
+        <source>stan bieżący z panelu GCP</source>
+        <translation>current state from the GCP panel</translation>
+    </message>
+    <message>
+        <source>punkty zestawu na mapie: {n}</source>
+        <translation>set points on the map: {n}</translation>
     </message>
     <message>
         <source>bieżąca analiza</source>
@@ -2905,20 +2921,12 @@ Update the reference coordinates of these points?</translation>
         <translation>Saved: {f}</translation>
     </message>
     <message>
-        <source>stan bieżący z panelu GCP</source>
-        <translation>current state from the GCP panel</translation>
-    </message>
-    <message>
-        <source>punkty zestawu na mapie: {n}</source>
-        <translation>set points on the map: {n}</translation>
+        <source>arkusze: {n}</source>
+        <translation>sheets: {n}</translation>
     </message>
     <message>
         <source>Odstające na co najmniej dwóch mapach (czerwone) – sprawdź identyfikację lub położenie: {names}</source>
         <translation>Outliers on at least two maps (red) – check the identification or position: {names}</translation>
-    </message>
-    <message>
-        <source>arkusze: {n}</source>
-        <translation>sheets: {n}</translation>
     </message>
     <message>
         <source>nieznana</source>

@@ -25,7 +25,7 @@ qgs = QgsApplication([], True)
 qgs.initQgis()
 from qgis.gui import QgsMapCanvas  # noqa: E402
 from qgis.PyQt.QtCore import Qt  # noqa: E402
-from qgis.PyQt.QtWidgets import QDialog, QInputDialog, QMainWindow, QMessageBox  # noqa: E402
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QInputDialog, QMainWindow, QMessageBox  # noqa: E402
 from osgeo import gdal  # noqa: E402
 
 dock_mod = __import__(f"{PKG}.dockwidget", fromlist=["*"])
@@ -225,6 +225,33 @@ assert dock.open_library_analysis(aid)
 assert "niezapisane zmiany" in QUESTIONS[-1] or "Zapisać" in QUESTIONS[-2], QUESTIONS[-2:]
 ANSWER[0] = QMessageBox.StandardButton.Yes
 assert not dock.absent and len(dock.gcps) == n_gcps and not dock.analysis_dirty()
+
+# --- 8. plik .points: powiązania z biblioteką, statusy, uwagi i „brak na mapie” w pliku towarzyszącym
+dock.gcps[1].status, dock.gcps[1].comment = "uncertain", "zatarte"
+dock.choose_library_point(lb.RefPoint("P7", *to_ref(*PIX["P7"]), uid=uid["P7"]))
+dock.mark_target_absent()
+dock._clear_lib_target()
+before = [(g.name, g.uid, g.status, g.comment) for g in dock.gcps]
+pts_path = os.path.join(TMP, "scan.points")
+QFileDialog.getSaveFileName = staticmethod(lambda *a, **k: (pts_path, ""))
+QFileDialog.getOpenFileName = staticmethod(lambda *a, **k: (pts_path, ""))
+dock.save_gcp_to_file()
+assert "uid" in open(pts_path + ".names.csv", encoding="utf-8").readline()
+assert "uid" not in open(pts_path, encoding="utf-8").read()          # .points – czysty format Georeferencera
+dock.clear_all_gcp()
+dock.library_analysis = None
+dock.gcps_changed()
+dock.load_gcp_from_file()
+assert [(g.name, g.uid, g.status, g.comment) for g in dock.gcps] == before, [(g.name, g.uid) for g in dock.gcps]
+assert dock.absent == {uid["P7"]: ("P7", "pominięty")}
+assert "Powiązane z biblioteką" in dock.lbl_status.text(), dock.lbl_status.text()
+# dopisanie tego samego pliku: powiązania już użyte nie są dublowane
+ANSWER[0] = QMessageBox.StandardButton.No
+n = len(dock.gcps)
+dock.load_gcp_from_file()
+ANSWER[0] = QMessageBox.StandardButton.Yes
+assert len(dock.gcps) == 2 * n and all(g.uid is None for g in dock.gcps[n:])
+assert "pominięto" in dock.lbl_status.text()
 
 dock.cleanup()
 project.removeAllMapLayers()

@@ -54,7 +54,8 @@ Zapis/odczyt: format Georeferencera QGIS (`.points`) oraz CSV (separator `,` lub
 
 **Nazwy punktów.** Po zaznaczeniu przełącznika *Nazwy punktów* wtyczka po wskazaniu każdej pary pyta o nazwę (Anuluj – para nie zostanie dodana) i pokazuje kolumnę *Nazwa* (dwuklik – edycja). Nazwy pojawiają się w raporcie (np. „#5 Kościół”), w warstwie punktów GCP i w eksporcie CSV.
 * CSV – nazwa jest dodatkową kolumną `name`.
-* `.points` – plik pozostaje dokładnie w formacie Georeferencera QGIS, a nazwy trafiają do pliku towarzyszącego `<plik>.points.names.csv` (`id,name,sourceX,sourceY,mapX,mapY`). Przy wczytywaniu nazwy są przypisywane po współrzędnych skanu, więc przetrwają zmianę kolejności, dodanie lub usunięcie punktów w Georeferencerze; gdy liczba punktów się zgadza, punkty o poprawionych współrzędnych dostają nazwę po numerze. Zapis bez nazw usuwa nieaktualny plik towarzyszący.
+* `.points` – plik pozostaje dokładnie w formacie Georeferencera QGIS, a nazwy trafiają do pliku towarzyszącego `<plik>.points.names.csv` (`id,name,sourceX,sourceY,mapX,mapY,uid,status,comment`). Przy wczytywaniu nazwy są przypisywane po współrzędnych skanu, więc przetrwają zmianę kolejności, dodanie lub usunięcie punktów w Georeferencerze; gdy liczba punktów się zgadza, punkty o poprawionych współrzędnych dostają nazwę po numerze. Zapis bez nazw usuwa nieaktualny plik towarzyszący.
+* **Powiązanie z biblioteką** – CSV i plik towarzyszący `.points` przechowują też identyfikator punktu biblioteki (`uid`), status i uwagi, a plik towarzyszący dodatkowo punkty „brak na mapie” (wiersze bez współrzędnych). Po wczytaniu pliku punkty są od razu powiązane z biblioteką – nie trzeba ich ponownie wiązać. Powiązanie z punktem, którego nie ma w otwartej bibliotece (lub który jest już w analizie), jest pomijane; gdy punkt w bibliotece zmienił położenie, wtyczka zapyta o aktualizację współrzędnych.
 
 **Punkty z biblioteki** (gdy otwarta jest biblioteka punktów – zakładka *Biblioteka*):
 * **Przyciąganie** – w kroku 2/2 kliknięcie w pobliżu (do 10 px) punktu widocznej warstwy biblioteki bierze dokładne współrzędne, nazwę i identyfikator tego punktu. Kliknięcie dalej, ale do 40 px od punktu biblioteki, kończy się pytaniem, czy powiązać parę z tym punktem (*Nie* – punkt spoza biblioteki w miejscu kliknięcia).
@@ -68,7 +69,7 @@ Zapis/odczyt: format Georeferencera QGIS (`.points`) oraz CSV (separator `,` lub
 
 **Status i uwagi.** Kolumna *Status* (dwuklik – lista) opisuje identyfikację punktu na tej mapie: *pewny*, *niepewny* albo *nieczytelny*. Punkt nieczytelny nie wchodzi do obliczeń (jak wyłączony), ale zostaje w analizie. Kolumna *Uwagi* przechowuje komentarz do punktu na tej mapie.
 
-**Do biblioteki.** Zaznaczone w tabeli punkty GCP można dodać do biblioteki punktów (ich współrzędne odniesienia, przeliczone do układu biblioteki) – oraz do zestawu wybranego w zakładce *Biblioteka*. Punkt leżący już w bibliotece (do 1 m) zostaje powiązany z istniejącym, a nie zdublowany. Punkt bez nazwy dostaje nazwę „GCP n”, a źródłem staje się nazwa skanu. Powiązanie z biblioteką nie jest (jeszcze) zapisywane w plikach CSV/.points.
+**Do biblioteki.** Zaznaczone w tabeli punkty GCP można dodać do biblioteki punktów (ich współrzędne odniesienia, przeliczone do układu biblioteki) – oraz do zestawu wybranego w zakładce *Biblioteka*. Punkt leżący już w bibliotece (do 1 m) zostaje powiązany z istniejącym, a nie zdublowany. Punkt bez nazwy dostaje nazwę „GCP n”, a źródłem staje się nazwa skanu.
 
 ---
 

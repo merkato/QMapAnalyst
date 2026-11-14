@@ -760,4 +760,7 @@ EN = {
     'Usunąć mapę „{title}”?': 'Delete the map “{title}”?',
     'Usunąć arkusz „{name}” i jego punkty z biblioteki? Tego nie można cofnąć.': 'Delete the sheet “{name}” and its points from the library? This cannot be undone.',
     '(bez numeru arkusza)': '(no sheet number)',
+    'Powiązane z biblioteką: {n}.': 'Linked to the library: {n}.',
+    'Powiązania bez punktu w bibliotece pominięto (liczba: {n}).': 'Links without a point in the library were skipped (count: {n}).',
+    'Nazwy punktów i powiązania z biblioteką zapisano w pliku {f}.': 'Point names and library links were saved in the file {f}.',
 }

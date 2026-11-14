@@ -1919,14 +1919,17 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         if is_points and not path.lower().endswith(".points"):
             path += ".points"
         crs = self._ensure_ref_crs()
-        rows = [(g.old_x, g.old_y, g.ref_x, g.ref_y, g.enabled, g.name) for g in self.gcps]
+        rows = [(g.old_x, g.old_y, g.ref_x, g.ref_y, g.enabled, g.name, g.uid or "", g.status, g.comment)
+                for g in self.gcps]
+        absent = [(uid, name, comment) for uid, (name, comment) in self.absent.items()]
         msg = self.tr("Zapisano punkty do pliku (liczba: {n}).").format(n=len(self.gcps))
         if is_points:
             gcp_io.write_file(path, gcp_io.format_points(rows, self._crs_definition(crs)))
             names = gcp_io.names_path(path)
-            if gcp_io.has_names(rows):
-                gcp_io.write_file(names, gcp_io.format_names(rows))
-                msg += " " + self.tr("Nazwy punktów zapisano w pliku {f}.").format(f=os.path.basename(names))
+            if gcp_io.has_names(rows) or gcp_io.has_links(rows) or absent:
+                gcp_io.write_file(names, gcp_io.format_names(rows, absent))
+                msg += " " + self.tr("Nazwy punktów i powiązania z biblioteką zapisano w pliku {f}.").format(
+                    f=os.path.basename(names))
             elif os.path.isfile(names):
                 os.remove(names)  # nieaktualny plik nazw z poprzedniego zapisu
         else:
@@ -1968,27 +1971,62 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         crs_def, rows, skipped = gcp_io.read_file(path)
         if not rows:
             raise ValueError(self.tr("Plik nie zawiera punktów."))
+        absent = []
         if path.lower().endswith(".points"):
-            rows = gcp_io.assign_names(rows, gcp_io.read_names(path))
+            names = gcp_io.read_names(path)
+            rows = gcp_io.assign_names(rows, names)
+            absent = gcp_io.absent_entries(names)
         file_crs = self._parse_crs(crs_def) if crs_def else None
         ct = self._adopt_file_crs(file_crs)
-
-        for ox, oy, rx, ry, en, name in rows:
-            if ct is not None:
-                p = ct.transform(QgsPointXY(rx, ry))
-                rx, ry = p.x(), p.y()
-            self.add_gcp(ox, oy, rx, ry, enabled=en, name=name)
-        added = len(rows)
+        dropped = self._add_loaded_rows(rows, ct, absent)
         if gcp_io.has_names(rows) and not self.chk_names.isChecked():
             self.chk_names.setChecked(True)
         self.gcps_changed()
         self.update_ref_markers()
-        msg = self.tr("Wczytano punkty (liczba: {n}, układ: {crs}).").format(n=added, crs=self.crs_short(self.ref_crs))
+        msg = self.tr("Wczytano punkty (liczba: {n}, układ: {crs}).").format(n=len(rows), crs=self.crs_short(self.ref_crs))
         if ct is not None:
             msg += " " + self.tr("Współrzędne przeliczono z układu {crs}.").format(crs=self.crs_short(file_crs))
+        linked = sum(1 for r in rows if r[6]) - dropped
+        msg += self._load_notes(linked, dropped, skipped)
+        self.set_status(msg, "ok" if not (skipped or dropped) else "warn")
+        if linked > 0 and self.library_panel.path is not None:
+            self.check_changed_refs()
+
+    def _add_loaded_rows(self, rows, ct, absent):
+        """Punkty z pliku (9-krotki gcp_io) i „brak na mapie”; zwraca liczbę pominiętych powiązań
+        (dubel w analizie albo punktu nie ma w otwartej bibliotece)."""
+        known = self._known_uids()
+        used = {g.uid for g in self.gcps if g.uid}
+        dropped = 0
+        for ox, oy, rx, ry, en, name, uid, status, comment in rows:
+            if ct is not None:
+                p = ct.transform(QgsPointXY(rx, ry))
+                rx, ry = p.x(), p.y()
+            if uid and (uid in used or (known is not None and uid not in known)):
+                uid, dropped = "", dropped + 1
+            used.add(uid)
+            self.add_gcp(ox, oy, rx, ry, enabled=en, name=name, uid=uid or None, status=status, comment=comment)
+        for uid, name, comment in absent:
+            if uid not in used and (known is None or uid in known):
+                self.absent[uid] = (name, comment)
+        self.update_absent_label()
+        return dropped
+
+    def _load_notes(self, linked, dropped, skipped):
+        msg = ""
+        if linked > 0:
+            msg += " " + self.tr("Powiązane z biblioteką: {n}.").format(n=linked)
+        if dropped:
+            msg += " " + self.tr("Powiązania bez punktu w bibliotece pominięto (liczba: {n}).").format(n=dropped)
         if skipped:
             msg += " " + self.tr("Pominięto niepoprawne wiersze (liczba: {n}).").format(n=skipped)
-        self.set_status(msg, "ok" if not skipped else "warn")
+        return msg
+
+    def _known_uids(self):
+        """uid punktów otwartej biblioteki albo None (biblioteka nie jest otwarta – powiązania zostają)."""
+        if self.library_panel.path is None:
+            return None
+        return {p.uid for p in self.library_panel._cached()[0]}
 
     def _confirm_replace_gcps(self):
         """Pyta o zastąpienie lub dopisanie punktów. False – użytkownik anulował."""
