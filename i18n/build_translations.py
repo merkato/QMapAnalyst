@@ -24,6 +24,16 @@ CONTEXTS = {
     "report.py": "QMapAnalystReport",
     "export.py": "QMapAnalystExport",
     "layers.py": "QMapAnalystLayers",
+    "library_panel.py": "QMapAnalystLibrary",
+    "analysis_store.py": "QMapAnalystDockWidget",
+    "frame.py": "QMapAnalystDockWidget",
+    "import_dialog.py": "QMapAnalystLibrary",
+    "coverage_dialog.py": "QMapAnalystLibrary",
+    "maps_dialog.py": "QMapAnalystLibrary",
+    "sets_dialog.py": "QMapAnalystLibrary",
+    "series_dialog.py": "QMapAnalystLibrary",
+    "publication_dialog.py": "QMapAnalystLibrary",
+    "series_report.py": "QMapAnalystLibrary",
 }
 
 

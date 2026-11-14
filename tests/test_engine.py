@@ -248,20 +248,21 @@ def test_points_qgis_written_file():
             "641000,480000.25,2210.5,-2800.125,0,0,0,0\n")
     crs, rows, skipped = gcp_io.parse_gcp_text(text, "mapa.tif.points")
     assert crs == WKT and skipped == 0
-    assert rows[0] == (1534.25, -1022.75, 637012.123456789, 486514.5, True, "")
+    assert rows[0][:6] == (1534.25, -1022.75, 637012.123456789, 486514.5, True, "")
+    assert rows[0][6:] == ("", "sure", "")
     assert rows[1][4] is False
 
 
 def test_points_legacy_and_headerless():
     legacy = "mapX\tmapY\tpixelX\tpixelY\tenable\n500000\t300000\t10.5\t-20.5\t1\n"
     _, rows, _ = gcp_io.parse_gcp_text(legacy, "a.points")
-    assert rows == [(10.5, -20.5, 500000.0, 300000.0, True, "")]
+    assert [r[:6] for r in rows] == [(10.5, -20.5, 500000.0, 300000.0, True, "")]
     noheader = "500000,300000,10.5,-20.5,1\n500100,300100,11.5,-21.5,0\n"
     _, rows, _ = gcp_io.parse_gcp_text(noheader, "b.points")
     assert rows[0][:4] == (10.5, -20.5, 500000.0, 300000.0) and rows[1][4] is False
     csv_pl = "x_old;y_old;x_ref;y_ref;enable\n10,5;-20,5;500000,25;300000;1\nzly;wiersz;;;\n"
     _, rows, skipped = gcp_io.parse_gcp_text(csv_pl, "c.csv")
-    assert rows == [(10.5, -20.5, 500000.25, 300000.0, True, "")] and skipped == 1
+    assert [r[:6] for r in rows] == [(10.5, -20.5, 500000.25, 300000.0, True, "")] and skipped == 1
 
 
 def test_points_roundtrip_readable_by_qgis():
@@ -292,7 +293,7 @@ def test_names_sidecar_roundtrip_and_matching():
     names = gcp_io.parse_names(gcp_io.format_names(NAMED))
     assert [n[1] for n in names] == ["Kościół, wieża", "", 'Młyn "Dolny"']
     plain = [g[:5] for g in NAMED]
-    assert gcp_io.assign_names(plain, names) == NAMED
+    assert [g[:6] for g in gcp_io.assign_names(plain, names)] == NAMED
     # Georeferencer: kolejność zmieniona, jeden punkt usunięty, jeden dodany
     edited = [plain[2], (5.0, -5.0, 1.0, 1.0, True), plain[0]]
     got = gcp_io.assign_names(edited, names)
@@ -309,8 +310,36 @@ def test_csv_with_names():
     text = gcp_io.format_csv(NAMED)
     assert text.splitlines()[0] == "x_old,y_old,x_ref,y_ref,enable,name"
     _, rows, skipped = gcp_io.parse_gcp_text(text, "x.csv")
-    assert skipped == 0 and rows == NAMED
+    assert skipped == 0 and [r[:6] for r in rows] == NAMED
     assert "name" not in gcp_io.format_csv([g[:5] for g in NAMED])
+    assert "uid" not in text                                        # bez powiązań – bez kolumn biblioteki
+
+
+LINKED = [(1534.25, -1022.75, 637012.1, 486514.5, True, "Iłża", "uid-1", "uncertain", "sygnatura zatarta"),
+          (2210.5, -2800.125, 641000.0, 480000.25, False, "", "", "sure", ""),
+          (900.0, -400.0, 630000.0, 490000.0, True, "Wąchock", "uid-2", "illegible", "")]
+
+
+def test_library_links_in_csv_and_sidecar():
+    # CSV: kolumny uid, status, comment
+    text = gcp_io.format_csv(LINKED)
+    assert text.splitlines()[0] == "x_old,y_old,x_ref,y_ref,enable,name,uid,status,comment"
+    _, rows, skipped = gcp_io.parse_gcp_text(text, "x.csv")
+    assert skipped == 0 and rows == LINKED
+    # plik towarzyszący .points: powiązania i „brak na mapie”
+    side = gcp_io.format_names(LINKED, absent=[("uid-3", "Łagów", "pominięty")])
+    names = gcp_io.parse_names(side)
+    assert gcp_io.absent_entries(names) == [("uid-3", "Łagów", "pominięty")]
+    plain = [g[:5] for g in LINKED]
+    assert gcp_io.assign_names(plain, names) == LINKED
+    # wiersz „brak na mapie” pomijany przy odczycie pliku towarzyszącego jako listy GCP
+    _, rows, skipped = gcp_io.parse_gcp_text(side, "a.points.names.csv")
+    assert len(rows) == 3 and skipped == 1 and rows[0][6] == "uid-1"
+    # starszy plik nazw (bez kolumn biblioteki) nadal działa
+    old = "id,name,sourceX,sourceY,mapX,mapY\n1,Iłża,1534.25,-1022.75,637012.1,486514.5\n"
+    got = gcp_io.assign_names(plain[:1], gcp_io.parse_names(old))
+    assert got[0][5:] == ("Iłża", "", "sure", "")
+    assert gcp_io.has_links(LINKED) and not gcp_io.has_links([g[:6] for g in LINKED])
 
 
 def test_theme_contrast_on_qgis_backgrounds():
@@ -324,6 +353,88 @@ def test_theme_contrast_on_qgis_backgrounds():
     # kolor czytelny na obu tłach naprzemiennych wierszy tabeli
     c = theme.foreground("bad", "#202020", "#323232")
     assert min(theme.contrast(c, "#202020"), theme.contrast(c, "#323232")) >= theme.SEMANTIC_MIN
+
+
+
+# --- wagi a priori ---------------------------------------------------------------
+def _noisy(n=30, seed=5, sigma=4.0):
+    src, dst, rng = _synthetic(n, seed)
+    return src, dst + rng.normal(0, sigma, dst.shape), rng
+
+
+def test_unit_weights_equal_unweighted():
+    src, dst, _ = _noisy()
+    a = math_engine.fit_transform("affine", src, dst)
+    b = math_engine.fit_transform("affine", src, dst, np.ones(len(src)))
+    assert b.weights is None and not b.stats["weighted"]
+    assert np.allclose(a.residuals, b.residuals) and a.sigma0 == b.sigma0
+
+
+def test_weighted_normal_equations_and_sigma0():
+    src, dst, rng = _noisy()
+    w = rng.uniform(0.2, 3.0, len(src))
+    fr = math_engine.fit_transform("affine", src, dst, w)
+    # jawne równania normalne na tych samych współrzędnych znormalizowanych
+    u = (src - fr.src_center) / fr.src_scale
+    A = math_engine._design("affine", u)
+    L = (dst - fr.dst_center).reshape(-1)
+    P = np.diag(np.repeat(w, 2))
+    x = np.linalg.solve(A.T @ P @ A, A.T @ P @ L)
+    assert np.allclose(x, fr.params)
+    v = fr.residuals.reshape(-1)
+    assert abs(fr.sigma0 - math.sqrt(v @ P @ v / fr.redundancy)) < 1e-9
+    assert fr.stats["weighted"]
+
+
+def test_weighted_loo_matches_refit():
+    src, dst, rng = _noisy()
+    w = rng.uniform(0.2, 3.0, len(src))
+    fr = math_engine.fit_transform("affine", src, dst, w)
+    for i in (0, 7, 19):
+        mask = np.arange(len(src)) != i
+        fr_i = math_engine.fit_transform("affine", src[mask], dst[mask], w[mask])
+        loo = np.linalg.norm(dst[i] - fr_i.predict(src[i:i + 1])[0])
+        assert abs(loo - fr.loo_errors[i]) < 1e-6, (i, loo, fr.loo_errors[i])
+
+
+def test_weight_scale_invariance():
+    """Pomnożenie wszystkich wag przez stałą nie zmienia parametrów ani testu Baardy; σ₀ skaluje się √c."""
+    src, dst, rng = _noisy()
+    w = rng.uniform(0.2, 3.0, len(src))
+    a = math_engine.fit_transform("helmert", src, dst, w)
+    b = math_engine.fit_transform("helmert", src, dst, 4.0 * w)
+    assert np.allclose(a.predict(src), b.predict(src))
+    assert np.allclose(a.std_residuals, b.std_residuals)
+    assert np.allclose(a.loo_errors, b.loo_errors)
+    assert abs(b.sigma0 - 2.0 * a.sigma0) < 1e-9
+
+
+def test_downweighted_blunder_has_less_influence():
+    src, dst, _ = _noisy(sigma=1.0)
+    dst[4] += [300.0, 200.0]
+    w = np.ones(len(src))
+    w[4] = 0.01
+    a = math_engine.fit_transform("affine", src, dst)
+    b = math_engine.fit_transform("affine", src, dst, w)
+    others = np.arange(len(src)) != 4
+    assert b.errors[others].max() < a.errors[others].max() / 3
+    assert b.errors[4] > a.errors[4]
+
+
+def test_invalid_weights():
+    src, dst, _ = _noisy()
+    for bad in (np.zeros(len(src)), np.ones(3), -np.ones(len(src))):
+        try:
+            math_engine.fit_transform("affine", src, dst, bad)
+            raise AssertionError("accepted invalid weights")
+        except math_engine.EngineError:
+            pass
+
+
+def test_apriori_weights():
+    p = math_engine.apriori_weights([1.0, 0.25, 1.0, 1.0], [None, None, 10.0, float("nan")], 10.0)
+    assert np.allclose(p, [1.0, 0.25, 0.5, 1.0])
+    assert np.allclose(math_engine.apriori_weights([1.0, 0.25], [5.0, 5.0], float("nan")), [1.0, 0.25])
 
 
 if __name__ == "__main__":

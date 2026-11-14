@@ -5,7 +5,7 @@ Moduł jest niezależny od QGIS (tylko numpy / scipy), dzięki czemu można go
 testować poza aplikacją. Zawiera:
 
 * transformacje globalne (Helmert, afiniczna, wielomianowa 2. stopnia)
-  wyrównywane metodą najmniejszych kwadratów z pełną statystyką
+  wyrównywane metodą najmniejszych kwadratów (opcjonalnie z wagami a priori) z pełną statystyką
   (sigma0, błędy parametrów, liczby nadwyżkowe, reszty standaryzowane,
   walidacja krzyżowa leave-one-out, kryterium AICc),
 * odwzorowanie lokalne (transformacja globalna + TPS na resztach),
@@ -133,6 +133,7 @@ class FitResult:
     loo_errors: np.ndarray = None         # błąd walidacji krzyżowej (punkt pominięty)
     std_residuals: np.ndarray = None      # max |w| dla punktu
     redundancy_numbers: np.ndarray = None # średnia liczba nadwyżkowa punktu (0..1)
+    weights: np.ndarray = None            # wagi a priori punktów (None – równe wagi)
     stats: dict = field(default_factory=dict)
     derived: dict = field(default_factory=dict)
 
@@ -220,11 +221,15 @@ def _validated_points(model, src, dst):
     return src, dst
 
 
-def _hat_diagnostics(res, A, N_inv, v, min_pts):
-    """Liczby nadwyżkowe, reszty standaryzowane (Baarda) i błędy LOO z bloków 2×2 macierzy kapeluszowej."""
+def _hat_diagnostics(res, A, N_inv, v, min_pts, wts=None):
+    """Liczby nadwyżkowe, reszty standaryzowane (Baarda) i błędy LOO z bloków 2×2 macierzy kapeluszowej.
+
+    Przy wagach p_i: H = A N⁻¹ Aᵀ P (N = Aᵀ P A), liczba nadwyżkowa r = 1 − h_ii,
+    w = |v|·√p / (σ₀·√r), reszta usunięta (LOO) = (I − H_ii)⁻¹ v_i."""
     n, p_count = v.shape[0], A.shape[1]
+    wts = np.ones(n) if wts is None else wts
     Ai = A.reshape(n, 2, p_count)
-    H_blocks = np.einsum("nip,pq,njq->nij", Ai, N_inv, Ai)
+    H_blocks = np.einsum("nip,pq,njq->nij", Ai, N_inv, Ai) * wts[:, None, None]
     h_diag = np.stack([H_blocks[:, 0, 0], H_blocks[:, 1, 1]], axis=1)
     red_nums = np.clip(1.0 - h_diag, 0.0, 1.0)
     res.redundancy_numbers = red_nums.mean(axis=1)
@@ -232,7 +237,7 @@ def _hat_diagnostics(res, A, N_inv, v, min_pts):
     res.std_residuals = np.full(n, np.nan)
     if res.redundancy > 0 and res.sigma0 > 0:
         with np.errstate(divide="ignore", invalid="ignore"):
-            w = np.abs(v) / (res.sigma0 * np.sqrt(red_nums))
+            w = np.abs(v) * np.sqrt(wts)[:, None] / (res.sigma0 * np.sqrt(red_nums))
         w[~np.isfinite(w)] = np.nan
         res.std_residuals = np.fmax(w[:, 0], w[:, 1])
 
@@ -268,25 +273,41 @@ def _derived_parameters(res, params):
     res.derived.update({k + "_std": float(derived_std[i]) for i, k in enumerate(keys)})
 
 
-def fit_transform(model: str, src: np.ndarray, dst: np.ndarray) -> FitResult:
-    """Wyrównanie transformacji metodą najmniejszych kwadratów wraz z pełną statystyką."""
+def _validated_weights(weights, n):
+    if weights is None:
+        return None
+    w = np.asarray(weights, dtype=float).reshape(-1)
+    if w.size != n or not np.all(np.isfinite(w)) or np.any(w <= 0):
+        raise EngineError("Wagi punktów muszą być dodatnimi liczbami (po jednej na punkt).")
+    return None if np.allclose(w, 1.0) else w
+
+
+def fit_transform(model: str, src: np.ndarray, dst: np.ndarray, weights=None) -> FitResult:
+    """Wyrównanie transformacji metodą najmniejszych kwadratów wraz z pełną statystyką.
+
+    weights – wagi a priori punktów (p_i > 0, jednakowe dla X i Y punktu; waga 1 = obserwacja
+    o odchyleniu σ₀). Reszty, RMSE i błędy punktów są geometryczne (bez wag); σ₀, kowariancja,
+    test Baardy, LOO i AICc uwzględniają wagi."""
     src, dst = _validated_points(model, src, dst)
     n = src.shape[0]
     min_pts = MODELS[model]["min_pts"]
+    wts = _validated_weights(weights, n)
+    pw = np.ones(n) if wts is None else wts
 
     sc, ss = _normalization(src)
-    dc = dst.mean(axis=0)
+    dc = dst.mean(axis=0) if wts is None else (dst * pw[:, None]).sum(axis=0) / pw.sum()
     u = (src - sc) / ss
     A = _design(model, u)
     L = (dst - dc).reshape(-1)
+    sqrt_p = np.repeat(np.sqrt(pw), 2)
 
     p_count = A.shape[1]
-    params, _, rank, _ = np.linalg.lstsq(A, L, rcond=None)
+    params, _, rank, _ = np.linalg.lstsq(A * sqrt_p[:, None], L * sqrt_p, rcond=None)
     if rank < p_count:
         raise EngineError("Układ równań jest osobliwy – punkty są współliniowe lub zdublowane.")
 
     res = FitResult(model=model, src=src, dst=dst, params=params,
-                    src_center=sc, src_scale=ss, dst_center=dc)
+                    src_center=sc, src_scale=ss, dst_center=dc, weights=wts)
 
     pred = (A @ params).reshape(-1, 2) + dc
     v = dst - pred
@@ -296,19 +317,37 @@ def fit_transform(model: str, src: np.ndarray, dst: np.ndarray) -> FitResult:
 
     r = 2 * n - p_count
     res.redundancy = int(r)
-    vtv = float(np.sum(v ** 2))
-    res.sigma0 = math.sqrt(vtv / r) if r > 0 else float("nan")
+    vtpv = float(np.sum(v ** 2 * pw[:, None]))
+    res.sigma0 = math.sqrt(vtpv / r) if r > 0 else float("nan")
 
-    N_inv = np.linalg.pinv(A.T @ A)
+    Aw = A * sqrt_p[:, None]
+    N_inv = np.linalg.pinv(Aw.T @ Aw)
     if r > 0:
         res.cov = (res.sigma0 ** 2) * N_inv
 
-    _hat_diagnostics(res, A, N_inv, v, min_pts)
+    _hat_diagnostics(res, A, N_inv, v, min_pts, pw)
     _derived_parameters(res, params)
 
     res.stats = residual_statistics(v, res.sigma0, p_count)
-    res.stats["aicc"] = aicc(vtv, 2 * n, p_count)
+    res.stats["aicc"] = aicc(vtpv, 2 * n, p_count)
+    res.stats["weighted"] = wts is not None
     return res
+
+
+def apriori_weights(status_factors, sigma_ref, sigma_map):
+    """Wagi a priori punktów: p_i = f_i · σ_m² / (σ_m² + σ_ref,i²).
+
+    status_factors – czynnik identyfikacji na mapie (np. pewny 1, niepewny 0,25),
+    sigma_ref – niepewność współrzędnych odniesienia punktu (NaN/None – pomijalna),
+    sigma_map – typowy błąd współrzędnej mapy (σ₀ wyrównania bez wag), w tych samych jednostkach.
+    Punkt pewny o dokładnych współrzędnych ma wagę 1."""
+    f = np.asarray(status_factors, dtype=float)
+    sr = np.array([np.nan if x is None else x for x in sigma_ref], dtype=float) if sigma_ref is not None else np.full(f.shape, np.nan)
+    sr = np.where(np.isfinite(sr) & (sr > 0), sr, 0.0)
+    if sigma_map is None or not np.isfinite(sigma_map) or sigma_map <= 0:
+        return f.copy()
+    sm2 = float(sigma_map) ** 2
+    return np.maximum(f * sm2 / (sm2 + sr ** 2), f * 1e-6)  # waga > 0 także przy σ_m ≈ 0
 
 
 def aicc(rss: float, n_obs: int, n_params: int) -> float:
@@ -343,14 +382,14 @@ def residual_statistics(v: np.ndarray, sigma0: float, n_params: int) -> dict:
     return stats
 
 
-def compare_models(src: np.ndarray, dst: np.ndarray) -> list:
-    """Porównanie wszystkich modeli, dla których istnieje nadwyżka obserwacji."""
+def compare_models(src: np.ndarray, dst: np.ndarray, weights=None) -> list:
+    """Porównanie wszystkich modeli, dla których istnieje nadwyżka obserwacji (te same wagi dla każdego)."""
     out = []
     for key, meta in MODELS.items():
         if len(src) <= meta["min_pts"]:
             continue
         try:
-            fr = fit_transform(key, src, dst)
+            fr = fit_transform(key, src, dst, weights)
         except (ValueError, np.linalg.LinAlgError):
             continue
         out.append({

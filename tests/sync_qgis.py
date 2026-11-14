@@ -48,6 +48,7 @@ def run():
     canvas.setDestinationCrs(crs)
     canvas.setExtent(QgsRectangle(400000, 400000, 600000, 600000))
     dock = dm.QMapAnalystDockWidget(Iface())
+    dock.chk_names.setChecked(False)   # ustawienie wspólne z innymi testami – bez okna nazwy
     errors = []
     dock.report_exception = lambda where, exc: errors.append((where, repr(exc)))
     dock.resize(450, 900)

@@ -2,7 +2,9 @@
 
 **QMapAnalyst** to wtyczka QGIS do kartometrycznej analizy dawnych map. Inspirowana programem MapAnalyst pozwala badać dokładność i lokalne zniekształcenia mapy, szacować jej skalę papierową oraz **odwzorowanie kartograficzne, w jakim została wykonana** – w całości w środowisku QGIS.
 
-> Ilustracje przedstawiają arkusz VI szkicu indykacyjnego katastru austriackiego gminy Milówka (skala 1:2880, Archiwum Narodowe w Krakowie). Punkty GCP na ilustracjach są demonstracyjne – służą pokazaniu interfejsu, a nie są georeferencją arkusza.
+> Ilustracje rozdziałów 1–2 i 4–7 przedstawiają arkusz VI szkicu indykacyjnego katastru austriackiego gminy Milówka (skala 1:2880, Archiwum Narodowe w Krakowie); punkty GCP na nich są demonstracyjne – służą pokazaniu interfejsu, a nie są georeferencją arkusza.
+>
+> Ilustracje biblioteki punktów, serii czasowej i wydawnictwa wieloarkuszowego (wersja 0.3) pochodzą z pracy nad zestawem „TKKP” (Kielecczyzna, 36 miejscowości): *Polonia et Silesia* (1585), G. A. Rizzi Zannoni, *Carte de la Pologne*, ark. 14 (1772), *Karte von West-Galizien*, ark. 8 (1801–1808) i *Topograficzna Karta Królestwa Polskiego* 1:126 000, arkusze Kol. IV Sek. VI (Iłża) i Sek. VII (Szydłów) (1822–1843); skany z bibliotek cyfrowych (Library of Congress, Śląska BC, Polona, Jagiellońska BC), podkład – © współtwórcy OpenStreetMap.
 
 ---
 
@@ -54,11 +56,115 @@ Zapis/odczyt: format Georeferencera QGIS (`.points`) oraz CSV (separator `,` lub
 
 **Nazwy punktów.** Po zaznaczeniu przełącznika *Nazwy punktów* wtyczka po wskazaniu każdej pary pyta o nazwę (Anuluj – para nie zostanie dodana) i pokazuje kolumnę *Nazwa* (dwuklik – edycja). Nazwy pojawiają się w raporcie (np. „#5 Kościół”), w warstwie punktów GCP i w eksporcie CSV.
 * CSV – nazwa jest dodatkową kolumną `name`.
-* `.points` – plik pozostaje dokładnie w formacie Georeferencera QGIS, a nazwy trafiają do pliku towarzyszącego `<plik>.points.names.csv` (`id,name,sourceX,sourceY,mapX,mapY`). Przy wczytywaniu nazwy są przypisywane po współrzędnych skanu, więc przetrwają zmianę kolejności, dodanie lub usunięcie punktów w Georeferencerze; gdy liczba punktów się zgadza, punkty o poprawionych współrzędnych dostają nazwę po numerze. Zapis bez nazw usuwa nieaktualny plik towarzyszący.
+* `.points` – plik pozostaje dokładnie w formacie Georeferencera QGIS, a nazwy trafiają do pliku towarzyszącego `<plik>.points.names.csv` (`id,name,sourceX,sourceY,mapX,mapY,uid,status,comment`). Przy wczytywaniu nazwy są przypisywane po współrzędnych skanu, więc przetrwają zmianę kolejności, dodanie lub usunięcie punktów w Georeferencerze; gdy liczba punktów się zgadza, punkty o poprawionych współrzędnych dostają nazwę po numerze. Zapis bez nazw usuwa nieaktualny plik towarzyszący.
+* **Powiązanie z biblioteką** – CSV i plik towarzyszący `.points` przechowują też identyfikator punktu biblioteki (`uid`), status i uwagi, a plik towarzyszący dodatkowo punkty „brak na mapie” (wiersze bez współrzędnych). Po wczytaniu pliku punkty są od razu powiązane z biblioteką – nie trzeba ich ponownie wiązać. Powiązanie z punktem, którego nie ma w otwartej bibliotece (lub który jest już w analizie), jest pomijane; gdy punkt w bibliotece zmienił położenie, wtyczka zapyta o aktualizację współrzędnych.
+
+**Punkty z biblioteki** (gdy otwarta jest biblioteka punktów – zakładka *Biblioteka*):
+* **Przyciąganie** – w kroku 2/2 kliknięcie w pobliżu (do 10 px) punktu widocznej warstwy biblioteki bierze dokładne współrzędne, nazwę i identyfikator tego punktu. Kliknięcie dalej, ale do 40 px od punktu biblioteki, kończy się pytaniem, czy powiązać parę z tym punktem (*Nie* – punkt spoza biblioteki w miejscu kliknięcia).
+* **Wyszukiwarka** pod przyciskami – wpisz nazwę (także dawną, bez polskich znaków); wyniki z wybranego zestawu, uporządkowane także według odległości od położenia przewidywanego (przy tej samej nazwie w kilku miejscach właściwy punkt jest zwykle pierwszy). Wybrany punkt zaznacza się kwadratem na mapie głównej – wystarczy kliknąć go na mapie dawnej. Jeśli punkt na skanie wskazano już wcześniej (krok 2/2), para powstaje od razu – to celowy sposób pracy: klik na skanie, potem nazwa.
+* **Następny z zestawu** – kolejny punkt wybranego zestawu, którego nie ma jeszcze w analizie (najbliższy ostatnio dodanemu). Po obliczeniu transformacji żółte kółko na mapie dawnej pokazuje, gdzie go szukać. Ponowne kliknięcie pomija punkt (np. nieobecny na mapie). Punkt wskazany wcześniej na skanie (zaczęty krok 1/2) jest odrzucany – nie połączy się z punktem z zestawu.
+* Ten sam punkt biblioteki nie może wystąpić w analizie dwa razy.
+* **Brak na mapie** – oznacza bieżący punkt z biblioteki jako nieobecny na tej mapie (np. wieś pominięta przez kartografa) z uwagą. To informacja, nie błąd: punkt nie wchodzi do obliczeń, „Następny z zestawu” go pomija, a zapis analizy go zachowuje. Punkty „brak na mapie” są wierszami na końcu tabeli (○, bez położenia na skanie): uwagi można edytować, *Usuń* zdejmuje oznaczenie, a dwuklik w numer wiersza pozwala jednak wskazać punkt na mapie dawnej.
+* **Powiązanie z biblioteką widać przy numerze wiersza** (gdy biblioteka jest otwarta): ikona łącza – punkt biblioteki (podpowiedź podaje jego nazwę i ostrzega, gdy nazwa w tabeli jest inna), przekreślone łącze – punkt spoza biblioteki. **Tylko punkty powiązane trafiają do macierzy pokrycia.**
+* **Powiąż** – zaznaczone (bez zaznaczenia – wszystkie) punkty spoza biblioteki wiąże z istniejącymi punktami biblioteki: o tej samej nazwie (także dawnej) do 5 km, a bez takiej – z najbliższym do 500 m. Przed zmianą pokazuje listę propozycji z odległościami; współrzędne odniesienia są zastępowane współrzędnymi z biblioteki. Punkty bez dopasowania można dodać przyciskiem *Do biblioteki*.
+* **Zapisz analizę** (obok *Brak na mapie*) – to samo co w zakładce *Biblioteka*. Gwiazdka i pogrubienie (*Zapisz analizę \**) oznaczają niezapisane zmiany: plik biblioteki ma ostatni zapis, a macierz pokrycia pokazuje dla otwartej analizy stan bieżący (kolumna z \*). Przy wczytywaniu innej analizy wtyczka proponuje zapis zmian (*Tak*), ich porzucenie (*Nie*) albo rezygnację.
+
+**Zasięg mapy.** Przycisk *Zasięg mapy* ustala ramkę mapy na skanie: *Wskaż 4 rogi ramki na skanie* (cztery kliknięcia na mapie dawnej – rogi ramki mapy, bez marginesów, legendy i opisu) albo *Zasięg = cały skan* (domyślnie). Ramka jest widoczna na mapie dawnej; po obliczeniu transformacji jej obraz – **zasięg mapy na mapie współczesnej** – widać na mapie głównej (*Pokaż zasięg na mapie głównej*). *Następny z zestawu* pomija punkty zestawu leżące poza zasięgiem (komunikat podaje ich liczbę), a macierz pokrycia oznacza je jako „poza zasięgiem arkusza” zamiast pustej komórki. Ramka zapisywana jest w analizie we współrzędnych skanu (dane wejściowe); zasięg na mapie współczesnej liczy się na bieżąco z transformacji, więc poprawia się wraz z kolejnymi punktami.
+
+![Zakładka GCP: arkusz TKKP Szydłów z biblioteki – ikona łącza przy numerze wiersza (punkt biblioteki), lista zestawów i „Następny z zestawu”, ramka mapy na skanie (niebieska przerywana)](gcp_library.png)
+
+![Zasięg arkusza TKKP Szydłów na mapie współczesnej (ramka mapy przeliczona transformacją) i warstwa biblioteki: punkty zestawu w pełnym kolorze, punkty użyte w analizie z żółtą obwódką, pozostałe przygaszone](frame_main.jpg)
+
+**Status i uwagi.** Kolumna *Status* (dwuklik – lista) opisuje identyfikację punktu na tej mapie: *pewny*, *niepewny* albo *nieczytelny*. Punkt nieczytelny nie wchodzi do obliczeń (jak wyłączony), ale zostaje w analizie. Kolumna *Uwagi* przechowuje komentarz do punktu na tej mapie.
+
+**Do biblioteki.** Zaznaczone w tabeli punkty GCP można dodać do biblioteki punktów (ich współrzędne odniesienia, przeliczone do układu biblioteki) – oraz do zestawu wybranego w zakładce *Biblioteka*. Punkt leżący już w bibliotece (do 1 m) zostaje powiązany z istniejącym, a nie zdublowany. Punkt bez nazwy dostaje nazwę „GCP n”, a źródłem staje się nazwa skanu.
 
 ---
 
-## 3. Zakładka Analiza
+## 3. Zakładka Biblioteka
+
+![Zakładka Biblioteka: plik biblioteki, zestaw roboczy „TKKP”, macierz pokrycia i seria czasowa, analiza otwartego arkusza](library_tab.png)
+
+Biblioteka punktów referencyjnych to jeden plik GeoPackage użytkownika, wspólny dla wszystkich projektów i analiz. Przechowuje punkty (miejscowości, kościoły, ujścia rzek…) wraz z nazwami dawnymi, typem, wskazanym obiektem i niepewnością współrzędnych oraz **zestawy** – np. regionalne, jak „Kielecczyzna-18”. Ten sam punkt może należeć do wielu zestawów.
+
+* **Otwórz / Nowa** – wybór pliku biblioteki lub założenie nowego (z wyborem układu współrzędnych, domyślnie układ projektu). Ścieżka jest zapamiętywana.
+* **Warstwa na mapie głównej** – punkty biblioteki na mapie QGIS: symbol według typu, etykieta z nazwą, podpowiedź z nazwami dawnymi. Punkty użyte w bieżącej analizie mają żółtą obwódkę.
+* **Zestaw** – zestaw roboczy: do niego dodajesz i z niego usuwasz punkty, z niego korzystają *Następny z zestawu*, wyszukiwarka i macierz pokrycia. Ta sama lista jest w zakładce *GCP* obok *Następny z zestawu*. Punkty spoza zestawu są na mapie przygaszone – można je zaznaczyć i dodać przyciskiem *Dodaj zaznaczone*. **Tylko punkty zestawu** ukrywa je całkiem.
+* **Menu zestawów** (przycisk obok listy): *Nowy zestaw z zaznaczonych…* (punkty zaznaczone na warstwie biblioteki zwykłym narzędziem zaznaczania QGIS; bez zaznaczenia – pusty), *Nowy zestaw z punktów analizy…* (punkty biblioteki bieżącej analizy, także „brak na mapie”), *Punkty zestawu…* (lista z nazwami dawnymi i typem; dwuklik pokazuje punkt na mapie głównej i zaznacza go; *Usuń z zestawu*), *Zmień nazwę…*, *Usuń zestaw…*.
+* **Dodaj zaznaczone / Usuń zaznaczone** – zmiana składu wybranego zestawu. Usunięcie z zestawu ani usunięcie zestawu nie usuwa punktów z biblioteki.
+
+**Import punktów** (*Importuj…*). Źródłem jest dowolna warstwa wektorowa projektu (np. miejscowości z PRNG, obiekty z OSM lub BDOT10k – dla linii i poligonów brany jest punkt wewnątrz obiektu; opcjonalnie tylko zaznaczone obiekty) albo plik CSV (separator i kodowanie rozpoznawane automatycznie, przecinek dziesiętny dozwolony; wskazujesz kolumny X/Y i układ współrzędnych). Pola są dopasowywane automatycznie po nazwach (np. `NAZWA_GLOWNA`, `RODZAJ_OBIEKTU`, `name`, `place`, `old_name`) i można je zmienić. Wartości typu są rozpoznawane po polsku, angielsku i niemiecku (miasto/town/Stadt, wieś/village/hamlet, kościół/church…); nierozpoznane dostają *typ domyślny*. Punkt w zadanym promieniu od istniejącego, o tej samej nazwie (także dawnej, bez polskich znaków), jest **duplikatem** i nie zostanie dodany – można za to dopisać jego nowe nazwy dawne do istniejącego punktu. Punkty bliskie istniejącym, ale o innej nazwie (np. kościół i dwór w jednej wsi), są dodawane i liczone w komunikacie. Zaimportowane punkty (oraz istniejące duplikaty) mogą od razu trafić do zestawu – istniejącego lub nowego.
+
+**Mapy i arkusze.** Biblioteka przechowuje **mapy** (dzieło lub wydanie: tytuł, autor, rok od–do, skala nominalna) i ich **arkusze** – arkusz to analiza jednego skanu: położenie punktów na skanie, współrzędne odniesienia (kopia z chwili powiązania), status, uwagi i punkty „brak na mapie”, a także numer arkusza, DPI, uwagi i odcisk pliku skanu (SHA-256). Opis mapy jest wspólny dla wszystkich jej arkuszy – zmiana tytułu czy roku obejmuje je wszystkie. Zapisywane są dane wejściowe, nie wyniki – wynik przelicza się po wczytaniu.
+
+![Okno „Mapy i arkusze”: mapy według roku, arkusze TKKP (Iłża, Szydłów) z liczbą punktów i skanem](maps_dialog.png)
+
+* **Zapisz analizę** – ponowny zapis zastępuje punkty otwartego arkusza. Przy pierwszym zapisie okno opisu ma listę **Mapa**: wybierz mapę, której arkuszem jest skan (wtyczka podpowiada mapę o tytule zgodnym z nazwą warstwy skanu), albo *Nowa mapa…*; podaj numer arkusza. Jeśli skan ma już analizę w bibliotece, wtyczka najpierw pyta, czy ją zastąpić.
+* **Opis mapy…** – zmiana opisu mapy i arkusza; wybranie innej mapy z listy przenosi arkusz.
+* **Mapy i arkusze…** – drzewo map z arkuszami (liczba punktów, skan, data zmiany; arkusz otwarty w panelu GCP jest pogrubiony): *Nowa mapa…*, *Zapisz punkty jako nowy arkusz…* zaznaczonej mapy, *Edytuj…* (mapa – opis; arkusz – opis z wyborem mapy), *Usuń…* (mapa razem z arkuszami i ich punktami – z potwierdzeniem; usunięcie otwartego arkusza zostawia punkty w panelu jako niezapisane), *Wczytaj* (dwuklik) – przywraca punkty i – gdy trzeba – sam skan.
+* Jeśli po zapisaniu arkusza punkt w bibliotece poprawiono, wtyczka pokaże różnicę i zapyta o aktualizację współrzędnych; punkt usunięty z biblioteki zostaje w analizie jako punkt spoza biblioteki.
+* Biblioteki z wersji rozwojowych 0.3.0-dev są uaktualniane przy otwarciu (arkusze o tym samym tytule trafiają do jednej mapy; dochodzi pole ramki mapy). Przedtem powstaje kopia pliku `<nazwa>.v<wersja>.bak.gpkg`.
+
+**Macierz pokrycia** (*Macierz pokrycia…*, dla wybranego zestawu). Wiersze to punkty zestawu, kolumny – analizy map zapisane w bibliotece, które zawierają choć jeden punkt zestawu (uporządkowane według roku; mapy bez daty na końcu). Komórka: ✓ pewny, ? niepewny, ! odstający, × nieczytelny, – wyłączony, ○ brak na mapie, · poza zasięgiem arkusza (ramka mapy przeliczona transformacją arkusza – wymaga dość punktów do wyrównania), puste – jeszcze nie wskazany. Odstające wyznacza test Baardy w wyrównaniu każdej mapy wybranym modelem (domyślnie afinicznym) – liczone na żądanie z zapisanych punktów; przy zbyt małej liczbie punktów mapa nie jest badana (podpowiedź w nagłówku). Kolumna Σ podaje, na ilu mapach punkt jest obecny. Pogrubione są **punkty wspólne wszystkim mapom** – wspólne minimum do porównań między mapami; na czerwono – punkty **odstające na co najmniej dwóch mapach** (podejrzenie błędnej identyfikacji lub zmiany położenia obiektu). Kolumny to **arkusze** albo **mapy** (przełącznik *Kolumny*): w trybie map arkusze jednej mapy tworzą jedną kolumnę – punkt obecny na którymkolwiek arkuszu jest obecny na mapie, odstający na którymkolwiek – odstający; dwuklik w kolumnę mapy wieloarkuszowej pyta, który arkusz wczytać. Analiza otwarta w panelu GCP jest pokazana w stanie bieżącym – także niezapisanym (gwiazdka w nagłówku), a analiza jeszcze niezapisana dochodzi jako osobna kolumna. Dwuklik w kolumnę wczytuje analizę tej mapy. Eksport do CSV (kody komórek) i JSON (z listą punktów wspólnych i powtarzających się odstających).
+
+![Macierz pokrycia zestawu „TKKP” w trybie map: ✓ obecny, ○ brak na mapie, · poza zasięgiem arkusza; pogrubione – punkty wspólne wszystkim mapom](coverage.png)
+
+**Seria czasowa** (*Seria czasowa…*, dla wybranego zestawu) – porównanie **map z różnych lat**, liczone na żądanie z arkuszy zapisanych w bibliotece (oraz bieżącego, niezapisanego stanu analizy otwartej w panelu GCP – oznaczonego \*). Elementem serii jest **mapa**: wydawnictwo wieloarkuszowe to jeden element (jeden punkt w czasie) – jego arkusze wyrównywane są osobno, a wyniki łączone (σ₀ i RMSE łączne, skala i obrót – średnie arkuszy, punkt na zakładce dwóch arkuszy – średni błąd). Wszystkie mapy i arkusze wyrównywane są **tym samym modelem** (domyślnie afinicznym), więc ich statystyki są porównywalne. Zgodność arkuszy jednego wydawnictwa bada osobny tryb – *Wydawnictwo wieloarkuszowe*.
+
+![Seria czasowa zestawu „TKKP”: mapy według roku – σ₀, RMSE, skala, obrót; TKKP to jedno wydawnictwo z dwoma arkuszami](series_maps.png)
+
+![Dokładność map w czasie: od kilkunastu kilometrów błędu (Polonia et Silesia, 1585) do kilkuset metrów (Karte von West-Galizien, TKKP)](chart_dokladnosc.png)
+
+* **Mapy** – dla każdej mapy (według roku): arkusze (numer albo liczba – lista w podpowiedzi), liczba punktów, σ₀, RMSE i błąd maksymalny w metrach, skala nominalna (gdy w opisie arkusza podano DPI skanu), obrót, stosunek skal osi X/Y i liczba punktów odstających (test Baardy; nazwy w podpowiedzi).
+* **Podobieństwo reszt** – dla każdej pary map: liczba punktów wspólnych, współczynnik korelacji wektorowej *r* błędów położenia tych punktów (1 – błędy o tym samym kierunku i proporcjach) i *p* z testu permutacyjnego (999 losowych przyporządkowań punktów). Pary z *r* ≥ 0,5 i *p* < 0,05 (co najmniej 4 punkty wspólne) są wyróżnione – to **ślad kopiowania** treści późniejszej mapy z wcześniejszej (razem z jej błędami). Uwaga: błąd współrzędnych punktu w bibliotece albo przesunięcie obiektu daje podobne błędy na wszystkich mapach – wtedy podobne są wszystkie pary, nie jedna.
+
+  ![Podobieństwo błędów między mapami zestawu „TKKP”](chart_podobienstwo.png)
+* **Błędy punktów** – tabela punkt × mapa z długością błędu położenia w metrach (kolor – wielkość; „!” – odstający), liczba map i średni błąd punktu. **Błąd położenia** to wektor od położenia obiektu w bibliotece do miejsca, w którym umieszcza go mapa – po usunięciu transformacji arkusza.
+
+  ![Błędy położenia punktów na mapach (skala logarytmiczna, kreska – mediana)](chart_bledy_punktow.png)
+* **Warstwa wektorów błędów** – na mapie głównej odcinek ze strzałką dla każdego punktu i mapy (kolor według mapy), powiększony *×k* (domyślnie ×10), z atrybutami: punkt, mapa, arkusze, rok, błąd [m], odstający.
+
+  ![Wektory błędów położenia czterech map na mapie współczesnej (powiększenie ×3; kolor według mapy)](series_vectors_main.jpg)
+* **Warstwa trajektorii** – dla każdego punktu obecnego na co najmniej dwóch mapach łamana przez położenia, które nadają mu kolejne mapy (według roku, w tym samym powiększeniu): widać, czy błąd punktu trwa, narasta, czy jest losowy.
+
+  ![Trajektorie punktów: położenia, które nadają miejscowościom kolejne mapy (×3)](series_trajectories_main.jpg)
+* **Eksport…** – CSV map, CSV błędów punktów albo JSON z całą serią (mapy z arkuszami, wektory błędów, pary).
+
+**Wydawnictwo wieloarkuszowe** (*Mapy i arkusze…* → zaznacz mapę z co najmniej dwoma arkuszami → *Wydawnictwo wieloarkuszowe…*) – zgodność arkuszy jednej mapy, wyrównanych tym samym modelem:
+
+![Wydawnictwo wieloarkuszowe TKKP: zgodność arkuszy Iłża i Szydłów – skala, obrót, RMSE](publication.png)
+
+![Arkusze wydawnictwa TKKP: RMSE i odchylenie skali od średniej](chart_arkusze.png)
+
+* **Arkusze** – dla każdego arkusza (numery liczbowo): punkty, σ₀, RMSE, błąd maksymalny, skala (z DPI), obrót, skale osi, odstające i czy znany jest zasięg arkusza; dwuklik wczytuje arkusz. Podsumowanie podaje rozrzut skali (w % średniej), obrotu i RMSE – różnice podkładów, rytowników czy skurczu papieru poszczególnych arkuszy.
+* **Zakładki** – punkty biblioteki wskazane na dwóch arkuszach: rozbieżność położeń, w których umieszczają je oba arkusze (po usunięciu transformacji każdego z nich), od największej. Duża rozbieżność to błąd identyfikacji na jednym z arkuszy albo niezgodność arkuszy na styku.
+* **Skorowidz arkuszy** – warstwa zasięgów arkuszy na mapie głównej (ramka mapy z arkusza przeliczona jego transformacją) z numerem arkusza i statystyką. Arkusz bez wskazanej ramki ma zasięg całego skanu.
+  ![Skorowidz arkuszy TKKP na mapie współczesnej](chart_skorowidz.png)
+
+* **Eksport CSV…** – arkusze i zakładki.
+
+**Wykresy i raporty** (okna *Seria czasowa* i *Wydawnictwo wieloarkuszowe*). Karta **Wykresy** pokazuje gotowe wykresy, a przycisk **Eksport** zapisuje:
+
+* **Raport PDF…** – raport A4 z nagłówkiem i numeracją stron: dane wejściowe, podsumowanie, wykresy i tabele;
+* **Raport HTML…** – ten sam raport jako strona internetowa; wykresy są wektorowe (SVG), ostre w każdym powiększeniu, z podpowiedziami po najechaniu kursorem na punkt, słupek czy komórkę;
+* **Wykresy (SVG i PNG)…** – każdy wykres osobno, jako SVG (do dalszej obróbki, np. w Inkscape) i PNG w podwójnej rozdzielczości (slajdy);
+* **Dane (CSV / JSON)…** – tabele do arkusza kalkulacyjnego lub dalszych analiz.
+
+![Karta „Wykresy” w oknie serii czasowej](series_charts.png)
+
+Wykresy serii czasowej: *Dokładność map w czasie* (RMSE na osi lat, skala logarytmiczna; pasek – lata wydania), *Błędy położenia punktów na mapach* (każdy obiekt zestawu jako kropka, kreska – mediana, czerwone – odstające z nazwą), *Podobieństwo błędów między mapami* (macierz r: czerwony – podobne, niebieski – przeciwne, szary – bez związku; * – istotne) i *Wektory błędów położenia* (mała mapka dla każdej mapy; powiększenie różne w panelach – długość odczytasz z podziałki). Wykresy wydawnictwa: *Arkusze wydawnictwa* (RMSE i odchylenie skali arkuszy od średniej) i *Skorowidz arkuszy* (zasięgi arkuszy i zakładki, największa rozbieżność na czerwono).
+
+| Raport PDF serii czasowej – strona 1 | strona 2 |
+|---|---|
+| ![Raport PDF serii czasowej „TKKP”, strona 1: dane wejściowe, dokładność map w czasie, tabela map](report_series_p1.png) | ![Raport PDF, strona 2: błędy punktów i podobieństwo błędów](report_series_p2.png) |
+
+![Wektory błędów położenia – małe mapki, osobna podziałka w każdym panelu](chart_wektory.png)
+
+**Dodawanie i poprawianie punktów** odbywa się narzędziami edycji QGIS na warstwie biblioteki. Formularz ma listę typów, a identyfikator punktu (uid) nadawany jest automatycznie i nie zmienia się – na nim opierają się powiązania z analizami. Nazwy dawne i obce wpisuje się w jednym polu, oddzielone znakiem `|` (np. `Ilza|Ilsa`).
+
+---
+
+## 4. Zakładka Analiza
 
 ![Zakładka Analiza: raport dokładności transformacji afinicznej](analysis.png)
 
@@ -82,7 +188,10 @@ Raport zawiera:
 
 ---
 
-## 4. Zakładka Odwzorowanie
+**Wagi a priori**. Przełącznik *Wagi a priori* włącza wyrównanie ważone. Waga punktu to czynnik statusu (*pewny* 1, *niepewny* 0,25 – ok. dwukrotnie większy błąd wskazania) pomnożony przez σ²ₘ / (σ²ₘ + σ²ᵣ), gdzie σᵣ to niepewność współrzędnych punktu z biblioteki (pole *niepewność współrzędnych [m]*), a σₘ – typowy błąd współrzędnej mapy (σ₀ wyrównania z samymi czynnikami statusu). Punkt pewny o dokładnych współrzędnych ma wagę 1; środek wsi z niepewnością ±200 m na dokładnej mapie katastralnej dostaje wagę bliską zera, a na mapie o błędach rzędu kilometra – prawie 1. Reszty, RMSE i błędy punktów są geometryczne (bez wag); σ₀ (błąd jednostkowy), błędy parametrów, test Baardy, LOO i AICc uwzględniają wagi. Wagę punktu pokazuje podpowiedź w kolumnie *w*, a raport – wiersz *Wagi a priori*. Estymacja odwzorowania nie używa wag. Domyślnie wyłączone – wyniki jak w wersji 0.2.
+
+
+## 5. Zakładka Odwzorowanie
 
 ![Zakładka Odwzorowanie: ranking kandydatów i siatka geograficzna najlepszego z nich na skanie](projection.png)
 
@@ -123,7 +232,7 @@ Panel szczegółów porównuje hipotezę ze swobodnym dopasowaniem tego samego o
 
 ---
 
-## 5. Zakładka Warstwy
+## 6. Zakładka Warstwy
 
 ![Zakładka Warstwy: siatka PUWG 1992 (oczko 200 m), izolinie skali i wektory przesunięć na skanie](results.png)
 
@@ -147,7 +256,7 @@ Ponowne wygenerowanie warstwy zastępuje poprzednią wersję (z zachowaniem jej 
 
 ---
 
-## 6. Zakładka Eksport
+## 7. Zakładka Eksport
 
 Wybierz folder i zaznacz, co zapisać. Nazwy plików zaczynają się od nazwy skanu (np. `Charlottenbrunn_raport.pdf`):
 
@@ -162,7 +271,7 @@ Raport można też zapisać bezpośrednio z zakładki **Analiza** przyciskiem **
 
 ---
 
-## 7. Uwagi techniczne
+## 8. Uwagi techniczne
 
 * **Język:** interfejs, raport analizy (w panelu i w PDF), komunikaty, nazwy warstw i legendy są po polsku albo po angielsku – zgodnie z językiem interfejsu QGIS (każdy język inny niż polski → angielski). W wersji polskiej liczby w raporcie i tabelach mają przecinek dziesiętny; pliki CSV zawsze używają kropki.
 
