@@ -25,14 +25,15 @@ Tryb serii – później (0.3.x / 0.4), liczony na żądanie.
 8. **Biblioteka jako zwykła warstwa** – edycję, tabelę atrybutów i przyciąganie zapewnia QGIS;
    wtyczka zakłada schemat, styl, wyszukiwarkę i powiązanie z GCP.
 
-## Schemat (wersja 1)
+## Schemat (wersja 2)
 
 | Tabela | Pola | Klucz |
 |---|---|---|
 | ref_points (geometria punktowa) | uid, name, alt_names, type, feature, sigma_m, valid_from, valid_to, source, note | uid |
 | point_sets | set_id, name, description | set_id |
 | set_members | set_id, uid | set_id + uid |
-| analyses | analysis_id, scan_path, scan_sha256, title, author, year_from, year_to, scale, sheet, dpi, ref_crs | analysis_id |
+| maps (od wersji 2) | map_id, title, author, year_from, year_to, scale, note | map_id |
+| analyses | analysis_id, map_id, scan_path, scan_sha256, title, author, year_from, year_to, scale, sheet, dpi, ref_crs | analysis_id |
 | gcp_links | analysis_id, seq, uid, name, x_old, y_old, ref_x, ref_y, enabled, status, comment | analysis_id + uid (gdy uid niepusty) |
 | qma_meta | key, value (wersja schematu) | key |
 
@@ -83,6 +84,11 @@ Stan:
   „Następny z zestawu” odrzuca zaczęty krok 1/2, niezapisane zmiany (sygnatura punktów, *Zapisz analizę \**,
   pytanie przy wczytaniu innej analizy), macierz pokrycia ze stanem bieżącym otwartej analizy
   (`build_coverage(..., current=…)`, kolumna `CURRENT`) (`tests/library_link_qgis.py`).
+- etap 7 – mapy i arkusze: schemat 2 (`maps`, `analyses.map_id`; migracja 1 → 2 łączy analizy o tym samym
+  tytule), `MapInfo`, `save_map` (opis mapy kopiowany do arkuszy), `delete_map`, `move_analysis`; okno opisu
+  arkusza z listą map (`maps_dialog.AnalysisDialog`), okno „Mapy i arkusze” (`MapsDialog`), macierz pokrycia
+  według arkusza lub mapy (`build_coverage(..., by=…)`, łączenie arkuszy wg `PRIORITY`)
+  (`tests/test_library.py`, `tests/test_coverage.py`, `tests/library_maps_qgis.py`).
 
 ## Etapy
 

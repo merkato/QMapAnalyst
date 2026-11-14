@@ -17,6 +17,7 @@ import numpy as np
 from . import library as lb
 from . import math_engine as me
 from .library_panel import AnalysisDialog, analysis_years
+from .maps_dialog import MapsDialog, save_with_dialog
 
 
 class LibraryAnalysisMixin:
@@ -129,28 +130,56 @@ class LibraryAnalysisMixin:
             return None
         return old if ans == QMessageBox.StandardButton.Yes else a
 
-    def save_library_analysis(self):
+    def _library_maps(self):
+        try:
+            with self.library_panel.library() as lib:
+                return lib.maps()
+        except lb.LibraryError:
+            return []
+
+    def _can_save(self):
         if self.library_panel.path is None:
             self.set_status(self.tr("Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka)."), "warn")
             return False
         if not self.gcps and not self.absent:
             self.set_status(self.tr("Brak punktów do zapisania."), "warn")
             return False
-        if self.library_panel.layer is not None and not self.library_panel._save_pending_edits():
+        return self.library_panel.layer is None or self.library_panel._save_pending_edits()
+
+    def save_library_analysis(self):
+        """Zapis bieżących punktów: do otwartej analizy albo – pierwszy raz – jako arkusz mapy wybranej z listy."""
+        if not self._can_save():
             return False
         a = self.library_analysis
+        dlg = None
         if a is None or a.analysis_id is None:
             a = self._choose_existing(self._new_library_analysis())
             if a is None:
                 return False
-            if a.analysis_id is None and AnalysisDialog(a, self).exec() != AnalysisDialog.DialogCode.Accepted:
-                return False
+            if a.analysis_id is None:
+                dlg = AnalysisDialog(a, self, self._library_maps())
+                if dlg.exec() != AnalysisDialog.DialogCode.Accepted:
+                    return False
+        return self._store_analysis(a, dlg)
+
+    def save_library_analysis_as(self, map_id):
+        """Bieżące punkty jako nowy arkusz mapy map_id (okno Mapy i arkusze)."""
+        if not self._can_save():
+            return False
+        sheet, ok = QInputDialog.getText(self, self.tr("Nowy arkusz"), self.tr("Arkusz (numer lub nazwa):"))
+        if not ok:
+            return False
+        a = self._new_library_analysis()
+        a.map_id, a.sheet = map_id, sheet.strip()
+        return self._store_analysis(a)
+
+    def _store_analysis(self, a, dlg=None):
         a.ref_crs = self._crs_definition(self._ensure_ref_crs())
         a.scan_path = self._scan_path() or a.scan_path
         links = self.library_links()
         try:
             with self.library_panel.library() as lib:
-                lib.save_analysis(a)
+                save_with_dialog(lib, a, dlg)
                 lib.save_links(a.analysis_id, links)
         except lb.LibraryError as e:
             self.set_status(self.library_panel._library_error(e), "error")
@@ -166,17 +195,23 @@ class LibraryAnalysisMixin:
         if self.library_panel.path is None:
             return
         a = self.library_analysis or self._new_library_analysis()
-        if AnalysisDialog(a, self).exec() != AnalysisDialog.DialogCode.Accepted:
+        dlg = AnalysisDialog(a, self, self._library_maps())
+        if dlg.exec() != AnalysisDialog.DialogCode.Accepted:
             return
         self.library_analysis = a
         if a.analysis_id is not None:
             try:
                 with self.library_panel.library() as lib:
-                    lib.save_analysis(a)
+                    save_with_dialog(lib, a, dlg)
             except lb.LibraryError as e:
                 self.set_status(self.library_panel._library_error(e), "error")
                 return
         self.update_analysis_label()
+
+    def show_maps_dialog(self):
+        if self.library_panel.path is None:
+            return
+        MapsDialog(self.library_panel, self, self).exec()
 
     # --- odczyt --------------------------------------------------------------------
     def _pick_analysis(self, analyses):

@@ -257,6 +257,65 @@ def test_match_point():
     assert lib_mod.match_point(pts, "Iłża", 100, 0, 5000, 500, exclude={"a", "b"})[0].uid == "c"
 
 
+def test_maps_and_sheets():
+    MapInfo = lib_mod.MapInfo
+    with _new("maps") as lib:
+        a = Analysis(title="Zannoni", year_from=1772, scale=280000, sheet="14")
+        aid = lib.save_analysis(a)                                      # analiza bez mapy – nowa mapa z jej opisu
+        m = lib.get_map(a.map_id)
+        assert m.title == "Zannoni" and m.year_from == 1772 and m.scale == 280000
+        b = Analysis(title="inny tytuł", sheet="15", map_id=m.map_id)
+        bid = lib.save_analysis(b)                                      # arkusz istniejącej mapy – opis z mapy
+        assert lib.get_analysis(bid).title == "Zannoni" and lib.get_analysis(bid).year_from == 1772
+        m.title, m.year_to = "Carte de la Pologne", 1772
+        lib.save_map(m)                                                 # zmiana opisu mapy – wszystkie arkusze
+        assert {x.title for x in lib.analyses(m.map_id)} == {"Carte de la Pologne"}
+        assert [x.sheet for x in sorted(lib.analyses(m.map_id), key=lambda x: x.analysis_id)] == ["14", "15"]
+        tkkp = lib.save_map(MapInfo(title="TKKP Iłża", year_from=1960))
+        old = lib.save_map(MapInfo(title="Karte"))
+        assert [x.title for x in lib.maps()] == ["Carte de la Pologne", "TKKP Iłża", "Karte"]   # wg roku, bez daty na końcu
+        lib.move_analysis(bid, tkkp)
+        assert lib.get_analysis(bid).title == "TKKP Iłża" and len(lib.analyses(m.map_id)) == 1
+        lib.save_links(aid, [Link(1, 1, 2, 2, name="A")])
+        try:
+            lib.delete_map(m.map_id)
+            raise AssertionError("map with sheets deleted without force")
+        except lib_mod.LibraryError:
+            pass
+        lib.delete_map(m.map_id, force=True)
+        assert lib.get_map(m.map_id) is None and lib.get_analysis(aid) is None and lib.links(aid) == []
+        lib.delete_map(old)
+        assert [x.title for x in lib.maps()] == ["TKKP Iłża"]
+
+
+def test_migration_1_to_2():
+    path = os.path.join(TMP, "v1.gpkg")
+    with Library.create(path, "EPSG:2180") as lib:
+        ids = [lib.save_analysis(Analysis(title=t, year_from=y, sheet=sh))
+               for t, y, sh in (("Zannoni", 1772, "14"), ("zannoni", None, "15"), ("Mapa 1830", 1830, ""),
+                                ("", None, "a"), ("", None, "b"))]
+    con = sqlite3.connect(path)                                         # plik w wersji 1: bez map i map_id
+    con.execute("DROP INDEX qma_analyses_map")
+    con.execute("DROP TABLE maps")
+    for t in ("gpkg_contents", "gpkg_ogr_contents"):
+        con.execute(f"DELETE FROM {t} WHERE table_name = 'maps'")      # noqa: S608 – stała nazwa tabeli
+    con.execute("ALTER TABLE analyses DROP COLUMN map_id")
+    con.execute("UPDATE qma_meta SET value = '1' WHERE key = 'schema_version'")
+    con.commit()
+    con.close()
+    with Library.open(path) as lib:
+        assert lib.schema_version == 2
+        assert os.path.isfile(os.path.join(TMP, "v1.v1.bak.gpkg"))       # kopia sprzed migracji
+        by_id = {a.analysis_id: a for a in lib.analyses()}
+        assert by_id[ids[0]].map_id == by_id[ids[1]].map_id               # ten sam tytuł (bez wielkości liter)
+        assert len({by_id[i].map_id for i in ids}) == 4                   # Zannoni, Mapa 1830, dwie bez tytułu
+        z = lib.get_map(by_id[ids[0]].map_id)
+        assert z.title == "Zannoni" and z.year_from == 1772
+        assert by_id[ids[1]].title == "Zannoni" and by_id[ids[1]].year_from == 1772   # opis mapy w arkuszach
+        assert by_id[ids[1]].sheet == "15"
+        assert len(lib.maps()) == 4
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_") and callable(f)]
     failed = 0

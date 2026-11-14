@@ -1100,6 +1100,14 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Analiza nie jest jeszcze zapisana w bibliotece.</translation>
     </message>
     <message>
+        <source>Nowy arkusz</source>
+        <translation>Nowy arkusz</translation>
+    </message>
+    <message>
+        <source>Arkusz (numer lub nazwa):</source>
+        <translation>Arkusz (numer lub nazwa):</translation>
+    </message>
+    <message>
         <source>Wczytaj analizę</source>
         <translation>Wczytaj analizę</translation>
     </message>
@@ -2493,12 +2501,12 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zapisz punkty GCP bieżącej mapy w bibliotece: położenie na skanie, współrzędne odniesienia, status, uwagi oraz punkty zestawu oznaczone jako „brak na mapie”.</translation>
     </message>
     <message>
-        <source>Wczytaj analizę…</source>
-        <translation>Wczytaj analizę…</translation>
+        <source>Mapy i arkusze…</source>
+        <translation>Mapy i arkusze…</translation>
     </message>
     <message>
-        <source>Wczytaj analizę mapy zapisaną w bibliotece</source>
-        <translation>Wczytaj analizę mapy zapisaną w bibliotece</translation>
+        <source>Mapy i ich arkusze zapisane w bibliotece: wczytanie arkusza, zapis bieżących punktów jako nowego arkusza, edycja opisu, przeniesienie arkusza do innej mapy, usuwanie</source>
+        <translation>Mapy i ich arkusze zapisane w bibliotece: wczytanie arkusza, zapis bieżących punktów jako nowego arkusza, edycja opisu, przeniesienie arkusza do innej mapy, usuwanie</translation>
     </message>
     <message>
         <source>Opis mapy…</source>
@@ -2543,46 +2551,6 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Nowa nazwa:</source>
         <translation>Nowa nazwa:</translation>
-    </message>
-    <message>
-        <source>Opis mapy</source>
-        <translation>Opis mapy</translation>
-    </message>
-    <message>
-        <source>nieznana</source>
-        <translation>nieznana</translation>
-    </message>
-    <message>
-        <source>Tytuł:</source>
-        <translation>Tytuł:</translation>
-    </message>
-    <message>
-        <source>Autor / wydawca:</source>
-        <translation>Autor / wydawca:</translation>
-    </message>
-    <message>
-        <source>Rok (od – do):</source>
-        <translation>Rok (od – do):</translation>
-    </message>
-    <message>
-        <source>Skala nominalna:</source>
-        <translation>Skala nominalna:</translation>
-    </message>
-    <message>
-        <source>Arkusz:</source>
-        <translation>Arkusz:</translation>
-    </message>
-    <message>
-        <source>Rozdzielczość skanu [DPI]:</source>
-        <translation>Rozdzielczość skanu [DPI]:</translation>
-    </message>
-    <message>
-        <source>Uwagi:</source>
-        <translation>Uwagi:</translation>
-    </message>
-    <message>
-        <source>Skan:</source>
-        <translation>Skan:</translation>
     </message>
     <message>
         <source>Zestaw:</source>
@@ -2693,6 +2661,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Usunąć zestaw {name}? Punkty zostaną w bibliotece.</translation>
     </message>
     <message>
+        <source>arkusz {s}</source>
+        <translation>arkusz {s}</translation>
+    </message>
+    <message>
         <source>Nie można wczytać warstwy biblioteki z pliku {f}.</source>
         <translation>Nie można wczytać warstwy biblioteki z pliku {f}.</translation>
     </message>
@@ -2735,6 +2707,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Źródło:</source>
         <translation>Źródło:</translation>
+    </message>
+    <message>
+        <source>Uwagi:</source>
+        <translation>Uwagi:</translation>
     </message>
     <message>
         <source>Import punktów do biblioteki</source>
@@ -2853,6 +2829,18 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Macierz pokrycia</translation>
     </message>
     <message>
+        <source>arkusze</source>
+        <translation>arkusze</translation>
+    </message>
+    <message>
+        <source>mapy (arkusze razem)</source>
+        <translation>mapy (arkusze razem)</translation>
+    </message>
+    <message>
+        <source>Mapy: arkusze jednej mapy w jednej kolumnie – punkt obecny na którymkolwiek arkuszu jest obecny na mapie, odstający na którymkolwiek – odstający.</source>
+        <translation>Mapy: arkusze jednej mapy w jednej kolumnie – punkt obecny na którymkolwiek arkuszu jest obecny na mapie, odstający na którymkolwiek – odstający.</translation>
+    </message>
+    <message>
         <source>Eksport CSV…</source>
         <translation>Eksport CSV…</translation>
     </message>
@@ -2865,8 +2853,20 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zamknij</translation>
     </message>
     <message>
+        <source>Wczytaj arkusz</source>
+        <translation>Wczytaj arkusz</translation>
+    </message>
+    <message>
+        <source>Arkusz mapy:</source>
+        <translation>Arkusz mapy:</translation>
+    </message>
+    <message>
         <source>Eksport macierzy pokrycia</source>
         <translation>Eksport macierzy pokrycia</translation>
+    </message>
+    <message>
+        <source>Kolumny:</source>
+        <translation>Kolumny:</translation>
     </message>
     <message>
         <source>Odstające wg modelu:</source>
@@ -2917,8 +2917,140 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Odstające na co najmniej dwóch mapach (czerwone) – sprawdź identyfikację lub położenie: {names}</translation>
     </message>
     <message>
-        <source>arkusz {s}</source>
-        <translation>arkusz {s}</translation>
+        <source>arkusze: {n}</source>
+        <translation>arkusze: {n}</translation>
+    </message>
+    <message>
+        <source>nieznana</source>
+        <translation>nieznana</translation>
+    </message>
+    <message>
+        <source>Tytuł:</source>
+        <translation>Tytuł:</translation>
+    </message>
+    <message>
+        <source>Autor / wydawca:</source>
+        <translation>Autor / wydawca:</translation>
+    </message>
+    <message>
+        <source>Rok (od – do):</source>
+        <translation>Rok (od – do):</translation>
+    </message>
+    <message>
+        <source>Skala nominalna:</source>
+        <translation>Skala nominalna:</translation>
+    </message>
+    <message>
+        <source>Opis mapy</source>
+        <translation>Opis mapy</translation>
+    </message>
+    <message>
+        <source>Nowa mapa…</source>
+        <translation>Nowa mapa…</translation>
+    </message>
+    <message>
+        <source>Mapa, do której należy arkusz. Opis mapy jest wspólny dla wszystkich jej arkuszy.</source>
+        <translation>Mapa, do której należy arkusz. Opis mapy jest wspólny dla wszystkich jej arkuszy.</translation>
+    </message>
+    <message>
+        <source>Mapa:</source>
+        <translation>Mapa:</translation>
+    </message>
+    <message>
+        <source>Arkusz:</source>
+        <translation>Arkusz:</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość skanu [DPI]:</source>
+        <translation>Rozdzielczość skanu [DPI]:</translation>
+    </message>
+    <message>
+        <source>Skan:</source>
+        <translation>Skan:</translation>
+    </message>
+    <message>
+        <source>Mapa</source>
+        <translation>Mapa</translation>
+    </message>
+    <message>
+        <source>Mapy i arkusze</source>
+        <translation>Mapy i arkusze</translation>
+    </message>
+    <message>
+        <source>Zapisz punkty jako nowy arkusz…</source>
+        <translation>Zapisz punkty jako nowy arkusz…</translation>
+    </message>
+    <message>
+        <source>Zapisz bieżące punkty GCP jako nowy arkusz zaznaczonej mapy</source>
+        <translation>Zapisz bieżące punkty GCP jako nowy arkusz zaznaczonej mapy</translation>
+    </message>
+    <message>
+        <source>Edytuj…</source>
+        <translation>Edytuj…</translation>
+    </message>
+    <message>
+        <source>Usuń…</source>
+        <translation>Usuń…</translation>
+    </message>
+    <message>
+        <source>Wczytaj</source>
+        <translation>Wczytaj</translation>
+    </message>
+    <message>
+        <source>Wczytaj punkty zaznaczonego arkusza (dwuklik)</source>
+        <translation>Wczytaj punkty zaznaczonego arkusza (dwuklik)</translation>
+    </message>
+    <message>
+        <source>Zapis utworzy nową mapę z tym opisem.</source>
+        <translation>Zapis utworzy nową mapę z tym opisem.</translation>
+    </message>
+    <message>
+        <source>Zmiany tytułu, autora, lat i skali dotyczą wszystkich arkuszy tej mapy.</source>
+        <translation>Zmiany tytułu, autora, lat i skali dotyczą wszystkich arkuszy tej mapy.</translation>
+    </message>
+    <message>
+        <source>Mapa / arkusz</source>
+        <translation>Mapa / arkusz</translation>
+    </message>
+    <message>
+        <source>Skala</source>
+        <translation>Skala</translation>
+    </message>
+    <message>
+        <source>Punkty</source>
+        <translation>Punkty</translation>
+    </message>
+    <message>
+        <source>Skan</source>
+        <translation>Skan</translation>
+    </message>
+    <message>
+        <source>Zmieniono</source>
+        <translation>Zmieniono</translation>
+    </message>
+    <message>
+        <source>Mapy: {n}, arkusze: {m}. Arkusz to analiza jednego skanu; opis mapy jest wspólny dla jej arkuszy.</source>
+        <translation>Mapy: {n}, arkusze: {m}. Arkusz to analiza jednego skanu; opis mapy jest wspólny dla jej arkuszy.</translation>
+    </message>
+    <message>
+        <source>Arkusz otwarty w panelu GCP</source>
+        <translation>Arkusz otwarty w panelu GCP</translation>
+    </message>
+    <message>
+        <source>Usunąć mapę „{title}” razem z jej arkuszami ({n}) i ich punktami? Tego nie można cofnąć.</source>
+        <translation>Usunąć mapę „{title}” razem z jej arkuszami ({n}) i ich punktami? Tego nie można cofnąć.</translation>
+    </message>
+    <message>
+        <source>Usunąć mapę „{title}”?</source>
+        <translation>Usunąć mapę „{title}”?</translation>
+    </message>
+    <message>
+        <source>Usunąć arkusz „{name}” i jego punkty z biblioteki? Tego nie można cofnąć.</source>
+        <translation>Usunąć arkusz „{name}” i jego punkty z biblioteki? Tego nie można cofnąć.</translation>
+    </message>
+    <message>
+        <source>(bez numeru arkusza)</source>
+        <translation>(bez numeru arkusza)</translation>
     </message>
 </context>
 <context>

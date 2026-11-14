@@ -361,7 +361,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self.library_panel.libraryChanged.connect(self.update_analysis_label)
         self.library_panel.libraryChanged.connect(self.refresh_table)
         self.library_panel.current_analysis = self.current_analysis_state
-        self.library_panel.openAnalysisRequested.connect(self.open_library_analysis)
+        self.library_panel.mapsRequested.connect(self.show_maps_dialog)
         self.library_panel.editAnalysisRequested.connect(self.edit_library_analysis)
         self.library_panel.openAnalysisIdRequested.connect(self.open_library_analysis)
         self.tab_widget.addTab(self._build_analysis_tab(), _icon("/mActionCalculateField.svg"), self.tr("Analiza"))

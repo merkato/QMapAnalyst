@@ -7,6 +7,8 @@ Komórka opisuje punkt na danej mapie:
     illegible         – nieczytelny, disabled – wyłączony przez użytkownika,
     absent            – brak na mapie (informacja, nie błąd),
     None              – jeszcze nie wskazany na tej mapie.
+Kolumny to arkusze (analizy) albo mapy – wtedy komórka łączy arkusze mapy (punkt obecny na którymkolwiek
+arkuszu jest obecny na mapie; odstający na którymkolwiek – odstający).
 Wyniki liczone są na żądanie z gcp_links (bez przechowywania obliczeń).
 Moduł bez zależności od QGIS.
 """
@@ -24,7 +26,28 @@ from . import math_engine as me
 
 PRESENT = ("sure", "uncertain", "outlier")      # punkt obecny i zidentyfikowany na mapie
 CODES = ("sure", "uncertain", "outlier", "illegible", "disabled", "absent")
-CURRENT = 0                                      # analysis_id kolumny bieżącej analizy jeszcze nie zapisanej
+PRIORITY = ("outlier", "uncertain", "sure", "illegible", "disabled", "absent")   # łączenie arkuszy mapy
+CURRENT = 0                                      # klucz kolumny bieżącej analizy jeszcze nie zapisanej
+BY_SHEET, BY_MAP = "sheet", "map"
+
+
+@dataclass
+class Column:
+    """Kolumna macierzy: arkusz (analiza) albo mapa (jej arkusze)."""
+    key: int                                     # analysis_id (kolumny arkuszy) albo map_id (kolumny map)
+    title: str = ""
+    author: str = ""
+    year_from: int = None
+    year_to: int = None
+    scale: int = None
+    sheet: str = ""
+    map_id: int = None
+    analysis_ids: list = field(default_factory=list)
+
+    @property
+    def analysis_id(self):
+        """Analiza kolumny – gdy jest dokładnie jedna (kolumna arkusza lub mapy jednoarkuszowej)."""
+        return self.analysis_ids[0] if len(self.analysis_ids) == 1 else None
 
 
 @dataclass
@@ -33,36 +56,40 @@ class Coverage:
     set_name: str
     model: str
     points: list = field(default_factory=list)       # RefPoint (kolejność wierszy)
-    analyses: list = field(default_factory=list)     # Analysis (kolejność kolumn)
-    cells: dict = field(default_factory=dict)        # (uid, analysis_id) -> kod
-    fitted: dict = field(default_factory=dict)       # analysis_id -> True, gdy wyrównano (wykrywanie odstających)
-    current_id: int = None                           # kolumna ze stanem bieżącym (panel GCP), gdy podano `current`
+    columns: list = field(default_factory=list)      # Column (kolejność kolumn)
+    cells: dict = field(default_factory=dict)        # (uid, klucz kolumny) -> kod
+    fitted: dict = field(default_factory=dict)       # klucz -> True, gdy wyrównano (wykrywanie odstających)
+    current_id: int = None                           # klucz kolumny ze stanem bieżącym (panel GCP)
+    by: str = BY_SHEET
 
-    def cell(self, uid, analysis_id):
-        return self.cells.get((uid, analysis_id))
+    @property
+    def analyses(self):
+        return self.columns
+
+    def cell(self, uid, key):
+        return self.cells.get((uid, key))
 
     def common(self):
         """uid punktów obecnych na wszystkich mapach (wspólne minimum do porównań)."""
-        if not self.analyses:
+        if not self.columns:
             return []
-        return [p.uid for p in self.points
-                if all(self.cell(p.uid, a.analysis_id) in PRESENT for a in self.analyses)]
+        return [p.uid for p in self.points if all(self.cell(p.uid, c.key) in PRESENT for c in self.columns)]
 
     def row_count(self, uid):
-        return sum(1 for a in self.analyses if self.cell(uid, a.analysis_id) in PRESENT)
+        return sum(1 for c in self.columns if self.cell(uid, c.key) in PRESENT)
 
-    def column_count(self, analysis_id):
-        return sum(1 for p in self.points if self.cell(p.uid, analysis_id) in PRESENT)
+    def column_count(self, key):
+        return sum(1 for p in self.points if self.cell(p.uid, key) in PRESENT)
 
     def repeated_outliers(self, minimum=2):
         """uid punktów odstających na co najmniej `minimum` mapach (podejrzenie błędnej identyfikacji)."""
         return [p.uid for p in self.points
-                if sum(1 for a in self.analyses if self.cell(p.uid, a.analysis_id) == "outlier") >= minimum]
+                if sum(1 for c in self.columns if self.cell(p.uid, c.key) == "outlier") >= minimum]
 
 
-def _year_key(a):
-    year = a.year_from or a.year_to
-    return (year is None, year or 0, (a.title or "").lower(), a.analysis_id)
+def _year_key(c):
+    year = c.year_from or c.year_to
+    return (year is None, year or 0, (c.title or "").lower(), c.sheet or "", c.key)
 
 
 def _link_code(ln):
@@ -91,68 +118,98 @@ def _outlier_indices(links, model):
 
 
 def _entries(lib, current):
-    """(Analysis, punkty lub None – z pliku) dla każdej kolumny; stan bieżący zastępuje zapisany. (wpisy, current_id)"""
+    """(Analysis, punkty lub None – z pliku) dla każdego arkusza; stan bieżący zastępuje zapisany. (wpisy, id bieżącej)"""
     cur_a, cur_links = current if current is not None else (None, None)
     cur_id = cur_a.analysis_id if cur_a is not None else None
     entries = []
     for a in lib.analyses():
         if cur_links is not None and cur_id is not None and a.analysis_id == cur_id:
-            entries.append((cur_a, cur_links))
+            entries.append((dataclasses.replace(cur_a, map_id=cur_a.map_id or a.map_id), cur_links))
         else:
             entries.append((a, None))
     if cur_links is not None and cur_id is None:
-        a = dataclasses.replace(cur_a, analysis_id=CURRENT) if cur_a is not None else lb.Analysis(analysis_id=CURRENT)
+        a = dataclasses.replace(cur_a, analysis_id=CURRENT, map_id=None) if cur_a is not None else lb.Analysis(analysis_id=CURRENT)
         entries.append((a, cur_links))
         cur_id = CURRENT
     return entries, (cur_id if cur_links is not None else None)
 
 
-def build_coverage(lib, set_id, model="affine", analysis_ids=None, current=None):
-    """Macierz pokrycia zestawu. analysis_ids – ograniczenie kolumn (domyślnie: analizy z punktami zestawu).
+def _sheet_codes(links, members, model):
+    """Kody punktów zestawu na arkuszu: {uid: kod}; czy zbadano odstające."""
+    outliers = _outlier_indices(links, model)
+    codes = {}
+    for k, ln in enumerate(links):
+        if ln.uid in members:
+            code = _link_code(ln)
+            if outliers and k in outliers and code in ("sure", "uncertain"):
+                code = "outlier"
+            codes[ln.uid] = code
+    return codes, outliers is not None
+
+
+def _column_for(a, by, maps):
+    if by == BY_MAP and a.analysis_id != CURRENT:
+        m = maps.get(a.map_id)
+        src = m if m is not None else a
+        return Column(key=a.map_id if m is not None else -a.analysis_id, map_id=a.map_id,
+                      **{f: getattr(src, f) for f in lb.MAP_FIELDS})
+    return Column(key=a.analysis_id, sheet=a.sheet, map_id=a.map_id, **{f: getattr(a, f) for f in lb.MAP_FIELDS})
+
+
+def build_coverage(lib, set_id, model="affine", analysis_ids=None, current=None, by=BY_SHEET):
+    """Macierz pokrycia zestawu.
+
+    analysis_ids – ograniczenie do tych arkuszy (domyślnie: wszystkie z punktami zestawu);
     current = (Analysis lub None, [Link]) – bieżący, być może niezapisany stan analizy otwartej w panelu GCP:
-    zastępuje zapisaną wersję tej analizy albo – gdy analizy nie zapisano – dochodzi jako kolumna CURRENT."""
+    zastępuje zapisaną wersję tej analizy albo – gdy analizy nie zapisano – dochodzi jako kolumna CURRENT;
+    by – kolumny według arkusza (BY_SHEET) albo mapy (BY_MAP, arkusze mapy łączone wg PRIORITY)."""
     sets = {sid: name for sid, name, _d, _n in lib.sets()}
     if set_id not in sets:
         raise lb.LibraryError(f"no set {set_id}")
     points = sorted(lib.points(set_id), key=lambda p: lb.normalize(p.name))
     members = {p.uid for p in points}
-    cov = Coverage(set_id, sets[set_id], model, points)
-    entries, cov.current_id = _entries(lib, current)
-    for a, links in sorted(entries, key=lambda e: _year_key(e[0])):
-        if analysis_ids is not None and a.analysis_id not in analysis_ids and a.analysis_id != cov.current_id:
+    cov = Coverage(set_id, sets[set_id], model, points, by=by)
+    entries, cur_id = _entries(lib, current)
+    maps = {m.map_id: m for m in lib.maps()} if by == BY_MAP else {}
+    columns = {}
+    for a, links in entries:
+        if analysis_ids is not None and a.analysis_id not in analysis_ids and a.analysis_id != cur_id:
             continue
         if links is None:
             links = lib.links(a.analysis_id)
-        if not any(ln.uid in members for ln in links):
+        codes, fitted = _sheet_codes(links, members, model)
+        if not codes:
             continue
-        cov.analyses.append(a)
-        outliers = _outlier_indices(links, model)
-        cov.fitted[a.analysis_id] = outliers is not None
-        for k, ln in enumerate(links):
-            if ln.uid in members:
-                code = _link_code(ln)
-                if outliers and k in outliers and code in ("sure", "uncertain"):
-                    code = "outlier"
-                cov.cells[(ln.uid, a.analysis_id)] = code
+        col = _column_for(a, by, maps)
+        col = columns.setdefault(col.key, col)
+        col.analysis_ids.append(a.analysis_id)
+        if a.analysis_id == cur_id:
+            cov.current_id = col.key
+        cov.fitted[col.key] = cov.fitted.get(col.key, False) or fitted
+        for uid, code in codes.items():
+            old = cov.cells.get((uid, col.key))
+            if old is None or PRIORITY.index(code) < PRIORITY.index(old):
+                cov.cells[(uid, col.key)] = code
+    cov.columns = sorted(columns.values(), key=_year_key)
     return cov
 
 
 # ----------------------------------------------------------------------
 #  Eksport
 # ----------------------------------------------------------------------
-def analysis_label(a):
-    years = a.year_from if not a.year_to or a.year_to == a.year_from else f"{a.year_from or '?'}–{a.year_to}"
-    title = a.title or ("current" if a.analysis_id == CURRENT else f"#{a.analysis_id}")
-    return title + (f" ({years})" if years else "")
+def analysis_label(c):
+    years = c.year_from if not c.year_to or c.year_to == c.year_from else f"{c.year_from or '?'}–{c.year_to}"
+    key = getattr(c, "key", getattr(c, "analysis_id", None))
+    title = c.title or ("current" if key == CURRENT else f"#{key}")
+    return title + (f" ({years})" if years else "") + (f" [{c.sheet}]" if c.sheet else "")
 
 
 def to_csv(cov):
     out = io.StringIO()
     w = csv.writer(out, lineterminator="\n")
-    w.writerow(["uid", "name"] + [analysis_label(a) for a in cov.analyses] + ["present"])
+    w.writerow(["uid", "name"] + [analysis_label(c) for c in cov.columns] + ["present"])
     for p in cov.points:
-        w.writerow([p.uid, p.name] + [cov.cell(p.uid, a.analysis_id) or "" for a in cov.analyses]
-                   + [cov.row_count(p.uid)])
+        w.writerow([p.uid, p.name] + [cov.cell(p.uid, c.key) or "" for c in cov.columns] + [cov.row_count(p.uid)])
     return out.getvalue()
 
 
@@ -160,12 +217,12 @@ def to_json(cov):
     data = {
         "set": {"id": cov.set_id, "name": cov.set_name},
         "model": cov.model,
+        "columns_by": cov.by,
         "codes": list(CODES),
-        "analyses": [{"id": a.analysis_id, "title": a.title, "year_from": a.year_from, "year_to": a.year_to,
-                      "scale": a.scale, "sheet": a.sheet, "outliers_tested": cov.fitted.get(a.analysis_id, False)}
-                     for a in cov.analyses],
-        "points": [{"uid": p.uid, "name": p.name,
-                    "cells": {str(a.analysis_id): cov.cell(p.uid, a.analysis_id) for a in cov.analyses}}
+        "columns": [{"key": c.key, "map_id": c.map_id, "analysis_ids": c.analysis_ids, "title": c.title,
+                     "year_from": c.year_from, "year_to": c.year_to, "scale": c.scale, "sheet": c.sheet,
+                     "outliers_tested": cov.fitted.get(c.key, False)} for c in cov.columns],
+        "points": [{"uid": p.uid, "name": p.name, "cells": {str(c.key): cov.cell(p.uid, c.key) for c in cov.columns}}
                    for p in cov.points],
         "common": cov.common(),
         "repeated_outliers": cov.repeated_outliers(),

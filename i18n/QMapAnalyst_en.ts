@@ -1100,6 +1100,14 @@ No – append the new points to the existing ones.</translation>
         <translation>The analysis is not saved in the library yet.</translation>
     </message>
     <message>
+        <source>Nowy arkusz</source>
+        <translation>New sheet</translation>
+    </message>
+    <message>
+        <source>Arkusz (numer lub nazwa):</source>
+        <translation>Sheet (number or name):</translation>
+    </message>
+    <message>
         <source>Wczytaj analizę</source>
         <translation>Load analysis</translation>
     </message>
@@ -2493,12 +2501,12 @@ Update the reference coordinates of these points?</translation>
         <translation>Save the GCPs of the current map to the library: scan position, reference coordinates, status, notes and the set points marked “not on map”.</translation>
     </message>
     <message>
-        <source>Wczytaj analizę…</source>
-        <translation>Load analysis…</translation>
+        <source>Mapy i arkusze…</source>
+        <translation>Maps and sheets…</translation>
     </message>
     <message>
-        <source>Wczytaj analizę mapy zapisaną w bibliotece</source>
-        <translation>Load a map analysis saved in the library</translation>
+        <source>Mapy i ich arkusze zapisane w bibliotece: wczytanie arkusza, zapis bieżących punktów jako nowego arkusza, edycja opisu, przeniesienie arkusza do innej mapy, usuwanie</source>
+        <translation>Maps and their sheets saved in the library: load a sheet, save the current points as a new sheet, edit the description, move a sheet to another map, delete</translation>
     </message>
     <message>
         <source>Opis mapy…</source>
@@ -2543,46 +2551,6 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Nowa nazwa:</source>
         <translation>New name:</translation>
-    </message>
-    <message>
-        <source>Opis mapy</source>
-        <translation>Map description</translation>
-    </message>
-    <message>
-        <source>nieznana</source>
-        <translation>unknown</translation>
-    </message>
-    <message>
-        <source>Tytuł:</source>
-        <translation>Title:</translation>
-    </message>
-    <message>
-        <source>Autor / wydawca:</source>
-        <translation>Author / publisher:</translation>
-    </message>
-    <message>
-        <source>Rok (od – do):</source>
-        <translation>Year (from – to):</translation>
-    </message>
-    <message>
-        <source>Skala nominalna:</source>
-        <translation>Nominal scale:</translation>
-    </message>
-    <message>
-        <source>Arkusz:</source>
-        <translation>Sheet:</translation>
-    </message>
-    <message>
-        <source>Rozdzielczość skanu [DPI]:</source>
-        <translation>Scan resolution [DPI]:</translation>
-    </message>
-    <message>
-        <source>Uwagi:</source>
-        <translation>Notes:</translation>
-    </message>
-    <message>
-        <source>Skan:</source>
-        <translation>Scan:</translation>
     </message>
     <message>
         <source>Zestaw:</source>
@@ -2693,6 +2661,10 @@ Update the reference coordinates of these points?</translation>
         <translation>Delete set {name}? The points will stay in the library.</translation>
     </message>
     <message>
+        <source>arkusz {s}</source>
+        <translation>sheet {s}</translation>
+    </message>
+    <message>
         <source>Nie można wczytać warstwy biblioteki z pliku {f}.</source>
         <translation>Cannot load the library layer from {f}.</translation>
     </message>
@@ -2735,6 +2707,10 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Źródło:</source>
         <translation>Source:</translation>
+    </message>
+    <message>
+        <source>Uwagi:</source>
+        <translation>Notes:</translation>
     </message>
     <message>
         <source>Import punktów do biblioteki</source>
@@ -2853,6 +2829,18 @@ Update the reference coordinates of these points?</translation>
         <translation>Coverage matrix</translation>
     </message>
     <message>
+        <source>arkusze</source>
+        <translation>sheets</translation>
+    </message>
+    <message>
+        <source>mapy (arkusze razem)</source>
+        <translation>maps (sheets combined)</translation>
+    </message>
+    <message>
+        <source>Mapy: arkusze jednej mapy w jednej kolumnie – punkt obecny na którymkolwiek arkuszu jest obecny na mapie, odstający na którymkolwiek – odstający.</source>
+        <translation>Maps: the sheets of one map in one column – a point present on any sheet is present on the map, an outlier on any sheet is an outlier.</translation>
+    </message>
+    <message>
         <source>Eksport CSV…</source>
         <translation>Export CSV…</translation>
     </message>
@@ -2865,8 +2853,20 @@ Update the reference coordinates of these points?</translation>
         <translation>Close</translation>
     </message>
     <message>
+        <source>Wczytaj arkusz</source>
+        <translation>Load sheet</translation>
+    </message>
+    <message>
+        <source>Arkusz mapy:</source>
+        <translation>Map sheet:</translation>
+    </message>
+    <message>
         <source>Eksport macierzy pokrycia</source>
         <translation>Export coverage matrix</translation>
+    </message>
+    <message>
+        <source>Kolumny:</source>
+        <translation>Columns:</translation>
     </message>
     <message>
         <source>Odstające wg modelu:</source>
@@ -2917,8 +2917,140 @@ Update the reference coordinates of these points?</translation>
         <translation>Outliers on at least two maps (red) – check the identification or position: {names}</translation>
     </message>
     <message>
-        <source>arkusz {s}</source>
-        <translation>sheet {s}</translation>
+        <source>arkusze: {n}</source>
+        <translation>sheets: {n}</translation>
+    </message>
+    <message>
+        <source>nieznana</source>
+        <translation>unknown</translation>
+    </message>
+    <message>
+        <source>Tytuł:</source>
+        <translation>Title:</translation>
+    </message>
+    <message>
+        <source>Autor / wydawca:</source>
+        <translation>Author / publisher:</translation>
+    </message>
+    <message>
+        <source>Rok (od – do):</source>
+        <translation>Year (from – to):</translation>
+    </message>
+    <message>
+        <source>Skala nominalna:</source>
+        <translation>Nominal scale:</translation>
+    </message>
+    <message>
+        <source>Opis mapy</source>
+        <translation>Map description</translation>
+    </message>
+    <message>
+        <source>Nowa mapa…</source>
+        <translation>New map…</translation>
+    </message>
+    <message>
+        <source>Mapa, do której należy arkusz. Opis mapy jest wspólny dla wszystkich jej arkuszy.</source>
+        <translation>The map the sheet belongs to. The map description is shared by all its sheets.</translation>
+    </message>
+    <message>
+        <source>Mapa:</source>
+        <translation>Map:</translation>
+    </message>
+    <message>
+        <source>Arkusz:</source>
+        <translation>Sheet:</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość skanu [DPI]:</source>
+        <translation>Scan resolution [DPI]:</translation>
+    </message>
+    <message>
+        <source>Skan:</source>
+        <translation>Scan:</translation>
+    </message>
+    <message>
+        <source>Mapa</source>
+        <translation>Map</translation>
+    </message>
+    <message>
+        <source>Mapy i arkusze</source>
+        <translation>Maps and sheets</translation>
+    </message>
+    <message>
+        <source>Zapisz punkty jako nowy arkusz…</source>
+        <translation>Save points as a new sheet…</translation>
+    </message>
+    <message>
+        <source>Zapisz bieżące punkty GCP jako nowy arkusz zaznaczonej mapy</source>
+        <translation>Save the current GCPs as a new sheet of the selected map</translation>
+    </message>
+    <message>
+        <source>Edytuj…</source>
+        <translation>Edit…</translation>
+    </message>
+    <message>
+        <source>Usuń…</source>
+        <translation>Delete…</translation>
+    </message>
+    <message>
+        <source>Wczytaj</source>
+        <translation>Load</translation>
+    </message>
+    <message>
+        <source>Wczytaj punkty zaznaczonego arkusza (dwuklik)</source>
+        <translation>Load the points of the selected sheet (double-click)</translation>
+    </message>
+    <message>
+        <source>Zapis utworzy nową mapę z tym opisem.</source>
+        <translation>Saving will create a new map with this description.</translation>
+    </message>
+    <message>
+        <source>Zmiany tytułu, autora, lat i skali dotyczą wszystkich arkuszy tej mapy.</source>
+        <translation>Changes to the title, author, years and scale apply to all sheets of this map.</translation>
+    </message>
+    <message>
+        <source>Mapa / arkusz</source>
+        <translation>Map / sheet</translation>
+    </message>
+    <message>
+        <source>Skala</source>
+        <translation>Scale</translation>
+    </message>
+    <message>
+        <source>Punkty</source>
+        <translation>Points</translation>
+    </message>
+    <message>
+        <source>Skan</source>
+        <translation>Scan</translation>
+    </message>
+    <message>
+        <source>Zmieniono</source>
+        <translation>Modified</translation>
+    </message>
+    <message>
+        <source>Mapy: {n}, arkusze: {m}. Arkusz to analiza jednego skanu; opis mapy jest wspólny dla jej arkuszy.</source>
+        <translation>Maps: {n}, sheets: {m}. A sheet is the analysis of one scan; the map description is shared by its sheets.</translation>
+    </message>
+    <message>
+        <source>Arkusz otwarty w panelu GCP</source>
+        <translation>Sheet open in the GCP panel</translation>
+    </message>
+    <message>
+        <source>Usunąć mapę „{title}” razem z jej arkuszami ({n}) i ich punktami? Tego nie można cofnąć.</source>
+        <translation>Delete the map “{title}” together with its sheets ({n}) and their points? This cannot be undone.</translation>
+    </message>
+    <message>
+        <source>Usunąć mapę „{title}”?</source>
+        <translation>Delete the map “{title}”?</translation>
+    </message>
+    <message>
+        <source>Usunąć arkusz „{name}” i jego punkty z biblioteki? Tego nie można cofnąć.</source>
+        <translation>Delete the sheet “{name}” and its points from the library? This cannot be undone.</translation>
+    </message>
+    <message>
+        <source>(bez numeru arkusza)</source>
+        <translation>(no sheet number)</translation>
     </message>
 </context>
 <context>

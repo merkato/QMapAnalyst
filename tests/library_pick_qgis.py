@@ -73,6 +73,7 @@ ds = None
 PIX = {f"P{i}": (200 + 200 * i, -(300 + 250 * (i % 4))) for i in range(8)}
 PIX["Łagów"] = (1500, -1400)
 dock = dock_mod.QMapAnalystDockWidget(iface)
+dock.chk_names.setChecked(False)       # ustawienie wspólne z innymi testami – bez okna nazwy
 dock.set_old_raster(QgsRasterLayer(raster, "scan"))
 panel = dock.library_panel
 path = os.path.join(TMP, "lib.gpkg")

@@ -94,7 +94,8 @@ def test_export():
     assert text[14].endswith(",P13,absent,,,0")
     data = json.loads(cv.to_json(cov))
     assert data["set"]["name"] == "K" and data["common"] == [uid["P00"], uid["P01"], uid["P02"]]
-    assert data["points"][3]["cells"][str(a1)] == "outlier" and data["analyses"][2]["outliers_tested"] is False
+    assert data["points"][3]["cells"][str(a1)] == "outlier" and data["columns"][2]["outliers_tested"] is False
+    assert data["columns_by"] == "sheet" and data["columns"][0]["analysis_ids"] == [a1]
 
 
 def test_current_state():
@@ -111,6 +112,27 @@ def test_current_state():
         assert cv.analysis_label(cur) == "current"
         cov = cv.build_coverage(lib, sid, analysis_ids={a1}, current=(None, new))
         assert [a.analysis_id for a in cov.analyses] == [a1, cv.CURRENT]
+
+
+def test_columns_by_map():
+    lib, sid, uid, (a1, a2, a3, _a4) = make_library(os.path.join(TMP, "bymap.gpkg"))
+    with lib:
+        zannoni = lib.get_analysis(a1).map_id
+        a5 = lib.save_analysis(lb.Analysis(sheet="15", map_id=zannoni))
+        lib.save_links(a5, [lb.Link(1, 1, 5, 5, uid=uid["P13"], name="P13"), lb.Link(2, 2, 6, 6, uid=uid["P03"], name="P03"),
+                            lb.Link(uid=uid["P04"], name="P04", status="absent")])
+        by_sheet = cv.build_coverage(lib, sid)
+        by_map = cv.build_coverage(lib, sid, by=cv.BY_MAP)
+    assert len(by_sheet.columns) == 4 and cv.analysis_label(by_sheet.columns[1]) == "Zannoni (1772) [15]"
+    assert [c.key for c in by_map.columns][0] == zannoni and len(by_map.columns) == 3
+    z = by_map.columns[0]
+    assert sorted(z.analysis_ids) == [a1, a5] and z.analysis_id is None and cv.analysis_label(z) == "Zannoni (1772)"
+    c = by_map.cell
+    assert c(uid["P13"], zannoni) == "sure"          # brak na arkuszu 14, jest na arkuszu 15 – obecny na mapie
+    assert c(uid["P03"], zannoni) == "outlier"       # odstający na jednym arkuszu – odstający na mapie
+    assert c(uid["P04"], zannoni) == "sure"
+    assert by_map.row_count(uid["P13"]) == 1 and by_map.columns[1].analysis_id == a2
+    assert by_map.fitted[zannoni] is True
 
 
 def test_unknown_set_and_empty():

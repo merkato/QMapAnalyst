@@ -17,8 +17,8 @@ from html import escape
 from qgis.PyQt.QtCore import QCoreApplication, Qt, pyqtSignal
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
-    QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QFormLayout, QFrame, QHBoxLayout,
-    QInputDialog, QLabel, QLineEdit, QMessageBox, QSpinBox, QToolButton, QVBoxLayout, QWidget,
+    QCheckBox, QComboBox, QDialog, QFileDialog, QFrame, QHBoxLayout,
+    QInputDialog, QLabel, QMessageBox, QToolButton, QVBoxLayout, QWidget,
 )
 from qgis.core import (
     QgsApplication, QgsCategorizedSymbolRenderer, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsCsException, QgsDefaultValue,
@@ -29,6 +29,7 @@ from qgis.core import (
 from . import importer as im
 from . import library as lb
 from .layers import set_labels
+from .maps_dialog import AnalysisDialog, analysis_years  # noqa: F401 – używane też przez analysis_store
 from .widgets import FlowLayout
 
 SETTINGS_PATH = "QMapAnalyst/library_path"
@@ -167,7 +168,7 @@ class LibraryPanel(QWidget):
 
     libraryChanged = pyqtSignal()
     saveAnalysisRequested = pyqtSignal()
-    openAnalysisRequested = pyqtSignal()
+    mapsRequested = pyqtSignal()
     editAnalysisRequested = pyqtSignal()
     openAnalysisIdRequested = pyqtSignal(int)
 
@@ -272,8 +273,10 @@ class LibraryPanel(QWidget):
             "Zapisz punkty GCP bieżącej mapy w bibliotece: położenie na skanie, współrzędne odniesienia, status, "
             "uwagi oraz punkty zestawu oznaczone jako „brak na mapie”."))
         self.btn_an_save.clicked.connect(self.saveAnalysisRequested)
-        self.btn_an_open = _tool("/mActionFileOpen.svg", tr("Wczytaj analizę…"), tr("Wczytaj analizę mapy zapisaną w bibliotece"))
-        self.btn_an_open.clicked.connect(self.openAnalysisRequested)
+        self.btn_an_open = _tool("/mActionFileOpen.svg", tr("Mapy i arkusze…"), tr(
+            "Mapy i ich arkusze zapisane w bibliotece: wczytanie arkusza, zapis bieżących punktów jako nowego arkusza, "
+            "edycja opisu, przeniesienie arkusza do innej mapy, usuwanie"))
+        self.btn_an_open.clicked.connect(self.mapsRequested)
         self.btn_an_meta = _tool("/mActionFormView.svg", tr("Opis mapy…"), tr("Tytuł, autor, rok, skala, arkusz mapy"))
         self.btn_an_meta.clicked.connect(self.editAnalysisRequested)
         for b in (self.btn_an_save, self.btn_an_open, self.btn_an_meta):
@@ -293,6 +296,8 @@ class LibraryPanel(QWidget):
         text = tr("Analiza mapy: <b>{title}</b>").format(title=escape(analysis.title or "?"))
         if years:
             text += f" ({years})"
+        if analysis.sheet:
+            text += " · " + escape(tr("arkusz {s}").format(s=analysis.sheet))
         if dirty:
             text += " · <b>" + escape(tr("niezapisane zmiany")) + "</b>"
         self.lbl_analysis.setText(text)
@@ -900,74 +905,3 @@ class LibraryPanel(QWidget):
                 sig.disconnect(slot)
             except (TypeError, RuntimeError):
                 pass
-
-
-def analysis_years(a):
-    if a.year_from and a.year_to and a.year_to != a.year_from:
-        return f"{a.year_from}–{a.year_to}"
-    return str(a.year_from or a.year_to or "")
-
-
-class AnalysisDialog(QDialog):
-    """Opis mapy analizowanej w bibliotece (library.Analysis)."""
-
-    def __init__(self, analysis, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(tr("Opis mapy"))
-        self.analysis = analysis
-        form = QFormLayout(self)
-        self.ed_title = QLineEdit(analysis.title)
-        self.ed_author = QLineEdit(analysis.author)
-        self.sp_from = self._year(analysis.year_from)
-        self.sp_to = self._year(analysis.year_to)
-        self.sp_scale = QSpinBox()
-        self.sp_scale.setRange(0, 100000000)
-        self.sp_scale.setSingleStep(1000)
-        self.sp_scale.setPrefix("1 : ")
-        self.sp_scale.setSpecialValueText(tr("nieznana"))
-        self.sp_scale.setValue(analysis.scale or 0)
-        self.ed_sheet = QLineEdit(analysis.sheet)
-        self.sp_dpi = QDoubleSpinBox()
-        self.sp_dpi.setRange(0, 9600)
-        self.sp_dpi.setDecimals(0)
-        self.sp_dpi.setSpecialValueText(tr("nieznana"))
-        self.sp_dpi.setValue(analysis.dpi or 0)
-        self.ed_note = QLineEdit(analysis.note)
-        years = QHBoxLayout()
-        years.addWidget(self.sp_from)
-        years.addWidget(QLabel("–"))
-        years.addWidget(self.sp_to)
-        form.addRow(tr("Tytuł:"), self.ed_title)
-        form.addRow(tr("Autor / wydawca:"), self.ed_author)
-        form.addRow(tr("Rok (od – do):"), years)
-        form.addRow(tr("Skala nominalna:"), self.sp_scale)
-        form.addRow(tr("Arkusz:"), self.ed_sheet)
-        form.addRow(tr("Rozdzielczość skanu [DPI]:"), self.sp_dpi)
-        form.addRow(tr("Uwagi:"), self.ed_note)
-        scan = QLabel(escape(os.path.basename(analysis.scan_path or "")) or "–")
-        scan.setToolTip(analysis.scan_path or "")
-        form.addRow(tr("Skan:"), scan)
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        form.addRow(buttons)
-
-    @staticmethod
-    def _year(value):
-        sp = QSpinBox()
-        sp.setRange(0, 2100)
-        sp.setSpecialValueText("?")
-        sp.setValue(value or 0)
-        return sp
-
-    def accept(self):
-        a = self.analysis
-        a.title = self.ed_title.text().strip()
-        a.author = self.ed_author.text().strip()
-        a.year_from = self.sp_from.value() or None
-        a.year_to = self.sp_to.value() or None
-        a.scale = self.sp_scale.value() or None
-        a.sheet = self.ed_sheet.text().strip()
-        a.dpi = self.sp_dpi.value() or None
-        a.note = self.ed_note.text().strip()
-        super().accept()

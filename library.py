@@ -5,7 +5,9 @@ Tabele (schemat w wersji SCHEMA_VERSION):
     ref_points   – punkty biblioteki (geometria punktowa, klucz uid)
     point_sets   – zestawy punktów (np. regionalne), set_id = FID
     set_members  – przynależność punktów do zestawów (set_id + uid)
-    analyses     – analizy map (skan, rok, skala, arkusz…), analysis_id = FID
+    maps         – mapy (tytuł, autor, lata, skala), map_id = FID; od wersji 2
+    analyses     – analizy arkuszy map (skan, arkusz, DPI…), analysis_id = FID; map_id – mapa
+                   (opis mapy jest kopiowany do analizy i aktualizowany przy zmianie mapy)
     gcp_links    – punkty GCP analizy: położenie na skanie, kopia współrzędnych odniesienia, status
     qma_meta     – wersja schematu
 
@@ -25,6 +27,7 @@ import functools
 import hashlib
 import math
 import os
+import shutil
 import unicodedata
 import uuid
 from contextlib import contextmanager, nullcontext
@@ -32,7 +35,7 @@ from dataclasses import dataclass, fields
 
 from osgeo import gdal, ogr, osr
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # status identyfikacji punktu na danej mapie
 STATUSES = ("sure", "uncertain", "illegible", "absent")
@@ -46,6 +49,7 @@ POINT_TYPES = ("town", "village", "church", "monastery", "castle", "manor", "mil
 _POINTS = "ref_points"
 _SETS = "point_sets"
 _MEMBERS = "set_members"
+_MAPS = "maps"
 _ANALYSES = "analyses"
 _LINKS = "gcp_links"
 _META = "qma_meta"
@@ -56,9 +60,11 @@ _SCHEMA = {
               ("valid_from", I), ("valid_to", I), ("source", S), ("note", S)],
     _SETS: [("name", S), ("description", S)],
     _MEMBERS: [("set_id", I), ("uid", S)],
+    _MAPS: [("title", S), ("author", S), ("year_from", I), ("year_to", I), ("scale", I), ("note", S),
+            ("created", S), ("modified", S)],
     _ANALYSES: [("title", S), ("author", S), ("year_from", I), ("year_to", I), ("scale", I), ("sheet", S),
                 ("dpi", R), ("scan_path", S), ("scan_sha256", S), ("ref_crs", S), ("note", S),
-                ("created", S), ("modified", S)],
+                ("created", S), ("modified", S), ("map_id", I)],
     _LINKS: [("analysis_id", I), ("seq", I), ("uid", S), ("name", S), ("x_old", R), ("y_old", R),
              ("ref_x", R), ("ref_y", R), ("enabled", I), ("status", S), ("comment", S)],
     _META: [("key", S), ("value", S)],
@@ -68,10 +74,10 @@ _INDEXES = (
     "CREATE UNIQUE INDEX IF NOT EXISTS qma_set_members_key ON set_members(set_id, uid)",
     "CREATE INDEX IF NOT EXISTS qma_gcp_links_analysis ON gcp_links(analysis_id)",
     "CREATE UNIQUE INDEX IF NOT EXISTS qma_gcp_links_key ON gcp_links(analysis_id, uid) WHERE uid IS NOT NULL",
+    "CREATE INDEX IF NOT EXISTS qma_analyses_map ON analyses(map_id)",
 )
-
-# migracje: wersja -> funkcja(ds) podnosząca schemat do wersji + 1
-_MIGRATIONS = {}
+# pola opisu mapy kopiowane do analiz jej arkuszy
+MAP_FIELDS = ("title", "author", "year_from", "year_to", "scale")
 
 
 class LibraryError(Exception):
@@ -134,6 +140,21 @@ class Analysis:
     created: str = ""
     modified: str = ""
     analysis_id: int = None
+    map_id: int = None           # mapa, do której należy arkusz (library.Map)
+
+
+@dataclass
+class MapInfo:
+    """Mapa (dzieło / wydanie) – jej arkusze to analizy. Opis jest wspólny dla wszystkich arkuszy."""
+    title: str = ""
+    author: str = ""
+    year_from: int = None
+    year_to: int = None
+    scale: int = None
+    note: str = ""
+    created: str = ""
+    modified: str = ""
+    map_id: int = None
 
 
 @dataclass
@@ -155,6 +176,7 @@ class Link:
 
 _POINT_FIELDS = [f for f, _t in _SCHEMA[_POINTS]]
 _ANALYSIS_FIELDS = [f for f, _t in _SCHEMA[_ANALYSES]]
+_MAP_FIELDS = [f for f, _t in _SCHEMA[_MAPS]]
 _LINK_FIELDS = [f for f, _t in _SCHEMA[_LINKS] if f not in ("analysis_id", "seq")]
 
 
@@ -307,7 +329,7 @@ class Library:
             raise LibraryError(f"cannot create {path}: {gdal.GetLastErrorMsg()}")
         lyr = ds.CreateLayer(_POINTS, _srs(crs), ogr.wkbPoint, ["FID=fid", "GEOMETRY_NAME=geom"])
         cls._add_fields(lyr, _POINTS)
-        for name in (_SETS, _MEMBERS, _ANALYSES, _LINKS, _META):
+        for name in (_SETS, _MEMBERS, _MAPS, _ANALYSES, _LINKS, _META):
             cls._add_fields(ds.CreateLayer(name, None, ogr.wkbNone, ["FID=fid"]), name)
         for sql in _INDEXES:
             ds.ExecuteSQL(sql)
@@ -329,6 +351,14 @@ class Library:
         if ds.GetLayerByName(_META) is None or ds.GetLayerByName(_POINTS) is None:
             raise NotALibrary(path)
         lib = cls(ds, path)
+        version = int(lib._get_meta("schema_version") or 0)
+        if version < SCHEMA_VERSION:
+            # kopia pliku przed migracją (raz dla danej wersji)
+            lib.close()
+            backup = f"{os.path.splitext(path)[0]}.v{version}.bak.gpkg"
+            if not os.path.exists(backup):
+                shutil.copy2(path, backup)
+            lib = cls(gdal.OpenEx(path, gdal.OF_VECTOR | gdal.OF_UPDATE, allowed_drivers=["GPKG"]), path)
         lib._migrate()
         return lib
 
@@ -346,9 +376,29 @@ class Library:
             raise SchemaTooNew(version)
         while version < SCHEMA_VERSION:
             with self._tx():
-                _MIGRATIONS[version](self.ds)
+                getattr(self, f"_migrate_{version}")()
                 version += 1
                 self._set_meta("schema_version", str(version))
+
+    def _migrate_1(self):
+        """1 → 2: tabela map; analizy o tym samym tytule (bez znaczenia wielkości liter i znaków
+        diakrytycznych) trafiają do jednej mapy z opisem pierwszej z nich (kopiowanym do pozostałych);
+        analizy bez tytułu – każda do osobnej mapy."""
+        self._add_fields(self.ds.CreateLayer(_MAPS, None, ogr.wkbNone, ["FID=fid"]), _MAPS)
+        _ok(self._layer(_ANALYSES).CreateField(ogr.FieldDefn("map_id", I)), "analyses.map_id")
+        self.ds.ExecuteSQL(_INDEXES[-1])
+        groups = {}
+        for a in sorted(self.analyses(), key=lambda a: a.analysis_id):
+            key = normalize(a.title) or f"#{a.analysis_id}"
+            if key not in groups:
+                m = MapInfo(**{f: getattr(a, f) for f in MAP_FIELDS})
+                self._insert_map(m)
+                groups[key] = m
+            m = groups[key]
+            a.map_id = m.map_id
+            for f in MAP_FIELDS:                          # opis mapy wspólny dla jej arkuszy
+                setattr(a, f, getattr(m, f))
+            self._write_analysis(a)
 
     def close(self):
         self.ds = None
@@ -551,15 +601,67 @@ class Library:
     def point_sets_of(self, uid):
         return sorted(f.GetField("set_id") for f in self._features(_MEMBERS, f"uid = {_q(uid)}"))
 
+    # --- mapy ---------------------------------------------------------------------------
+    def _map_from(self, feat):
+        kw = {f: _get(feat, f) for f in _MAP_FIELDS}
+        for k in ("title", "author", "note", "created", "modified"):
+            kw[k] = kw[k] or ""
+        return MapInfo(map_id=feat.GetFID(), **kw)
+
+    def _insert_map(self, m):
+        lyr = self._layer(_MAPS)
+        feat = lyr.GetFeature(m.map_id) if m.map_id is not None else None
+        new = feat is None
+        if new:
+            feat = ogr.Feature(lyr.GetLayerDefn())
+            m.created = m.created or _now()
+        m.modified = _now()
+        for f in _MAP_FIELDS:
+            v = getattr(m, f)
+            _set(feat, f, None if v == "" else v)
+        _ok(lyr.CreateFeature(feat) if new else lyr.SetFeature(feat), "save map")
+        m.map_id = feat.GetFID()
+        return m.map_id
+
+    def save_map(self, m):
+        """Zapisuje (nową lub istniejącą) mapę; opis trafia też do wszystkich jej arkuszy. Zwraca map_id."""
+        with self._tx():
+            self._insert_map(m)
+            for a in self.analyses(m.map_id):
+                for f in MAP_FIELDS:
+                    setattr(a, f, getattr(m, f))
+                self._write_analysis(a)
+        return m.map_id
+
+    def get_map(self, map_id):
+        feat = self._layer(_MAPS).GetFeature(int(map_id)) if map_id is not None else None
+        return self._map_from(feat) if feat is not None else None
+
+    def maps(self):
+        """Mapy uporządkowane według roku (bez daty na końcu) i tytułu."""
+        out = [self._map_from(f) for f in self._features(_MAPS)]
+        out.sort(key=lambda m: (not (m.year_from or m.year_to), m.year_from or m.year_to or 0, normalize(m.title)))
+        return out
+
+    def delete_map(self, map_id, force=False):
+        """Usuwa mapę; mapę z arkuszami – tylko z force=True (razem z arkuszami i ich punktami)."""
+        sheets = self.analyses(map_id)
+        if sheets and not force:
+            raise LibraryError(f"map {map_id} has {len(sheets)} sheet(s)")
+        with self._tx():
+            for a in sheets:
+                self._delete_where(_LINKS, f"analysis_id = {int(a.analysis_id)}")
+                _ok(self._layer(_ANALYSES).DeleteFeature(int(a.analysis_id)), "delete analysis")
+            _ok(self._layer(_MAPS).DeleteFeature(int(map_id)), "delete map")
+
     # --- analizy ----------------------------------------------------------------
     def _analysis_from(self, feat):
-        kw = {f: _get(feat, f) for f in _ANALYSIS_FIELDS}
+        kw = {f: _get(feat, f) for f in _ANALYSIS_FIELDS if feat.GetFieldIndex(f) >= 0}
         for k in ("title", "author", "sheet", "scan_path", "scan_sha256", "ref_crs", "note", "created", "modified"):
             kw[k] = kw[k] or ""
         return Analysis(analysis_id=feat.GetFID(), **kw)
 
-    def save_analysis(self, a):
-        """Zapisuje (nową lub istniejącą) analizę. Zwraca analysis_id."""
+    def _write_analysis(self, a):
         lyr = self._layer(_ANALYSES)
         feat = lyr.GetFeature(a.analysis_id) if a.analysis_id is not None else None
         new = feat is None
@@ -574,12 +676,34 @@ class Library:
         a.analysis_id = feat.GetFID()
         return a.analysis_id
 
+    def save_analysis(self, a):
+        """Zapisuje (nową lub istniejącą) analizę arkusza. Zwraca analysis_id.
+
+        Opis mapy pochodzi z mapy a.map_id; analiza bez mapy dostaje nową mapę z własnego opisu."""
+        m = self.get_map(a.map_id) if a.map_id is not None else None
+        if m is None:
+            a.map_id = self._insert_map(MapInfo(**{f: getattr(a, f) for f in MAP_FIELDS}))
+        else:
+            for f in MAP_FIELDS:
+                setattr(a, f, getattr(m, f))
+        return self._write_analysis(a)
+
     def get_analysis(self, analysis_id):
         feat = self._layer(_ANALYSES).GetFeature(int(analysis_id))
         return self._analysis_from(feat) if feat is not None else None
 
-    def analyses(self):
-        return [self._analysis_from(f) for f in self._features(_ANALYSES)]
+    def analyses(self, map_id=None):
+        """Analizy (arkusze); z map_id – tylko arkusze tej mapy."""
+        where = f"map_id = {int(map_id)}" if map_id is not None else None
+        return [self._analysis_from(f) for f in self._features(_ANALYSES, where)]
+
+    def move_analysis(self, analysis_id, map_id):
+        """Przenosi arkusz do innej mapy (opis mapy kopiowany do analizy). Mapa bez arkuszy zostaje."""
+        a = self.get_analysis(analysis_id)
+        if a is None or self.get_map(map_id) is None:
+            raise LibraryError(f"no analysis {analysis_id} or map {map_id}")
+        a.map_id = map_id
+        self.save_analysis(a)
 
     def find_analyses(self, scan_sha256=None, scan_path=None):
         """Analizy tego samego skanu – po sumie kontrolnej, a gdy jej brak – po ścieżce."""
