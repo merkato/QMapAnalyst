@@ -132,6 +132,14 @@
         <translation>Add the selected GCPs (their reference coordinates) to the point library and to the set chosen on the Library tab. A point already in the library (within 1 m) is linked, not duplicated.</translation>
     </message>
     <message>
+        <source>Powiąż</source>
+        <translation>Link</translation>
+    </message>
+    <message>
+        <source>Powiąż zaznaczone (bez zaznaczenia – wszystkie) punkty spoza biblioteki z istniejącymi punktami biblioteki: ta sama nazwa (także dawna) do 5 km albo najbliższy punkt do 500 m. Przed zmianą pokazuje listę propozycji.</source>
+        <translation>Link the selected (with no selection – all) points outside the library to existing library points: the same name (also a historical one) within 5 km or the nearest point within 500 m. A list of proposals is shown before any change.</translation>
+    </message>
+    <message>
         <source>Wczytaj GCP (CSV / .points)…</source>
         <translation>Load GCPs (CSV / .points)…</translation>
     </message>
@@ -148,8 +156,8 @@
         <translation>Ask for a point name after each pair is picked and show the name column. Names are saved in CSV (name column) or – for a .points file – in a companion .points.names.csv file, so the .points file stays compatible with the QGIS Georeferencer.</translation>
     </message>
     <message>
-        <source>Dwuklik w numer wiersza – pokaż punkt na obu mapach. Dwuklik w komórkę – edycja współrzędnej.</source>
-        <translation>Double-click a row number to show the point on both maps. Double-click a cell to edit a coordinate.</translation>
+        <source>Dwuklik w numer wiersza – pokaż punkt na obu mapach (wiersz „brak na mapie” – wskaż go teraz). Dwuklik w komórkę – edycja. Ikona przy numerze: punkt powiązany z biblioteką / spoza biblioteki.</source>
+        <translation>Double-click a row number – show the point on both maps (a “not on map” row – identify it now). Double-click a cell – edit. Icon next to the number: point linked to the library / outside the library.</translation>
     </message>
     <message>
         <source>Punkt z biblioteki – wpisz nazwę…</source>
@@ -170,6 +178,10 @@
     <message>
         <source>Brak na mapie</source>
         <translation>Not on map</translation>
+    </message>
+    <message>
+        <source>Zapisz analizę</source>
+        <translation>Save analysis</translation>
     </message>
     <message>
         <source>Helmert – skala, obrót, przesunięcie (zachowuje kształty).
@@ -436,6 +448,10 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Library point: {name}. Click it on the HISTORICAL MAP.</translation>
     </message>
     <message>
+        <source>Punkt spoza biblioteki – nie trafi do macierzy pokrycia. „Powiąż” dołączy go do istniejącego punktu biblioteki, „Do biblioteki” – doda nowy.</source>
+        <translation>Point outside the library – it will not appear in the coverage matrix. “Link” attaches it to an existing library point, “To library” adds a new one.</translation>
+    </message>
+    <message>
         <source>Zapisz punkty GCP</source>
         <translation>Save GCPs</translation>
     </message>
@@ -656,6 +672,10 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Library: new points – {new}, linked to existing – {linked}.</translation>
     </message>
     <message>
+        <source>Dwuklik – pokaż punkt na obu mapach.</source>
+        <translation>Double-click – show the point on both maps.</translation>
+    </message>
+    <message>
         <source>Waga a priori p = {p}</source>
         <translation>A priori weight p = {p}</translation>
     </message>
@@ -828,6 +848,22 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>The GCPs have changed – the estimation result is out of date. Run it again.</translation>
     </message>
     <message>
+        <source>Punkt biblioteki: {name}</source>
+        <translation>Library point: {name}</translation>
+    </message>
+    <message>
+        <source>Brak na mapie: {name}. Dwuklik – wskaż jednak ten punkt na mapie dawnej.</source>
+        <translation>Not on map: {name}. Double-click – identify this point on the old map after all.</translation>
+    </message>
+    <message>
+        <source>{name} – brak na mapie (bez położenia na skanie)</source>
+        <translation>{name} – not on map (no position on the scan)</translation>
+    </message>
+    <message>
+        <source>Punktu nie ma już w bibliotece.</source>
+        <translation>The point is no longer in the library.</translation>
+    </message>
+    <message>
         <source>Usunięto punkty (liczba: {n}).</source>
         <translation>Removed {n} points.</translation>
     </message>
@@ -944,6 +980,10 @@ No – append the new points to the existing ones.</translation>
         <translation>Set: {name}.</translation>
     </message>
     <message>
+        <source>Usunięto oznaczenia „brak na mapie” (liczba: {n}).</source>
+        <translation>Removed “not on map” marks (count: {n}).</translation>
+    </message>
+    <message>
         <source>Współrzędne przeliczono z układu {crs}.</source>
         <translation>Coordinates were transformed from {crs}.</translation>
     </message>
@@ -994,6 +1034,10 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>GCP {n}</source>
         <translation>GCP {n}</translation>
+    </message>
+    <message>
+        <source>Nazwa w tabeli ({name}) różni się od nazwy w bibliotece.</source>
+        <translation>The name in the table ({name}) differs from the library name.</translation>
     </message>
     <message>
         <source>Niepoprawna wartość liczbowa – przywrócono poprzednią.</source>
@@ -1052,6 +1096,10 @@ No – append the new points to the existing ones.</translation>
         <translation>off</translation>
     </message>
     <message>
+        <source>Analiza nie jest jeszcze zapisana w bibliotece.</source>
+        <translation>The analysis is not saved in the library yet.</translation>
+    </message>
+    <message>
         <source>Wczytaj analizę</source>
         <translation>Load analysis</translation>
     </message>
@@ -1060,8 +1108,28 @@ No – append the new points to the existing ones.</translation>
         <translation>Map analysis:</translation>
     </message>
     <message>
+        <source>Analiza „{cur}” ma niezapisane zmiany. Zapisać je przed wczytaniem „{title}”?</source>
+        <translation>The analysis “{cur}” has unsaved changes. Save them before loading “{title}”?</translation>
+    </message>
+    <message>
+        <source>Bieżące punkty ({n}) nie są zapisane w bibliotece. Zapisać je przed wczytaniem „{title}”?</source>
+        <translation>The current points ({n}) are not saved in the library. Save them before loading “{title}”?</translation>
+    </message>
+    <message>
+        <source>Niezapisane zmiany – macierz pokrycia pokazuje je jako stan bieżący (*), plik biblioteki ma ostatni zapis.</source>
+        <translation>Unsaved changes – the coverage matrix shows them as the current state (*), the library file holds the last save.</translation>
+    </message>
+    <message>
         <source>Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka).</source>
         <translation>First open or create a point library (Library tab).</translation>
+    </message>
+    <message>
+        <source>Nie – porzuć zmiany.</source>
+        <translation>No – discard the changes.</translation>
+    </message>
+    <message>
+        <source>Wszystkie wskazane punkty są już powiązane z biblioteką.</source>
+        <translation>All the indicated points are already linked to the library.</translation>
     </message>
     <message>
         <source>Najpierw wybierz punkt z biblioteki (wyszukiwarka lub „Następny z zestawu”).</source>
@@ -1070,6 +1138,10 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>Oznacz bieżący punkt z biblioteki jako nieobecny na tej mapie (informacja, nie błąd).</source>
         <translation>Mark the current library point as not present on this map (information, not an error).</translation>
+    </message>
+    <message>
+        <source>Analiza w bibliotece: {title}</source>
+        <translation>Analysis in the library: {title}</translation>
     </message>
     <message>
         <source>W bibliotece jest już analiza tego skanu: „{title}”. Zastąpić ją?
@@ -1086,6 +1158,24 @@ No – save as a new analysis.</translation>
     <message>
         <source>Wczytano analizę „{title}” (punkty: {n}, brak na mapie: {m}).</source>
         <translation>Loaded analysis “{title}” (points: {n}, not on map: {m}).</translation>
+    </message>
+    <message>
+        <source>{gcp} → {name} ({d} m{how})</source>
+        <translation>{gcp} → {name} ({d} m{how})</translation>
+    </message>
+    <message>
+        <source>Powiązano z biblioteką: {n} pkt.</source>
+        <translation>Linked to the library: {n} pts.</translation>
+    </message>
+    <message>
+        <source>Kliknięto {px} px od punktu biblioteki „{name}”. Powiązać parę z tym punktem?
+
+Tak – współrzędne z biblioteki (punkt trafi do macierzy pokrycia).
+Nie – punkt spoza biblioteki w miejscu kliknięcia.</source>
+        <translation>You clicked {px} px from the library point “{name}”. Link the pair to this point?
+
+Yes – coordinates from the library (the point will appear in the coverage matrix).
+No – a point outside the library at the clicked position.</translation>
     </message>
     <message>
         <source>Punkt „{name}” – uwagi (np. pominięty przez kartografa):</source>
@@ -1116,6 +1206,14 @@ Update the reference coordinates of these points?</translation>
         <translation>Updated the coordinates of library points ({n}).</translation>
     </message>
     <message>
+        <source>Bez dopasowania: {n}.</source>
+        <translation>Without a match: {n}.</translation>
+    </message>
+    <message>
+        <source>Brak dopasowań w bibliotece dla punktów spoza biblioteki (liczba: {n}): ta sama nazwa do 5 km lub dowolny punkt do 500 m. Użyj „Do biblioteki”, aby je dodać.</source>
+        <translation>No library matches for the points outside the library (count: {n}): the same name within 5 km or any point within 500 m. Use “To library” to add them.</translation>
+    </message>
+    <message>
         <source>ark. {s}</source>
         <translation>sheet {s}</translation>
     </message>
@@ -1124,12 +1222,16 @@ Update the reference coordinates of these points?</translation>
         <translation>The library contains no saved analyses.</translation>
     </message>
     <message>
-        <source>Zastąpić bieżące punkty ({n}) punktami analizy „{title}”?</source>
-        <translation>Replace the current points ({n}) with the points of analysis “{title}”?</translation>
-    </message>
-    <message>
         <source>Analiza dotyczy innego skanu ({f}). Wczytać go?</source>
         <translation>The analysis refers to a different scan ({f}). Load it?</translation>
+    </message>
+    <message>
+        <source>ta sama nazwa</source>
+        <translation>same name</translation>
+    </message>
+    <message>
+        <source>Powiązać punkty z biblioteką (liczba: {n})? Współrzędne odniesienia zostaną zastąpione współrzędnymi z biblioteki.</source>
+        <translation>Link the points to the library (count: {n})? The reference coordinates will be replaced with the library coordinates.</translation>
     </message>
     <message>
         <source>Brak na mapie ({n}): {names}</source>
@@ -2407,6 +2509,10 @@ Update the reference coordinates of these points?</translation>
         <translation>Title, author, year, scale, sheet of the map</translation>
     </message>
     <message>
+        <source>Analiza mapy: nie zapisana w bibliotece.</source>
+        <translation>Map analysis: not saved in the library.</translation>
+    </message>
+    <message>
         <source>Plik nie jest biblioteką punktów QMapAnalyst.</source>
         <translation>The file is not a QMapAnalyst point library.</translation>
     </message>
@@ -2483,10 +2589,6 @@ Update the reference coordinates of these points?</translation>
         <translation>Set:</translation>
     </message>
     <message>
-        <source>Analiza mapy: nie zapisana w bibliotece.</source>
-        <translation>Map analysis: not saved in the library.</translation>
-    </message>
-    <message>
         <source>Analiza mapy: &lt;b&gt;{title}&lt;/b&gt;</source>
         <translation>Map analysis: &lt;b&gt;{title}&lt;/b&gt;</translation>
     </message>
@@ -2523,6 +2625,10 @@ Update the reference coordinates of these points?</translation>
         <translation>Select points on the library layer (QGIS selection tool).</translation>
     </message>
     <message>
+        <source>Zapisz ją, aby punkty były widoczne w macierzy pokrycia.</source>
+        <translation>Save it so that the points are visible in the coverage matrix.</translation>
+    </message>
+    <message>
         <source>Plik utworzyła nowsza wersja QMapAnalyst (schemat {v}). Zaktualizuj wtyczkę.</source>
         <translation>The file was created by a newer QMapAnalyst version (schema {v}). Update the plugin.</translation>
     </message>
@@ -2557,6 +2663,10 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Utworzono zestaw „{name}” ({n} pkt).</source>
         <translation>Created set “{name}” ({n} pts).</translation>
+    </message>
+    <message>
+        <source>niezapisane zmiany</source>
+        <translation>unsaved changes</translation>
     </message>
     <message>
         <source>Biblioteka: &lt;b&gt;{name}&lt;/b&gt; ({crs})</source>
@@ -2763,8 +2873,8 @@ Update the reference coordinates of these points?</translation>
         <translation>Outliers by model:</translation>
     </message>
     <message>
-        <source>(puste – nie wskazany) · dwuklik – wczytaj analizę</source>
-        <translation>(empty – not identified) · double-click – load the analysis</translation>
+        <source>(puste – nie wskazany) · dwuklik – wczytaj analizę · * – stan bieżący, niezapisany</source>
+        <translation>(empty – not identified) · double-click – load the analysis · * – current, unsaved state</translation>
     </message>
     <message>
         <source>Żadna analiza zapisana w bibliotece nie zawiera punktów tego zestawu.</source>
@@ -2775,8 +2885,16 @@ Update the reference coordinates of these points?</translation>
         <translation>Points common to all maps (bold): {n}</translation>
     </message>
     <message>
+        <source>Ta analiza jest otwarta w panelu GCP.</source>
+        <translation>This analysis is open in the GCP panel.</translation>
+    </message>
+    <message>
         <source>odstające nie badane – za mało punktów do wyrównania</source>
         <translation>outliers not tested – too few points for the adjustment</translation>
+    </message>
+    <message>
+        <source>bieżąca analiza</source>
+        <translation>current analysis</translation>
     </message>
     <message>
         <source>Zestaw „{name}”: punkty {n}, mapy {m}</source>
@@ -2785,6 +2903,10 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Zapisano: {f}</source>
         <translation>Saved: {f}</translation>
+    </message>
+    <message>
+        <source>stan bieżący z panelu GCP</source>
+        <translation>current state from the GCP panel</translation>
     </message>
     <message>
         <source>punkty zestawu na mapie: {n}</source>

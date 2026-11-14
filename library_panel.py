@@ -181,6 +181,8 @@ class LibraryPanel(QWidget):
         self._crs_authid = ""
         self._crs_wkt = ""
         self._cache = None          # (punkty, {set_id: [uid]}) – do wyszukiwania i „następnego z zestawu”
+        # bieżący stan analizy w panelu GCP: () -> (Analysis lub None, [Link], niezapisane) – dla macierzy pokrycia
+        self.current_analysis = None
         self._build()
         self.project.layersWillBeRemoved.connect(self._on_layers_removed)
         path = QgsSettings().value(SETTINGS_PATH, "", type=str)
@@ -280,14 +282,19 @@ class LibraryPanel(QWidget):
         self.set_analysis_label(None)
         return box
 
-    def set_analysis_label(self, analysis):
+    def set_analysis_label(self, analysis, dirty=False):
         if analysis is None or analysis.analysis_id is None:
-            self.lbl_analysis.setText(tr("Analiza mapy: nie zapisana w bibliotece."))
+            text = tr("Analiza mapy: nie zapisana w bibliotece.")
+            if dirty:
+                text += " " + tr("Zapisz ją, aby punkty były widoczne w macierzy pokrycia.")
+            self.lbl_analysis.setText(text)
             return
         years = analysis_years(analysis)
         text = tr("Analiza mapy: <b>{title}</b>").format(title=escape(analysis.title or "?"))
         if years:
             text += f" ({years})"
+        if dirty:
+            text += " · <b>" + escape(tr("niezapisane zmiany")) + "</b>"
         self.lbl_analysis.setText(text)
 
     def _update_state(self):
@@ -652,6 +659,21 @@ class LibraryPanel(QWidget):
         except QgsCsException:
             return None
         return q.x(), q.y()
+
+    def _metre(self):
+        """Długość metra w jednostkach układu biblioteki (przybliżenie dla układu geograficznego)."""
+        crs = self.library_crs()
+        return 1 / 111320.0 if crs.isValid() and crs.isGeographic() else 1.0
+
+    def match_reference(self, name, pt, crs, exclude=(), named_m=5000.0, near_m=500.0):
+        """Punkt biblioteki dla punktu GCP spoza biblioteki (pt w układzie crs):
+        (RefPoint, odległość [m], po_nazwie) albo None – zob. library.match_point."""
+        xy = self.from_crs(pt, crs)
+        if xy is None:
+            return None
+        unit = self._metre()
+        m = lb.match_point(self._cached()[0], name, xy[0], xy[1], named_m * unit, near_m * unit, exclude)
+        return None if m is None else (m[0], m[1] / unit, m[2])
 
     def snap(self, canvas_point, canvas, tolerance_px=10):
         """Punkt widocznej warstwy biblioteki najbliższy kliknięciu (w promieniu tolerance_px) albo None.

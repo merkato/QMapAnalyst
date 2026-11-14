@@ -132,6 +132,14 @@
         <translation>Dodaj zaznaczone punkty GCP (ich współrzędne odniesienia) do biblioteki punktów i do zestawu wybranego w zakładce Biblioteka. Punkt leżący już w bibliotece (do 1 m) zostanie powiązany, a nie zdublowany.</translation>
     </message>
     <message>
+        <source>Powiąż</source>
+        <translation>Powiąż</translation>
+    </message>
+    <message>
+        <source>Powiąż zaznaczone (bez zaznaczenia – wszystkie) punkty spoza biblioteki z istniejącymi punktami biblioteki: ta sama nazwa (także dawna) do 5 km albo najbliższy punkt do 500 m. Przed zmianą pokazuje listę propozycji.</source>
+        <translation>Powiąż zaznaczone (bez zaznaczenia – wszystkie) punkty spoza biblioteki z istniejącymi punktami biblioteki: ta sama nazwa (także dawna) do 5 km albo najbliższy punkt do 500 m. Przed zmianą pokazuje listę propozycji.</translation>
+    </message>
+    <message>
         <source>Wczytaj GCP (CSV / .points)…</source>
         <translation>Wczytaj GCP (CSV / .points)…</translation>
     </message>
@@ -148,8 +156,8 @@
         <translation>Po wskazaniu pary pytaj o nazwę punktu i pokaż kolumnę nazw. Nazwy zapisywane są w CSV (kolumna name) lub – dla pliku .points – w pliku towarzyszącym .points.names.csv, dzięki czemu plik .points pozostaje zgodny z Georeferencerem QGIS.</translation>
     </message>
     <message>
-        <source>Dwuklik w numer wiersza – pokaż punkt na obu mapach. Dwuklik w komórkę – edycja współrzędnej.</source>
-        <translation>Dwuklik w numer wiersza – pokaż punkt na obu mapach. Dwuklik w komórkę – edycja współrzędnej.</translation>
+        <source>Dwuklik w numer wiersza – pokaż punkt na obu mapach (wiersz „brak na mapie” – wskaż go teraz). Dwuklik w komórkę – edycja. Ikona przy numerze: punkt powiązany z biblioteką / spoza biblioteki.</source>
+        <translation>Dwuklik w numer wiersza – pokaż punkt na obu mapach (wiersz „brak na mapie” – wskaż go teraz). Dwuklik w komórkę – edycja. Ikona przy numerze: punkt powiązany z biblioteką / spoza biblioteki.</translation>
     </message>
     <message>
         <source>Punkt z biblioteki – wpisz nazwę…</source>
@@ -170,6 +178,10 @@
     <message>
         <source>Brak na mapie</source>
         <translation>Brak na mapie</translation>
+    </message>
+    <message>
+        <source>Zapisz analizę</source>
+        <translation>Zapisz analizę</translation>
     </message>
     <message>
         <source>Helmert – skala, obrót, przesunięcie (zachowuje kształty).
@@ -436,6 +448,10 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Punkt z biblioteki: {name}. Kliknij go na MAPIE DAWNEJ.</translation>
     </message>
     <message>
+        <source>Punkt spoza biblioteki – nie trafi do macierzy pokrycia. „Powiąż” dołączy go do istniejącego punktu biblioteki, „Do biblioteki” – doda nowy.</source>
+        <translation>Punkt spoza biblioteki – nie trafi do macierzy pokrycia. „Powiąż” dołączy go do istniejącego punktu biblioteki, „Do biblioteki” – doda nowy.</translation>
+    </message>
+    <message>
         <source>Zapisz punkty GCP</source>
         <translation>Zapisz punkty GCP</translation>
     </message>
@@ -656,6 +672,10 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Biblioteka: nowe punkty – {new}, powiązane z istniejącymi – {linked}.</translation>
     </message>
     <message>
+        <source>Dwuklik – pokaż punkt na obu mapach.</source>
+        <translation>Dwuklik – pokaż punkt na obu mapach.</translation>
+    </message>
+    <message>
         <source>Waga a priori p = {p}</source>
         <translation>Waga a priori p = {p}</translation>
     </message>
@@ -828,6 +848,22 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</translation>
     </message>
     <message>
+        <source>Punkt biblioteki: {name}</source>
+        <translation>Punkt biblioteki: {name}</translation>
+    </message>
+    <message>
+        <source>Brak na mapie: {name}. Dwuklik – wskaż jednak ten punkt na mapie dawnej.</source>
+        <translation>Brak na mapie: {name}. Dwuklik – wskaż jednak ten punkt na mapie dawnej.</translation>
+    </message>
+    <message>
+        <source>{name} – brak na mapie (bez położenia na skanie)</source>
+        <translation>{name} – brak na mapie (bez położenia na skanie)</translation>
+    </message>
+    <message>
+        <source>Punktu nie ma już w bibliotece.</source>
+        <translation>Punktu nie ma już w bibliotece.</translation>
+    </message>
+    <message>
         <source>Usunięto punkty (liczba: {n}).</source>
         <translation>Usunięto punkty (liczba: {n}).</translation>
     </message>
@@ -944,6 +980,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Zestaw: {name}.</translation>
     </message>
     <message>
+        <source>Usunięto oznaczenia „brak na mapie” (liczba: {n}).</source>
+        <translation>Usunięto oznaczenia „brak na mapie” (liczba: {n}).</translation>
+    </message>
+    <message>
         <source>Współrzędne przeliczono z układu {crs}.</source>
         <translation>Współrzędne przeliczono z układu {crs}.</translation>
     </message>
@@ -994,6 +1034,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>GCP {n}</source>
         <translation>GCP {n}</translation>
+    </message>
+    <message>
+        <source>Nazwa w tabeli ({name}) różni się od nazwy w bibliotece.</source>
+        <translation>Nazwa w tabeli ({name}) różni się od nazwy w bibliotece.</translation>
     </message>
     <message>
         <source>Niepoprawna wartość liczbowa – przywrócono poprzednią.</source>
@@ -1052,6 +1096,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>wył.</translation>
     </message>
     <message>
+        <source>Analiza nie jest jeszcze zapisana w bibliotece.</source>
+        <translation>Analiza nie jest jeszcze zapisana w bibliotece.</translation>
+    </message>
+    <message>
         <source>Wczytaj analizę</source>
         <translation>Wczytaj analizę</translation>
     </message>
@@ -1060,8 +1108,28 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Analiza mapy:</translation>
     </message>
     <message>
+        <source>Analiza „{cur}” ma niezapisane zmiany. Zapisać je przed wczytaniem „{title}”?</source>
+        <translation>Analiza „{cur}” ma niezapisane zmiany. Zapisać je przed wczytaniem „{title}”?</translation>
+    </message>
+    <message>
+        <source>Bieżące punkty ({n}) nie są zapisane w bibliotece. Zapisać je przed wczytaniem „{title}”?</source>
+        <translation>Bieżące punkty ({n}) nie są zapisane w bibliotece. Zapisać je przed wczytaniem „{title}”?</translation>
+    </message>
+    <message>
+        <source>Niezapisane zmiany – macierz pokrycia pokazuje je jako stan bieżący (*), plik biblioteki ma ostatni zapis.</source>
+        <translation>Niezapisane zmiany – macierz pokrycia pokazuje je jako stan bieżący (*), plik biblioteki ma ostatni zapis.</translation>
+    </message>
+    <message>
         <source>Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka).</source>
         <translation>Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka).</translation>
+    </message>
+    <message>
+        <source>Nie – porzuć zmiany.</source>
+        <translation>Nie – porzuć zmiany.</translation>
+    </message>
+    <message>
+        <source>Wszystkie wskazane punkty są już powiązane z biblioteką.</source>
+        <translation>Wszystkie wskazane punkty są już powiązane z biblioteką.</translation>
     </message>
     <message>
         <source>Najpierw wybierz punkt z biblioteki (wyszukiwarka lub „Następny z zestawu”).</source>
@@ -1070,6 +1138,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>Oznacz bieżący punkt z biblioteki jako nieobecny na tej mapie (informacja, nie błąd).</source>
         <translation>Oznacz bieżący punkt z biblioteki jako nieobecny na tej mapie (informacja, nie błąd).</translation>
+    </message>
+    <message>
+        <source>Analiza w bibliotece: {title}</source>
+        <translation>Analiza w bibliotece: {title}</translation>
     </message>
     <message>
         <source>W bibliotece jest już analiza tego skanu: „{title}”. Zastąpić ją?
@@ -1086,6 +1158,24 @@ Nie – zapisz jako nową analizę.</translation>
     <message>
         <source>Wczytano analizę „{title}” (punkty: {n}, brak na mapie: {m}).</source>
         <translation>Wczytano analizę „{title}” (punkty: {n}, brak na mapie: {m}).</translation>
+    </message>
+    <message>
+        <source>{gcp} → {name} ({d} m{how})</source>
+        <translation>{gcp} → {name} ({d} m{how})</translation>
+    </message>
+    <message>
+        <source>Powiązano z biblioteką: {n} pkt.</source>
+        <translation>Powiązano z biblioteką: {n} pkt.</translation>
+    </message>
+    <message>
+        <source>Kliknięto {px} px od punktu biblioteki „{name}”. Powiązać parę z tym punktem?
+
+Tak – współrzędne z biblioteki (punkt trafi do macierzy pokrycia).
+Nie – punkt spoza biblioteki w miejscu kliknięcia.</source>
+        <translation>Kliknięto {px} px od punktu biblioteki „{name}”. Powiązać parę z tym punktem?
+
+Tak – współrzędne z biblioteki (punkt trafi do macierzy pokrycia).
+Nie – punkt spoza biblioteki w miejscu kliknięcia.</translation>
     </message>
     <message>
         <source>Punkt „{name}” – uwagi (np. pominięty przez kartografa):</source>
@@ -1116,6 +1206,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zaktualizowano współrzędne punktów z biblioteki (liczba: {n}).</translation>
     </message>
     <message>
+        <source>Bez dopasowania: {n}.</source>
+        <translation>Bez dopasowania: {n}.</translation>
+    </message>
+    <message>
+        <source>Brak dopasowań w bibliotece dla punktów spoza biblioteki (liczba: {n}): ta sama nazwa do 5 km lub dowolny punkt do 500 m. Użyj „Do biblioteki”, aby je dodać.</source>
+        <translation>Brak dopasowań w bibliotece dla punktów spoza biblioteki (liczba: {n}): ta sama nazwa do 5 km lub dowolny punkt do 500 m. Użyj „Do biblioteki”, aby je dodać.</translation>
+    </message>
+    <message>
         <source>ark. {s}</source>
         <translation>ark. {s}</translation>
     </message>
@@ -1124,12 +1222,16 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Biblioteka nie zawiera zapisanych analiz.</translation>
     </message>
     <message>
-        <source>Zastąpić bieżące punkty ({n}) punktami analizy „{title}”?</source>
-        <translation>Zastąpić bieżące punkty ({n}) punktami analizy „{title}”?</translation>
-    </message>
-    <message>
         <source>Analiza dotyczy innego skanu ({f}). Wczytać go?</source>
         <translation>Analiza dotyczy innego skanu ({f}). Wczytać go?</translation>
+    </message>
+    <message>
+        <source>ta sama nazwa</source>
+        <translation>ta sama nazwa</translation>
+    </message>
+    <message>
+        <source>Powiązać punkty z biblioteką (liczba: {n})? Współrzędne odniesienia zostaną zastąpione współrzędnymi z biblioteki.</source>
+        <translation>Powiązać punkty z biblioteką (liczba: {n})? Współrzędne odniesienia zostaną zastąpione współrzędnymi z biblioteki.</translation>
     </message>
     <message>
         <source>Brak na mapie ({n}): {names}</source>
@@ -2407,6 +2509,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Tytuł, autor, rok, skala, arkusz mapy</translation>
     </message>
     <message>
+        <source>Analiza mapy: nie zapisana w bibliotece.</source>
+        <translation>Analiza mapy: nie zapisana w bibliotece.</translation>
+    </message>
+    <message>
         <source>Plik nie jest biblioteką punktów QMapAnalyst.</source>
         <translation>Plik nie jest biblioteką punktów QMapAnalyst.</translation>
     </message>
@@ -2483,10 +2589,6 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zestaw:</translation>
     </message>
     <message>
-        <source>Analiza mapy: nie zapisana w bibliotece.</source>
-        <translation>Analiza mapy: nie zapisana w bibliotece.</translation>
-    </message>
-    <message>
         <source>Analiza mapy: &lt;b&gt;{title}&lt;/b&gt;</source>
         <translation>Analiza mapy: &lt;b&gt;{title}&lt;/b&gt;</translation>
     </message>
@@ -2523,6 +2625,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zaznacz punkty na warstwie biblioteki (narzędzie zaznaczania QGIS).</translation>
     </message>
     <message>
+        <source>Zapisz ją, aby punkty były widoczne w macierzy pokrycia.</source>
+        <translation>Zapisz ją, aby punkty były widoczne w macierzy pokrycia.</translation>
+    </message>
+    <message>
         <source>Plik utworzyła nowsza wersja QMapAnalyst (schemat {v}). Zaktualizuj wtyczkę.</source>
         <translation>Plik utworzyła nowsza wersja QMapAnalyst (schemat {v}). Zaktualizuj wtyczkę.</translation>
     </message>
@@ -2557,6 +2663,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Utworzono zestaw „{name}” ({n} pkt).</source>
         <translation>Utworzono zestaw „{name}” ({n} pkt).</translation>
+    </message>
+    <message>
+        <source>niezapisane zmiany</source>
+        <translation>niezapisane zmiany</translation>
     </message>
     <message>
         <source>Biblioteka: &lt;b&gt;{name}&lt;/b&gt; ({crs})</source>
@@ -2763,8 +2873,8 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Odstające wg modelu:</translation>
     </message>
     <message>
-        <source>(puste – nie wskazany) · dwuklik – wczytaj analizę</source>
-        <translation>(puste – nie wskazany) · dwuklik – wczytaj analizę</translation>
+        <source>(puste – nie wskazany) · dwuklik – wczytaj analizę · * – stan bieżący, niezapisany</source>
+        <translation>(puste – nie wskazany) · dwuklik – wczytaj analizę · * – stan bieżący, niezapisany</translation>
     </message>
     <message>
         <source>Żadna analiza zapisana w bibliotece nie zawiera punktów tego zestawu.</source>
@@ -2775,8 +2885,16 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Punkty wspólne wszystkim mapom (pogrubione): {n}</translation>
     </message>
     <message>
+        <source>Ta analiza jest otwarta w panelu GCP.</source>
+        <translation>Ta analiza jest otwarta w panelu GCP.</translation>
+    </message>
+    <message>
         <source>odstające nie badane – za mało punktów do wyrównania</source>
         <translation>odstające nie badane – za mało punktów do wyrównania</translation>
+    </message>
+    <message>
+        <source>bieżąca analiza</source>
+        <translation>bieżąca analiza</translation>
     </message>
     <message>
         <source>Zestaw „{name}”: punkty {n}, mapy {m}</source>
@@ -2785,6 +2903,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Zapisano: {f}</source>
         <translation>Zapisano: {f}</translation>
+    </message>
+    <message>
+        <source>stan bieżący z panelu GCP</source>
+        <translation>stan bieżący z panelu GCP</translation>
     </message>
     <message>
         <source>punkty zestawu na mapie: {n}</source>

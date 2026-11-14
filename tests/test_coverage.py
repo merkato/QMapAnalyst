@@ -97,6 +97,22 @@ def test_export():
     assert data["points"][3]["cells"][str(a1)] == "outlier" and data["analyses"][2]["outliers_tested"] is False
 
 
+def test_current_state():
+    lib, sid, uid, (a1, a2, a3, _a4) = make_library(os.path.join(TMP, "c.gpkg"))
+    with lib:
+        links = lib.links(a3) + [lb.Link(uid=uid["P04"], name="P04", status="absent")]
+        cov = cv.build_coverage(lib, sid, current=(lib.get_analysis(a3), links))
+        assert cov.current_id == a3 and cov.cell(uid["P04"], a3) == "absent"   # stan bieżący zamiast zapisanego
+        new = [lb.Link(10, 10, 5, 5, uid=uid["P00"], name="P00"), lb.Link(uid=uid["P01"], name="P01", status="absent")]
+        cov = cv.build_coverage(lib, sid, current=(None, new))
+        cur = next(a for a in cov.analyses if a.analysis_id == cv.CURRENT)
+        assert cov.current_id == cv.CURRENT and len(cov.analyses) == 4
+        assert cov.cell(uid["P00"], cv.CURRENT) == "sure" and cov.cell(uid["P01"], cv.CURRENT) == "absent"
+        assert cv.analysis_label(cur) == "current"
+        cov = cv.build_coverage(lib, sid, analysis_ids={a1}, current=(None, new))
+        assert [a.analysis_id for a in cov.analyses] == [a1, cv.CURRENT]
+
+
 def test_unknown_set_and_empty():
     lib = lb.Library.create(os.path.join(TMP, "empty.gpkg"), "EPSG:2180")
     with lib:

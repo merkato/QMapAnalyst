@@ -244,6 +244,19 @@ def test_geographic_crs_axis_order():
     assert abs(g.GetX() - 21.24) < 1e-12, "x musi być długością geograficzną (kolejność GIS)"
 
 
+def test_match_point():
+    pts = [lib_mod.RefPoint("Iłża", 0, 0, uid="a", alt_names="Ilsa"), lib_mod.RefPoint("Wierzbica", 300, 0, uid="b"),
+           lib_mod.RefPoint("Iłża", 4000, 0, uid="c")]
+    p, d, by_name = lib_mod.match_point(pts, "ilsa", 1000, 0, 5000, 500)
+    assert p.uid == "a" and d == 1000 and by_name                      # nazwa dawna, najbliższy z tą nazwą
+    p, d, by_name = lib_mod.match_point(pts, "", 350, 100, 5000, 500)
+    assert p.uid == "b" and not by_name                                 # bez nazwy – najbliższy do 500 m
+    p, d, by_name = lib_mod.match_point(pts, "Inna", 350, 0, 5000, 500)
+    assert p.uid == "b" and not by_name                                 # nazwa bez dopasowania – najbliższy
+    assert lib_mod.match_point(pts, "", 2000, 2000, 5000, 500) is None
+    assert lib_mod.match_point(pts, "Iłża", 100, 0, 5000, 500, exclude={"a", "b"})[0].uid == "c"
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_") and callable(f)]
     failed = 0

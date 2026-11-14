@@ -267,6 +267,25 @@ def search_points(points, text, near=None, limit=20, max_dist=None):
     return [(p, d) for *_k, p, d in out[:limit]]
 
 
+def match_point(points, name, x, y, named_dist, near_dist, exclude=()):
+    """Punkt biblioteki dla punktu GCP spoza biblioteki: (RefPoint, odległość, po_nazwie) albo None.
+
+    Najpierw najbliższy punkt o tej samej nazwie (także dawnej) w promieniu named_dist,
+    potem – najbliższy dowolny w promieniu near_dist. Punkty z `exclude` (uid) są pomijane."""
+    key = normalize(name) if name else ""
+    best_named = best_near = None
+    for p in points:
+        if p.uid in exclude:
+            continue
+        d = math.hypot(p.x - x, p.y - y)
+        if key and d <= named_dist and key in (normalize(n) for n in p.names()):
+            if best_named is None or d < best_named[1]:
+                best_named = (p, d, True)
+        if d <= near_dist and (best_near is None or d < best_near[1]):
+            best_near = (p, d, False)
+    return best_named or best_near
+
+
 # ----------------------------------------------------------------------
 #  Biblioteka
 # ----------------------------------------------------------------------

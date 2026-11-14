@@ -256,6 +256,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self._lib_skipped = set()      # „Następny z zestawu” – pominięte w tej sesji
         self.absent = {}               # uid -> (nazwa, uwagi): punkty zestawu nieobecne na tej mapie
         self.library_analysis = None   # library.Analysis bieżącej mapy (po zapisie / odczycie)
+        self._saved_signature = None   # stan punktów przy ostatnim zapisie / odczycie analizy (niezapisane zmiany)
 
         self._hints = []
         self._theme_busy = False
@@ -357,6 +358,9 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self.tab_widget.addTab(_scrollable(self.library_panel), _icon("/mGeoPackage.svg"), self.tr("Biblioteka"))
         self.library_panel.libraryChanged.connect(self.update_enabled_state)
         self.library_panel.saveAnalysisRequested.connect(self.save_library_analysis)
+        self.library_panel.libraryChanged.connect(self.update_analysis_label)
+        self.library_panel.libraryChanged.connect(self.refresh_table)
+        self.library_panel.current_analysis = self.current_analysis_state
         self.library_panel.openAnalysisRequested.connect(self.open_library_analysis)
         self.library_panel.editAnalysisRequested.connect(self.edit_library_analysis)
         self.library_panel.openAnalysisIdRequested.connect(self.open_library_analysis)
@@ -478,11 +482,15 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
             "Dodaj zaznaczone punkty GCP (ich współrzędne odniesienia) do biblioteki punktów i do zestawu wybranego "
             "w zakładce Biblioteka. Punkt leżący już w bibliotece (do 1 m) zostanie powiązany, a nie zdublowany."))
         self.btn_gcp_to_library.clicked.connect(self.add_selected_gcp_to_library)
+        self.btn_gcp_link = _button(self.tr("Powiąż"), "/mActionLink.svg", self.tr(
+            "Powiąż zaznaczone (bez zaznaczenia – wszystkie) punkty spoza biblioteki z istniejącymi punktami biblioteki: "
+            "ta sama nazwa (także dawna) do 5 km albo najbliższy punkt do 500 m. Przed zmianą pokazuje listę propozycji."))
+        self.btn_gcp_link.clicked.connect(lambda: self.link_selected_to_library())
         self.btn_load_gcp = _button("", "/mActionFileOpen.svg", self.tr("Wczytaj GCP (CSV / .points)…"))
         self.btn_load_gcp.clicked.connect(self.load_gcp_from_file)
         self.btn_save_gcp = _button("", "/mActionFileSave.svg", self.tr("Zapisz GCP (CSV / .points)…"))
         self.btn_save_gcp.clicked.connect(self.save_gcp_to_file)
-        for b in (self.btn_add_gcp, self.btn_remove_gcp, self.btn_toggle_gcp, self.btn_gcp_to_library):
+        for b in (self.btn_add_gcp, self.btn_remove_gcp, self.btn_toggle_gcp, self.btn_gcp_to_library, self.btn_gcp_link):
             row.addWidget(b)
         self.chk_names = QCheckBox(self.tr("Nazwy punktów"))
         self.chk_names.setToolTip(self.tr(
@@ -536,7 +544,8 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self.tbl_gcp.verticalHeader().sectionDoubleClicked.connect(self.zoom_to_gcp)
         lay.addWidget(self.tbl_gcp)
 
-        hint = QLabel(self.tr("Dwuklik w numer wiersza – pokaż punkt na obu mapach. Dwuklik w komórkę – edycja współrzędnej."))
+        hint = QLabel(self.tr("Dwuklik w numer wiersza – pokaż punkt na obu mapach (wiersz „brak na mapie” – wskaż go teraz). "
+                              "Dwuklik w komórkę – edycja. Ikona przy numerze: punkt powiązany z biblioteką / spoza biblioteki."))
         hint.setWordWrap(True)
         self._hint(hint, small=True)
         lay.addWidget(hint)
@@ -564,9 +573,12 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self.btn_lib_next.clicked.connect(self.next_library_point)
         self.btn_lib_absent = _button(self.tr("Brak na mapie"), "/mActionHideSelectedLayers.svg", "")
         self.btn_lib_absent.clicked.connect(self.mark_target_absent)
+        self.btn_lib_save = _button(self.tr("Zapisz analizę"), "/mActionFileSave.svg", "")
+        self.btn_lib_save.clicked.connect(lambda: self.save_library_analysis())
         row.addWidget(self.ed_lib_search, 1)
         row.addWidget(self.btn_lib_next)
         row.addWidget(self.btn_lib_absent)
+        row.addWidget(self.btn_lib_save)
         self.update_absent_label()
         return row
 
@@ -1034,12 +1046,14 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self.btn_save_report.setEnabled(has_res)
         self.btn_graticule.setEnabled(self.projection is not None and has_raster)
         self.btn_save_gcp.setEnabled(bool(self.gcps))
-        self.btn_remove_gcp.setEnabled(bool(self.gcps))
+        self.btn_remove_gcp.setEnabled(bool(self.gcps) or bool(self.absent))
         self.btn_toggle_gcp.setEnabled(bool(self.gcps))
         has_lib = self.library_panel.path is not None
         self.btn_gcp_to_library.setEnabled(bool(self.gcps) and has_lib)
+        self.btn_gcp_link.setEnabled(has_lib and any(not g.uid for g in self.gcps))
         self.ed_lib_search.setEnabled(has_lib)
         self.btn_lib_next.setEnabled(has_lib)
+        self.btn_lib_save.setEnabled(has_lib)
         self.btn_lib_absent.setEnabled(has_lib and self._lib_target is not None)
 
     # ------------------------------------------------------------------
@@ -1342,7 +1356,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
     def on_ref_canvas_clicked(self, point, button):
         if button != Qt.MouseButton.LeftButton or self._temp_old_point is None:
             return
-        snapped = self.library_panel.snap(point, self.main_canvas)
+        snapped = self.library_panel.snap(point, self.main_canvas) or self.propose_library_point(point)
         if snapped is not None:
             self._complete_library_pair(self._temp_old_point, snapped)
             return
@@ -1523,6 +1537,11 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
             return
         if self._lib_target is not None:
             self._lib_skipped.add(self._lib_target.uid)
+        if self._temp_old_point is not None:
+            # punkt wskazany wcześniej na skanie nie należy do punktu z zestawu – nie łączyć ich w parę
+            self._temp_old_point = None
+            self._remove_temp_marker()
+            self._remove_pred_marker()
         cands, n_missing = self._next_candidates(points)
         if not cands:
             self._clear_lib_target()
@@ -1610,7 +1629,13 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self.set_status(msg, "ok")
 
     def selected_rows(self):
-        return sorted({i.row() for i in self.tbl_gcp.selectedIndexes()})
+        """Zaznaczone wiersze punktów GCP (bez wierszy „brak na mapie”)."""
+        return sorted({i.row() for i in self.tbl_gcp.selectedIndexes() if i.row() < len(self.gcps)})
+
+    def selected_absent(self):
+        """uid zaznaczonych wierszy „brak na mapie”."""
+        uids = (self._absent_uid(r) for r in {i.row() for i in self.tbl_gcp.selectedIndexes()})
+        return [u for u in uids if u is not None]
 
     def gcps_changed(self):
         """Wywoływane po każdej zmianie zbioru punktów."""
@@ -1623,6 +1648,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self.update_markers()
         self.update_enabled_state()
         self.library_panel.set_used_uids(g.uid for g in self.gcps)
+        self.update_analysis_label()
         if self.chk_auto.isChecked():
             model = self.cmb_transform_type.currentData()
             n_active = sum(1 for g in self.gcps if g.active)
@@ -1634,7 +1660,9 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         t.blockSignals(True)
         t.setUpdatesEnabled(False)
         try:
-            t.setRowCount(len(self.gcps))
+            t.clearSpans()
+            t.setRowCount(len(self.gcps) + len(self.absent))
+            lib_names = {p.uid: p.name for p in self.library_panel._cached()[0]} if self.library_panel.path else None
             res = {}
             fit = None
             if self.analysis is not None and not self.analysis_stale:
@@ -1647,6 +1675,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
                 chk.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
                 chk.setCheckState(Qt.CheckState.Checked if g.enabled else Qt.CheckState.Unchecked)
                 t.setItem(r, COL_ACT, chk)
+                t.setVerticalHeaderItem(r, self._row_header(r, g, lib_names))
                 nm = QTableWidgetItem(g.name)
                 if g.uid:
                     nm.setToolTip(self.tr("Punkt biblioteki ({uid})").format(uid=g.uid))
@@ -1677,14 +1706,73 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
                             it.setText(self.tr("wył.") if not g.enabled else lib_status_labels()[g.status])
                             it.setForeground(off)
                         t.setItem(r, c, it)
+            for k, (name, comment) in enumerate(self.absent.values()):
+                self._fill_absent_row(len(self.gcps) + k, name, comment)
         finally:
             t.setUpdatesEnabled(True)
             t.blockSignals(False)
+
+    def _row_header(self, r, g, lib_names):
+        """Numer wiersza z ikoną powiązania z biblioteką (gdy biblioteka jest otwarta)."""
+        it = QTableWidgetItem(str(r + 1))
+        if lib_names is None:
+            return it
+        if g.uid:
+            it.setIcon(_icon("/mActionLink.svg"))
+            lib = lib_names.get(g.uid)
+            tip = self.tr("Punkt biblioteki: {name}").format(name=lib if lib is not None else "?")
+            if lib is not None and g.name and lib_normalize(g.name) != lib_normalize(lib):
+                tip += "\n" + self.tr("Nazwa w tabeli ({name}) różni się od nazwy w bibliotece.").format(name=g.name)
+        else:
+            it.setIcon(_icon("/mActionUnlink.svg"))
+            it.setForeground(fg_color(self.tbl_gcp, "warn"))
+            tip = self.tr("Punkt spoza biblioteki – nie trafi do macierzy pokrycia. "
+                          "„Powiąż” dołączy go do istniejącego punktu biblioteki, „Do biblioteki” – doda nowy.")
+        it.setToolTip(tip + "\n" + self.tr("Dwuklik – pokaż punkt na obu mapach."))
+        return it
+
+    def _fill_absent_row(self, r, name, comment):
+        """Wiersz punktu zestawu oznaczonego „brak na mapie” (bez położenia; edytowalne tylko uwagi)."""
+        t = self.tbl_gcp
+        off = fg_color(t, "off")
+        ro = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
+        head = QTableWidgetItem("○")
+        head.setIcon(_icon("/mActionHideSelectedLayers.svg"))
+        head.setToolTip(self.tr("Brak na mapie: {name}. Dwuklik – wskaż jednak ten punkt na mapie dawnej.").format(name=name))
+        t.setVerticalHeaderItem(r, head)
+        cells = {COL_ACT: "", COL_NAME: name, COL_STATUS: lib_status_labels()["absent"],
+                 COL_OX: self.tr("{name} – brak na mapie (bez położenia na skanie)").format(name=name)}
+        for c, text in cells.items():
+            it = QTableWidgetItem(text)
+            it.setFlags(ro)
+            it.setForeground(off)
+            if c != COL_ACT:
+                f = it.font()
+                f.setItalic(True)
+                it.setFont(f)
+            t.setItem(r, c, it)
+        for c in range(COL_OY, COL_NOTE):
+            it = QTableWidgetItem("")
+            it.setFlags(ro)
+            t.setItem(r, c, it)
+        t.setSpan(r, COL_OX, 1, COL_NOTE - COL_OX)
+        note = QTableWidgetItem(comment)
+        note.setFlags(ro | Qt.ItemFlag.ItemIsEditable)
+        t.setItem(r, COL_NOTE, note)
+
+    def _absent_uid(self, row):
+        k = row - len(self.gcps)
+        keys = list(self.absent)
+        return keys[k] if 0 <= k < len(keys) else None
 
     @guarded
     def on_table_item_changed(self, item):
         r, c = item.row(), item.column()
         if r >= len(self.gcps):
+            uid = self._absent_uid(r)
+            if uid is not None and c == COL_NOTE:
+                self.absent[uid] = (self.absent[uid][0], item.text().strip())
+                self.update_analysis_label()
             return
         g = self.gcps[r]
         if c in (COL_NAME, COL_NOTE, COL_STATUS):
@@ -1714,8 +1802,10 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         if c == COL_NAME:
             g.name = item.text().strip()
             self.names_changed()
+            self.update_analysis_label()
         elif c == COL_NOTE:
             g.comment = item.text().strip()
+            self.update_analysis_label()
         else:
             code = item.data(Qt.ItemDataRole.UserRole)
             if code != g.status and code in COMPUTABLE_STATUSES + ("illegible",):
@@ -1758,6 +1848,14 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
 
     @guarded
     def zoom_to_gcp(self, row):
+        uid = self._absent_uid(row)
+        if uid is not None:
+            p = next((q for q in self.library_panel._cached()[0] if q.uid == uid), None)
+            if p is None:
+                self.set_status(self.tr("Punktu nie ma już w bibliotece."), "warn")
+            else:
+                self.choose_library_point(p)
+            return
         if not (0 <= row < len(self.gcps)):
             return
         g = self.gcps[row]
@@ -1769,16 +1867,24 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
     @guarded
     def remove_selected_gcp(self):
         rows = self.selected_rows()
-        if not rows:
+        absent = self.selected_absent()
+        if not rows and not absent:
             self.set_status(self.tr("Zaznacz wiersze do usunięcia."), "warn")
+            return
+        for uid in absent:
+            self.absent.pop(uid, None)
+        self.update_absent_label()
+        self.tbl_gcp.clearSelection()
+        if not rows:
+            self.absent_changed()
+            self.set_status(self.tr("Usunięto oznaczenia „brak na mapie” (liczba: {n}).").format(n=len(absent)))
             return
         for r in reversed(rows):
             self._drop_markers(self.gcps.pop(r))
         if not self.gcps:
             self.ref_crs = None
-        self.tbl_gcp.clearSelection()
         self.gcps_changed()
-        self.set_status(self.tr("Usunięto punkty (liczba: {n}).").format(n=len(rows)))
+        self.set_status(self.tr("Usunięto punkty (liczba: {n}).").format(n=len(rows) + len(absent)))
 
     @guarded
     def toggle_selected_gcp(self):

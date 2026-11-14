@@ -45,8 +45,54 @@ class LibraryAnalysisMixin:
                 QApplication.restoreOverrideCursor()
         return a
 
+    # --- stan zapisu ------------------------------------------------------------
+    def _links_signature(self):
+        def num(v):
+            return None if v is None else round(float(v), 6)
+        return tuple((ln.uid, ln.name, num(ln.x_old), num(ln.y_old), num(ln.ref_x), num(ln.ref_y), bool(ln.enabled),
+                      ln.status, ln.comment) for ln in self.library_links())
+
+    def mark_analysis_saved(self):
+        self._saved_signature = self._links_signature()
+
+    def analysis_dirty(self):
+        """Czy punkty w panelu różnią się od zapisanych w bibliotece (lub w ogóle nie są zapisane)."""
+        if not self.gcps and not self.absent:
+            return False
+        a = self.library_analysis
+        if a is None or a.analysis_id is None:
+            return True
+        return self._links_signature() != self._saved_signature
+
+    def current_analysis_state(self):
+        """Dla macierzy pokrycia: (Analysis lub None, punkty, niezapisane)."""
+        return self.library_analysis, self.library_links(), self.analysis_dirty()
+
     def update_analysis_label(self):
-        self.library_panel.set_analysis_label(self.library_analysis)
+        has_lib = self.library_panel.path is not None
+        dirty = has_lib and self.analysis_dirty()
+        self.library_panel.set_analysis_label(self.library_analysis, dirty)
+        if not hasattr(self, "btn_lib_save"):
+            return
+        self.btn_lib_save.setEnabled(has_lib)
+        self.btn_lib_save.setText(self.tr("Zapisz analizę") + (" *" if dirty else ""))
+        f = self.btn_lib_save.font()
+        f.setBold(dirty)
+        self.btn_lib_save.setFont(f)
+        a = self.library_analysis
+        tip = (self.tr("Analiza w bibliotece: {title}").format(title=a.title or "?") if a is not None and a.analysis_id
+               else self.tr("Analiza nie jest jeszcze zapisana w bibliotece."))
+        if dirty:
+            tip += "\n" + self.tr("Niezapisane zmiany – macierz pokrycia pokazuje je jako stan bieżący (*), "
+                                   "plik biblioteki ma ostatni zapis.")
+        self.btn_lib_save.setToolTip(tip)
+
+    def absent_changed(self):
+        """Zmiana listy punktów „brak na mapie” (nie wpływa na obliczenia)."""
+        self.update_absent_label()
+        self.refresh_table()
+        self.update_enabled_state()
+        self.update_analysis_label()
 
     def on_scan_changed(self):
         """Nowy skan: analiza innego skanu przestaje być bieżąca; podpowiedź o analizach tego skanu w bibliotece."""
@@ -110,6 +156,7 @@ class LibraryAnalysisMixin:
             self.set_status(self.library_panel._library_error(e), "error")
             return False
         self.library_analysis = a
+        self.mark_analysis_saved()
         self.update_analysis_label()
         self.set_status(self.tr("Zapisano analizę „{title}” w bibliotece (punkty: {n}, brak na mapie: {m}).")
                         .format(title=a.title or "?", n=len(self.gcps), m=len(self.absent)), "ok")
@@ -169,15 +216,31 @@ class LibraryAnalysisMixin:
         except lb.LibraryError as e:
             self.set_status(self.library_panel._library_error(e), "error")
             return False
-        if self.gcps and QMessageBox.question(
-                self, "QMapAnalyst", self.tr("Zastąpić bieżące punkty ({n}) punktami analizy „{title}”?")
-                .format(n=len(self.gcps), title=a.title or "?")) != QMessageBox.StandardButton.Yes:
+        if not self._confirm_discard(a):
             return False
         self._ensure_scan(a)
         self._apply_library_analysis(a, links)
         self.library_panel.invalidate_cache()
         self.check_changed_refs()
         return True
+
+    def _confirm_discard(self, a):
+        """Przed wczytaniem analizy a: niezapisane punkty – zapisać, porzucić czy anulować?"""
+        if not self.analysis_dirty():
+            return True
+        cur = self.library_analysis
+        if cur is not None and cur.analysis_id is not None:
+            text = self.tr("Analiza „{cur}” ma niezapisane zmiany. Zapisać je przed wczytaniem „{title}”?")
+        else:
+            text = self.tr("Bieżące punkty ({n}) nie są zapisane w bibliotece. Zapisać je przed wczytaniem „{title}”?")
+        buttons = QMessageBox.StandardButton
+        ans = QMessageBox.question(self, "QMapAnalyst",
+                                   text.format(cur=cur.title if cur else "", n=len(self.gcps), title=a.title or "?")
+                                   + "\n\n" + self.tr("Nie – porzuć zmiany."),
+                                   buttons.Yes | buttons.No | buttons.Cancel)
+        if ans == buttons.Cancel:
+            return False
+        return ans == buttons.No or self.save_library_analysis()
 
     def _ensure_scan(self, a):
         """Wczytuje skan analizy, gdy żaden nie jest wczytany (lub – za zgodą – gdy wczytany jest inny)."""
@@ -208,6 +271,7 @@ class LibraryAnalysisMixin:
                 self.add_gcp(ln.x_old, ln.y_old, ln.ref_x, ln.ref_y, enabled=ln.enabled, name=ln.name,
                              uid=ln.uid, status=ln.status, comment=ln.comment)
         self.library_analysis = a
+        self.mark_analysis_saved()
         self.update_absent_label()
         if any(g.name for g in self.gcps) and not self.chk_names.isChecked():
             self.chk_names.setChecked(True)
@@ -289,6 +353,76 @@ class LibraryAnalysisMixin:
             self.set_status(self.tr("Zaktualizowano współrzędne punktów z biblioteki (liczba: {n}).").format(n=len(moved)), "ok")
         return len(changed)
 
+    # --- powiązanie z biblioteką ------------------------------------------------------
+    def _link_proposals(self, rows):
+        """Propozycje powiązania: [(wiersz, RefPoint, odległość [m], po_nazwie)] – bez dublowania uid."""
+        crs = self._ensure_ref_crs()
+        taken = {g.uid for g in self.gcps if g.uid}
+        out = []
+        for r in rows:
+            g = self.gcps[r]
+            m = self.library_panel.match_reference(g.name, QgsPointXY(g.ref_x, g.ref_y), crs, exclude=taken)
+            if m is not None:
+                taken.add(m[0].uid)
+                out.append((r, *m))
+        return out
+
+    def _link_question(self, props, n_rows):
+        lines = [self.tr("{gcp} → {name} ({d} m{how})").format(
+            gcp=self.point_label(r), name=p.name, d=f"{d:.0f}", how=", " + self.tr("ta sama nazwa") if by_name else "")
+            for r, p, d, by_name in props]
+        text = (self.tr("Powiązać punkty z biblioteką (liczba: {n})? Współrzędne odniesienia zostaną zastąpione "
+                        "współrzędnymi z biblioteki.").format(n=len(props)) + "\n\n" + "\n".join(lines[:20])
+                + ("\n…" if len(lines) > 20 else ""))
+        if len(props) < n_rows:
+            text += "\n\n" + self.tr("Bez dopasowania: {n}.").format(n=n_rows - len(props))
+        return QMessageBox.question(self, "QMapAnalyst", text) == QMessageBox.StandardButton.Yes
+
+    def link_selected_to_library(self):
+        """Zaznaczone (lub wszystkie) punkty GCP spoza biblioteki – powiązanie z punktami biblioteki
+        o tej samej nazwie (do 5 km) albo najbliższymi (do 500 m); współrzędne odniesienia z biblioteki."""
+        if self.library_panel.path is None:
+            self.set_status(self.tr("Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka)."), "warn")
+            return
+        rows = [r for r in (self.selected_rows() or range(len(self.gcps))) if not self.gcps[r].uid]
+        if not rows:
+            self.set_status(self.tr("Wszystkie wskazane punkty są już powiązane z biblioteką."), "ok")
+            return
+        props = self._link_proposals(rows)
+        if not props:
+            self.set_status(self.tr("Brak dopasowań w bibliotece dla punktów spoza biblioteki (liczba: {n}): "
+                                    "ta sama nazwa do 5 km lub dowolny punkt do 500 m. Użyj „Do biblioteki”, "
+                                    "aby je dodać.").format(n=len(rows)), "warn")
+            return
+        if not self._link_question(props, len(rows)):
+            return
+        crs = self._ensure_ref_crs()
+        for r, p, _d, _b in props:
+            g = self.gcps[r]
+            q = self.library_panel.to_crs(p, crs)
+            g.uid, g.ref_x, g.ref_y = p.uid, q.x(), q.y()
+            g.name = g.name or p.name
+            if g.ref_marker is not None:
+                g.ref_marker.setCenter(self._ref_to_canvas(g.ref_x, g.ref_y))
+            self.absent.pop(p.uid, None)
+        self.update_absent_label()
+        self.gcps_changed()
+        self.set_status(self.tr("Powiązano z biblioteką: {n} pkt.").format(n=len(props)), "ok")
+
+    def propose_library_point(self, canvas_point, tolerance_px=40):
+        """Punkt biblioteki w pobliżu kliknięcia na mapie głównej (gdy przyciąganie nie zadziałało) – za zgodą."""
+        p = self.library_panel.snap(canvas_point, self.main_canvas, tolerance_px)
+        if p is None or self._gcp_index_of(p.uid) is not None:
+            return None
+        cpt = self.library_panel.to_crs(p, self.canvas_crs())
+        px = cpt.distance(QgsPointXY(canvas_point)) / max(self.main_canvas.mapUnitsPerPixel(), 1e-12)
+        ans = QMessageBox.question(
+            self, "QMapAnalyst",
+            self.tr("Kliknięto {px} px od punktu biblioteki „{name}”. Powiązać parę z tym punktem?\n\n"
+                    "Tak – współrzędne z biblioteki (punkt trafi do macierzy pokrycia).\n"
+                    "Nie – punkt spoza biblioteki w miejscu kliknięcia.").format(px=f"{px:.0f}", name=p.name))
+        return p if ans == QMessageBox.StandardButton.Yes else None
+
     # --- brak na mapie --------------------------------------------------------------------
     def mark_target_absent(self):
         """Bieżący punkt z biblioteki (wybrany wyszukiwarką lub „Następny z zestawu”) – brak na mapie."""
@@ -302,7 +436,7 @@ class LibraryAnalysisMixin:
             return
         self.absent[p.uid] = (p.name, comment.strip())
         self._clear_lib_target()
-        self.update_absent_label()
+        self.absent_changed()
         self.set_status(self.tr("„{name}” – brak na mapie.").format(name=p.name), "ok")
         if self.library_panel.set_points() is not None:
             self.next_library_point()

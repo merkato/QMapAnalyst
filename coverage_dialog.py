@@ -45,6 +45,7 @@ class CoverageDialog(QDialog):
         self.panel = panel
         self.coverage = None
         self.chosen_analysis = None
+        self.current_dirty = False
         self.setWindowTitle(tr("Macierz pokrycia"))
         self.resize(820, 560)
         lay = QVBoxLayout(self)
@@ -69,7 +70,7 @@ class CoverageDialog(QDialog):
         lay.addWidget(self.table, 1)
 
         legend = "   ".join(f"{CELL_STYLE[c][0]} {cell_labels()[c]}" for c in cv.CODES)
-        self.lbl_legend = QLabel(legend + "   " + tr("(puste – nie wskazany) · dwuklik – wczytaj analizę"))
+        self.lbl_legend = QLabel(legend + "   " + tr("(puste – nie wskazany) · dwuklik – wczytaj analizę · * – stan bieżący, niezapisany"))
         self.lbl_legend.setWordWrap(True)
         lay.addWidget(self.lbl_legend)
         self.lbl_summary = QLabel()
@@ -94,9 +95,13 @@ class CoverageDialog(QDialog):
     # --- dane ------------------------------------------------------------------
     def refresh(self, *args):
         sid = self.panel.current_set()
+        current = None
+        if self.panel.current_analysis is not None:
+            analysis, links, self.current_dirty = self.panel.current_analysis()
+            current = (analysis, links) if links else None
         try:
             with self.panel.library() as lib:
-                self.coverage = cv.build_coverage(lib, sid, self.cmb_model.currentData())
+                self.coverage = cv.build_coverage(lib, sid, self.cmb_model.currentData(), current=current)
         except lb.LibraryError as e:
             self.coverage = None
             self.lbl_summary.setText(self.panel._library_error(e))
@@ -111,8 +116,10 @@ class CoverageDialog(QDialog):
         t.setRowCount(len(cov.points))
         t.setColumnCount(len(cov.analyses) + 1)
         for c, a in enumerate(cov.analyses):
-            it = QTableWidgetItem(cv.analysis_label(a))
-            tip = [cv.analysis_label(a)]
+            it = QTableWidgetItem(self._column_label(a))
+            tip = [self._column_label(a)]
+            if a.analysis_id == cov.current_id:
+                tip.append(tr("stan bieżący z panelu GCP") + (" – " + tr("niezapisane zmiany") if self.current_dirty else ""))
             if a.scale:
                 tip.append(f"1 : {a.scale:,}".replace(",", " "))
             if a.sheet:
@@ -141,6 +148,15 @@ class CoverageDialog(QDialog):
             total = QTableWidgetItem(f"{cov.row_count(p.uid)}/{len(cov.analyses)}")
             total.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             t.setItem(r, len(cov.analyses), total)
+
+    def _column_label(self, a):
+        if a.analysis_id == cv.CURRENT:
+            label = (a.title or tr("bieżąca analiza")) + " *"
+        else:
+            label = cv.analysis_label(a)
+            if a.analysis_id == self.coverage.current_id and self.current_dirty:
+                label += " *"
+        return label
 
     @staticmethod
     def _cell_item(code, labels):
@@ -178,7 +194,11 @@ class CoverageDialog(QDialog):
     def on_cell_double_clicked(self, row, col):
         if self.coverage is None or col >= len(self.coverage.analyses):
             return
-        self.chosen_analysis = self.coverage.analyses[col].analysis_id
+        aid = self.coverage.analyses[col].analysis_id
+        if aid == self.coverage.current_id:
+            self.lbl_legend.setText(tr("Ta analiza jest otwarta w panelu GCP."))
+            return
+        self.chosen_analysis = aid
         self.accept()
 
     def export(self, kind):

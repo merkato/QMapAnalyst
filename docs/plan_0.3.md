@@ -77,6 +77,12 @@ Stan:
   modelem liczone na żądanie, punkty wspólne wszystkim mapom, odstające na ≥ 2 mapach, eksport CSV/JSON,
   dwuklik – wczytanie analizy (`tests/test_coverage.py`, `tests/library_coverage_qgis.py`).
   Pilot „Kielecczyzna-18” (M2 Zannoni, M5 TKKP Iłża) – na danych użytkownika.
+- etap 6b – jednoznaczne powiązanie z biblioteką (po pierwszych testach w QGIS): ikona powiązania przy numerze
+  wiersza tabeli GCP, wiersze „brak na mapie” w tabeli (uwagi, usuwanie, dwuklik – wskazanie), propozycja punktu
+  biblioteki przy kliknięciu do 40 px, „Powiąż” (`library.match_point`: ta sama nazwa do 5 km, dowolny do 500 m),
+  „Następny z zestawu” odrzuca zaczęty krok 1/2, niezapisane zmiany (sygnatura punktów, *Zapisz analizę \**,
+  pytanie przy wczytaniu innej analizy), macierz pokrycia ze stanem bieżącym otwartej analizy
+  (`build_coverage(..., current=…)`, kolumna `CURRENT`) (`tests/library_link_qgis.py`).
 
 ## Etapy
 
@@ -89,5 +95,14 @@ Stan:
    (eksport `.points` zostaje), ostrzeżenie o zmienionych współrzędnych, opcja wag a priori.
 5. Import (CSV, dowolna warstwa wektorowa z mapowaniem pól), duplikaty, zestaw z zaznaczenia.
 6. Macierz pokrycia punkt × mapa; pilot „Kielecczyzna-18” (M2 Zannoni ark. 14, M5 TKKP Iłża).
+6b. Jednoznaczne powiązanie punktów analizy z biblioteką (tabela GCP = treść analizy, niezapisane zmiany).
+7. Mapy i arkusze: tabela `maps` (schemat 2, migracja wg tytułu), okno map i arkuszy (nowy arkusz, edycja,
+   usuwanie), wybór mapy z listy przy zapisie, macierz według mapy lub arkusza.
+8. Obsługa zestawów: zestaw roboczy oddzielony od filtra mapy, okno punktów zestawu, wybór zestawu w zakładce GCP,
+   zestaw z punktów analizy lub zasięgu mapy, mniej przycisków.
+9. Pilot „Kielecczyzna-18” na danych użytkownika.
+10. Wydanie 0.3.0: instrukcja, PR do `main`, wersja bez `-dev`.
+Później: tryb serii (statystyki, trajektorie, kopiowanie błędów, raport), import z sieci (Overpass, PRNG),
+wagi w estymacji odwzorowania.
 
 Na bieżąco: tłumaczenia EN, testy, dokumentacja.
