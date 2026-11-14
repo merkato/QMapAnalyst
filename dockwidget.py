@@ -42,6 +42,7 @@ from . import theme
 from .lang import num
 from .library import normalize as lib_normalize
 from .analysis_store import LibraryAnalysisMixin
+from .frame import SETTINGS_SHOW_FRAME, MapFrameMixin
 from .library import COMPUTABLE_STATUSES
 from .library_panel import LibraryPanel, status_labels as lib_status_labels, type_labels as lib_type_labels
 from .widgets import ComboDelegate, FlowLayout
@@ -228,7 +229,7 @@ def _num_item(value, digits=2, editable=False, color=None, tip=None):
 #  Panel
 # ---------------------------------------------------------------------------
 
-class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
+class QMapAnalystDockWidget(LibraryAnalysisMixin, MapFrameMixin, QDockWidget):
 
     def __init__(self, iface, parent=None):
         super().__init__("QMapAnalyst", parent)
@@ -254,6 +255,10 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self._lib_target = None        # punkt biblioteki czekający na wskazanie na mapie dawnej
         self._lib_markers = []         # znaczniki celu (mapa główna, przewidywane położenie na skanie)
         self._lib_skipped = set()      # „Następny z zestawu” – pominięte w tej sesji
+        self.map_frame = None          # ramka mapy na skanie (4 rogi) – None: cały skan
+        self._frame_capture = None     # rogi wskazywane w trybie „Zasięg mapy”
+        self._frame_bands = {}
+        self._lib_outside = 0          # „Następny z zestawu” – pominięte jako poza zasięgiem mapy
         self.absent = {}               # uid -> (nazwa, uwagi): punkty zestawu nieobecne na tej mapie
         self.library_analysis = None   # library.Analysis bieżącej mapy (po zapisie / odczycie)
         self._saved_signature = None   # stan punktów przy ostatnim zapisie / odczycie analizy (niezapisane zmiany)
@@ -489,11 +494,25 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
             "Powiąż zaznaczone (bez zaznaczenia – wszystkie) punkty spoza biblioteki z istniejącymi punktami biblioteki: "
             "ta sama nazwa (także dawna) do 5 km albo najbliższy punkt do 500 m. Przed zmianą pokazuje listę propozycji."))
         self.btn_gcp_link.clicked.connect(lambda: self.link_selected_to_library())
+        self.btn_frame = _button(self.tr("Zasięg mapy"), "/mActionAddPolygon.svg", self.tr(
+            "Ramka mapy na skanie: 4 rogi wskazane na mapie dawnej albo cały skan. Po obliczeniu transformacji zasięg "
+            "jest widoczny na mapie głównej; „Następny z zestawu” pomija punkty spoza zasięgu, a macierz pokrycia "
+            "oznacza je jako „poza zasięgiem”."))
+        menu = QMenu(self.btn_frame)
+        self.act_frame_pick = menu.addAction(self.tr("Wskaż 4 rogi ramki na skanie"), self.start_frame_capture)
+        self.act_frame_reset = menu.addAction(self.tr("Zasięg = cały skan"), self.reset_frame)
+        menu.addSeparator()
+        self.act_frame_show = menu.addAction(self.tr("Pokaż zasięg na mapie głównej"))
+        self.act_frame_show.setCheckable(True)
+        self.act_frame_show.setChecked(QgsSettings().value(SETTINGS_SHOW_FRAME, True, type=bool))
+        self.act_frame_show.toggled.connect(self.on_show_frame_toggled)
+        self.btn_frame.setMenu(menu)
         self.btn_load_gcp = _button("", "/mActionFileOpen.svg", self.tr("Wczytaj GCP (CSV / .points)…"))
         self.btn_load_gcp.clicked.connect(self.load_gcp_from_file)
         self.btn_save_gcp = _button("", "/mActionFileSave.svg", self.tr("Zapisz GCP (CSV / .points)…"))
         self.btn_save_gcp.clicked.connect(self.save_gcp_to_file)
-        for b in (self.btn_add_gcp, self.btn_remove_gcp, self.btn_toggle_gcp, self.btn_gcp_to_library, self.btn_gcp_link):
+        for b in (self.btn_add_gcp, self.btn_remove_gcp, self.btn_toggle_gcp, self.btn_gcp_to_library, self.btn_gcp_link,
+                  self.btn_frame):
             row.addWidget(b)
         self.chk_names = QCheckBox(self.tr("Nazwy punktów"))
         self.chk_names.setToolTip(self.tr(
@@ -1064,6 +1083,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self.ed_lib_search.setEnabled(has_lib)
         self.btn_lib_next.setEnabled(has_lib)
         self.btn_lib_save.setEnabled(has_lib)
+        self.btn_frame.setEnabled(has_raster)
         self.btn_lib_absent.setEnabled(has_lib and self._lib_target is not None)
 
     # ------------------------------------------------------------------
@@ -1336,6 +1356,8 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
     def on_old_canvas_clicked(self, point, button):
         if button != Qt.MouseButton.LeftButton:
             return
+        if self.frame_click(QgsPointXY(point)):
+            return
         if self._lib_target is not None:
             self._complete_library_pair(QgsPointXY(point), self._lib_target)
             return
@@ -1540,6 +1562,10 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         """Brakujące punkty zestawu, od najbliższego ostatnio dodanemu GCP; (kandydaci, liczba brakujących)."""
         used = {g.uid for g in self.gcps if g.uid}
         missing = [p for p in points if p.uid not in used and p.uid not in self.absent]
+        area = self.footprint_ref()
+        inside = [p for p in missing if self.footprint_contains(p, area) is not False] if area else missing
+        self._lib_outside = len(missing) - len(inside)
+        missing = inside
         cands = [p for p in missing if p.uid not in self._lib_skipped]
         if not cands:
             self._lib_skipped.clear()
@@ -1568,13 +1594,16 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
             self._remove_temp_marker()
             self._remove_pred_marker()
         cands, n_missing = self._next_candidates(points)
+        outside = (" " + self.tr("Poza zasięgiem mapy: {n} pkt zestawu (pominięte).").format(n=self._lib_outside)
+                   if self._lib_outside else "")
         if not cands:
             self._clear_lib_target()
-            self.set_status(self.tr("Wszystkie punkty zestawu są już w analizie."), "ok")
+            self.set_status(self.tr("Wszystkie punkty zestawu są już w analizie.") + outside, "ok")
             return
         self.choose_library_point(cands[0])
         if self._lib_target is not None:
-            self.set_status(self.lbl_status.text() + " " + self.tr("Brakuje jeszcze {n} pkt zestawu.").format(n=n_missing))
+            self.set_status(self.lbl_status.text() + " " + self.tr("Brakuje jeszcze {n} pkt zestawu.").format(n=n_missing)
+                            + outside)
 
     # ------------------------------------------------------------------
     #  Model punktów GCP
@@ -2110,6 +2139,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
             self.analysis_stale = auto
             self.refresh_table()
             self.update_enabled_state()
+            self.update_frame_bands()
             return
 
         with self.busy(self.tr("Obliczanie transformacji…")):
@@ -2137,6 +2167,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
             self.render_report()
             self.update_enabled_state()
             self.refresh_existing_layers()
+            self.update_frame_bands()
 
         st_ = fit.stats
         M = me.scale_denominator(fit.derived["scale"] * m_per_unit, self.spin_dpi.value())
@@ -2904,6 +2935,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, QDockWidget):
         self._remove_temp_marker()
         self._remove_pred_marker()
         self._clear_lib_target()
+        self.clear_frame_bands()
         for sig, slot in ((self.main_canvas.extentsChanged, self.sync_old_canvas_to_main),
                           (self.old_canvas.extentsChanged, self.sync_main_canvas_to_old)):
             try:

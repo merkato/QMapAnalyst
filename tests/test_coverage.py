@@ -135,6 +135,29 @@ def test_columns_by_map():
     assert by_map.fitted[zannoni] is True
 
 
+def test_outside_frame():
+    lib, sid, uid, (a1, a2, a3, _a4) = make_library(os.path.join(TMP, "frame.gpkg"))
+    with lib:
+        a = lib.get_analysis(a2)                                    # P13 nie jest wskazany na tej mapie
+        a.frame = lb.frame_text([(0, 0), (930, 0), (930, -1700), (0, -1700)])   # ramka obejmuje P00–P06
+        lib.save_analysis(a)
+        cov = cv.build_coverage(lib, sid)
+        assert cov.cell(uid["P13"], a2) == "outside" and cov.cell(uid["P13"], a1) == "absent"
+        assert cov.cell(uid["P04"], a3) is None                     # a3 bez ramki – zasięg nieznany
+        a.frame = lb.frame_text([(0, 0), (2000, 0), (2000, -1700), (0, -1700)])
+        lib.save_analysis(a)
+        assert cv.build_coverage(lib, sid).cell(uid["P13"], a2) is None   # w zasięgu, jeszcze nie wskazany
+        # mapa: poza zasięgiem jednego arkusza, nie wskazany w zasięgu drugiego – „nie wskazany”
+        a.frame = lb.frame_text([(0, 0), (930, 0), (930, -1700), (0, -1700)])
+        lib.save_analysis(a)
+        b = lib.save_analysis(lb.Analysis(sheet="2", map_id=a.map_id))
+        lib.save_links(b, [lb.Link(100.0 + 130 * i, -(150.0 + 110 * ((5 * i) % 14)), 600000 + 40 * (100.0 + 130 * i),
+                                   300000 - 40 * (150.0 + 110 * ((5 * i) % 14)), uid=uid[f"P{i:02d}"], name=f"P{i:02d}")
+                           for i in range(3)])
+        by_map = cv.build_coverage(lib, sid, by=cv.BY_MAP)
+        assert by_map.cell(uid["P13"], a.map_id) is None
+
+
 def test_unknown_set_and_empty():
     lib = lb.Library.create(os.path.join(TMP, "empty.gpkg"), "EPSG:2180")
     with lib:

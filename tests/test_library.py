@@ -288,6 +288,20 @@ def test_maps_and_sheets():
         assert [x.title for x in lib.maps()] == ["TKKP Iłża"]
 
 
+def test_frame_helpers():
+    pts = [(0, 0), (100, 0), (100, -50), (0, -50)]
+    assert lib_mod.frame_points(lib_mod.frame_text(pts)) == [(0.0, 0.0), (100.0, 0.0), (100.0, -50.0), (0.0, -50.0)]
+    assert lib_mod.frame_points("") is None and lib_mod.frame_points("nonsens") is None
+    assert lib_mod.point_in_polygon(50, -25, pts) and not lib_mod.point_in_polygon(150, -25, pts)
+    with _new("frame") as lib:
+        aid = lib.save_analysis(Analysis(title="F", frame=lib_mod.frame_text(pts)))
+        assert lib_mod.frame_points(lib.get_analysis(aid).frame) == [(float(x), float(y)) for x, y in pts]
+    tr = lib_mod.crs_transformer("EPSG:4326", "EPSG:2180")
+    x, y = tr(21.0, 51.0)                                               # długość, szerokość → PUWG 1992
+    assert 600000 < x < 700000 and 300000 < y < 400000, (x, y)
+    assert lib_mod.crs_transformer("EPSG:2180", "EPSG:2180") is None
+
+
 def test_migration_1_to_2():
     path = os.path.join(TMP, "v1.gpkg")
     with Library.create(path, "EPSG:2180") as lib:
@@ -300,11 +314,12 @@ def test_migration_1_to_2():
     for t in ("gpkg_contents", "gpkg_ogr_contents"):
         con.execute(f"DELETE FROM {t} WHERE table_name = 'maps'")      # noqa: S608 – stała nazwa tabeli
     con.execute("ALTER TABLE analyses DROP COLUMN map_id")
+    con.execute("ALTER TABLE analyses DROP COLUMN frame")
     con.execute("UPDATE qma_meta SET value = '1' WHERE key = 'schema_version'")
     con.commit()
     con.close()
     with Library.open(path) as lib:
-        assert lib.schema_version == 2
+        assert lib.schema_version == lib_mod.SCHEMA_VERSION                # 1 → 2 → 3
         assert os.path.isfile(os.path.join(TMP, "v1.v1.bak.gpkg"))       # kopia sprzed migracji
         by_id = {a.analysis_id: a for a in lib.analyses()}
         assert by_id[ids[0]].map_id == by_id[ids[1]].map_id               # ten sam tytuł (bez wielkości liter)

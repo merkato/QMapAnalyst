@@ -6,6 +6,7 @@ Komórka opisuje punkt na danej mapie:
     outlier           – zidentyfikowany, ale odstający w wyrównaniu tej mapy (test Baardy),
     illegible         – nieczytelny, disabled – wyłączony przez użytkownika,
     absent            – brak na mapie (informacja, nie błąd),
+    outside           – nie wskazany i leży poza zasięgiem arkusza (ramka mapy przeliczona transformacją),
     None              – jeszcze nie wskazany na tej mapie.
 Kolumny to arkusze (analizy) albo mapy – wtedy komórka łączy arkusze mapy (punkt obecny na którymkolwiek
 arkuszu jest obecny na mapie; odstający na którymkolwiek – odstający).
@@ -25,8 +26,9 @@ from . import library as lb
 from . import math_engine as me
 
 PRESENT = ("sure", "uncertain", "outlier")      # punkt obecny i zidentyfikowany na mapie
-CODES = ("sure", "uncertain", "outlier", "illegible", "disabled", "absent")
-PRIORITY = ("outlier", "uncertain", "sure", "illegible", "disabled", "absent")   # łączenie arkuszy mapy
+CODES = ("sure", "uncertain", "outlier", "illegible", "disabled", "absent", "outside")
+_TODO = "todo"                                   # wewnętrznie: w zasięgu (lub zasięg nieznany), nie wskazany
+PRIORITY = ("outlier", "uncertain", "sure", "illegible", "disabled", "absent", _TODO, "outside")  # łączenie arkuszy
 CURRENT = 0                                      # klucz kolumny bieżącej analizy jeszcze nie zapisanej
 BY_SHEET, BY_MAP = "sheet", "map"
 
@@ -102,19 +104,44 @@ def _link_code(ln):
     return ln.status if ln.status in ("sure", "uncertain") else "sure"
 
 
-def _outlier_indices(links, model):
-    """Indeksy (w links) punktów odstających w wyrównaniu mapy; None – za mało punktów."""
+def _fit(links, model):
+    """Wyrównanie arkusza z punktów obliczeniowych: (FitResult lub None, indeksy punktów w links)."""
     idx = [k for k, ln in enumerate(links) if ln.computable and ln.enabled]
-    if len(idx) <= me.MODELS[model]["min_pts"]:
-        return None
+    if len(idx) < me.MODELS[model]["min_pts"]:
+        return None, idx
     src = np.array([[links[k].x_old, links[k].y_old] for k in idx])
     dst = np.array([[links[k].ref_x, links[k].ref_y] for k in idx])
     try:
-        fit = me.fit_transform(model, src, dst)
+        return me.fit_transform(model, src, dst), idx
     except (ValueError, np.linalg.LinAlgError):
+        return None, idx
+
+
+def _outliers(fit, idx, model):
+    """Indeksy (w links) punktów odstających; None – za mało punktów (bez nadwyżki obserwacji)."""
+    if fit is None or len(idx) <= me.MODELS[model]["min_pts"]:
         return None
     w = np.nan_to_num(fit.std_residuals)
     return {idx[j] for j in range(len(idx)) if w[j] > me.OUTLIER_THRESHOLD}
+
+
+def _outlier_indices(links, model):
+    fit, idx = _fit(links, model)
+    return _outliers(fit, idx, model)
+
+
+def footprint(fit, frame, steps=8):
+    """Zasięg arkusza w układzie analizy: ramka (współrzędne skanu) zagęszczona i przeliczona transformacją."""
+    if fit is None or not frame:
+        return None
+    pts = []
+    for (x1, y1), (x2, y2) in zip(frame, frame[1:] + frame[:1]):
+        pts += [(x1 + (x2 - x1) * t / steps, y1 + (y2 - y1) * t / steps) for t in range(steps)]
+    try:
+        out = fit.predict(np.array(pts, dtype=float))
+    except (ValueError, np.linalg.LinAlgError, me.EngineError):
+        return None
+    return [(float(x), float(y)) for x, y in out] if np.all(np.isfinite(out)) else None
 
 
 def _entries(lib, current):
@@ -134,9 +161,12 @@ def _entries(lib, current):
     return entries, (cur_id if cur_links is not None else None)
 
 
-def _sheet_codes(links, members, model):
-    """Kody punktów zestawu na arkuszu: {uid: kod}; czy zbadano odstające."""
-    outliers = _outlier_indices(links, model)
+def _sheet_codes(a, links, points, model, to_analysis):
+    """Kody punktów zestawu na arkuszu: {uid: kod} (także „outside”/_TODO dla niewskazanych); czy zbadano odstające.
+    to_analysis(x, y) – przeliczenie z układu biblioteki do układu analizy (None – ten sam)."""
+    members = {p.uid for p in points}
+    fit, idx = _fit(links, model)
+    outliers = _outliers(fit, idx, model)
     codes = {}
     for k, ln in enumerate(links):
         if ln.uid in members:
@@ -144,7 +174,20 @@ def _sheet_codes(links, members, model):
             if outliers and k in outliers and code in ("sure", "uncertain"):
                 code = "outlier"
             codes[ln.uid] = code
+    if codes:
+        area = footprint(fit, lb.frame_points(a.frame))
+        for p in points:
+            if p.uid not in codes:
+                codes[p.uid] = "outside" if area is not None and not _inside(p, area, to_analysis) else _TODO
     return codes, outliers is not None
+
+
+def _inside(p, area, to_analysis):
+    try:
+        x, y = to_analysis(p.x, p.y) if to_analysis is not None else (p.x, p.y)
+    except RuntimeError:
+        return True                                   # nieprzeliczalny – nie wykluczamy
+    return lb.point_in_polygon(x, y, area)
 
 
 def _column_for(a, by, maps):
@@ -167,18 +210,20 @@ def build_coverage(lib, set_id, model="affine", analysis_ids=None, current=None,
     if set_id not in sets:
         raise lb.LibraryError(f"no set {set_id}")
     points = sorted(lib.points(set_id), key=lambda p: lb.normalize(p.name))
-    members = {p.uid for p in points}
     cov = Coverage(set_id, sets[set_id], model, points, by=by)
     entries, cur_id = _entries(lib, current)
     maps = {m.map_id: m for m in lib.maps()} if by == BY_MAP else {}
-    columns = {}
+    columns, transformers = {}, {}
+    lib_crs = lib.crs_wkt
     for a, links in entries:
         if analysis_ids is not None and a.analysis_id not in analysis_ids and a.analysis_id != cur_id:
             continue
         if links is None:
             links = lib.links(a.analysis_id)
-        codes, fitted = _sheet_codes(links, members, model)
-        if not codes:
+        if a.ref_crs not in transformers:
+            transformers[a.ref_crs] = lb.crs_transformer(lib_crs, a.ref_crs)
+        codes, fitted = _sheet_codes(a, links, points, model, transformers[a.ref_crs])
+        if not any(c != _TODO and c != "outside" for c in codes.values()):
             continue
         col = _column_for(a, by, maps)
         col = columns.setdefault(col.key, col)
@@ -190,6 +235,7 @@ def build_coverage(lib, set_id, model="affine", analysis_ids=None, current=None,
             old = cov.cells.get((uid, col.key))
             if old is None or PRIORITY.index(code) < PRIORITY.index(old):
                 cov.cells[(uid, col.key)] = code
+    cov.cells = {k: v for k, v in cov.cells.items() if v != _TODO}
     cov.columns = sorted(columns.values(), key=_year_key)
     return cov
 

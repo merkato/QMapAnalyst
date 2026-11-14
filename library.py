@@ -7,7 +7,8 @@ Tabele (schemat w wersji SCHEMA_VERSION):
     set_members  – przynależność punktów do zestawów (set_id + uid)
     maps         – mapy (tytuł, autor, lata, skala), map_id = FID; od wersji 2
     analyses     – analizy arkuszy map (skan, arkusz, DPI…), analysis_id = FID; map_id – mapa
-                   (opis mapy jest kopiowany do analizy i aktualizowany przy zmianie mapy)
+                   (opis mapy jest kopiowany do analizy i aktualizowany przy zmianie mapy);
+                   frame – ramka mapy na skanie (JSON [[x, y], …] we współrzędnych skanu; od wersji 3)
     gcp_links    – punkty GCP analizy: położenie na skanie, kopia współrzędnych odniesienia, status
     qma_meta     – wersja schematu
 
@@ -25,6 +26,7 @@ Kody typów i statusów są stałe (ASCII); nazwy wyświetlane tłumaczy interfe
 import datetime
 import functools
 import hashlib
+import json
 import math
 import os
 import shutil
@@ -35,7 +37,7 @@ from dataclasses import dataclass, fields
 
 from osgeo import gdal, ogr, osr
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # status identyfikacji punktu na danej mapie
 STATUSES = ("sure", "uncertain", "illegible", "absent")
@@ -64,7 +66,7 @@ _SCHEMA = {
             ("created", S), ("modified", S)],
     _ANALYSES: [("title", S), ("author", S), ("year_from", I), ("year_to", I), ("scale", I), ("sheet", S),
                 ("dpi", R), ("scan_path", S), ("scan_sha256", S), ("ref_crs", S), ("note", S),
-                ("created", S), ("modified", S), ("map_id", I)],
+                ("created", S), ("modified", S), ("map_id", I), ("frame", S)],
     _LINKS: [("analysis_id", I), ("seq", I), ("uid", S), ("name", S), ("x_old", R), ("y_old", R),
              ("ref_x", R), ("ref_y", R), ("enabled", I), ("status", S), ("comment", S)],
     _META: [("key", S), ("value", S)],
@@ -141,6 +143,7 @@ class Analysis:
     modified: str = ""
     analysis_id: int = None
     map_id: int = None           # mapa, do której należy arkusz (library.Map)
+    frame: str = ""              # ramka mapy na skanie – zob. frame_points() / frame_text()
 
 
 @dataclass
@@ -192,6 +195,57 @@ def normalize(text):
     s = unicodedata.normalize("NFKD", (text or "").translate(_FOLD))
     s = "".join(c for c in s if not unicodedata.combining(c))
     return " ".join(s.casefold().split())
+
+
+def frame_points(text):
+    """Ramka mapy z pola analyses.frame: lista (x, y) we współrzędnych skanu albo None."""
+    if not text:
+        return None
+    try:
+        pts = [(float(x), float(y)) for x, y in json.loads(text)]
+    except (ValueError, TypeError):
+        return None
+    return pts if len(pts) >= 3 else None
+
+
+def frame_text(points):
+    return json.dumps([[round(x, 3), round(y, 3)] for x, y in points]) if points else ""
+
+
+def point_in_polygon(x, y, poly):
+    """Czy punkt leży wewnątrz wielokąta (lista (x, y); zasada parzystości przecięć)."""
+    inside = False
+    n = len(poly)
+    for i in range(n):
+        x1, y1 = poly[i]
+        x2, y2 = poly[(i + 1) % n]
+        if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1:
+            inside = not inside
+    return inside
+
+
+def crs_transformer(src, dst):
+    """Funkcja (x, y) -> (x, y) z układu src do dst (WKT, authid…); None – ten sam układ lub błąd definicji."""
+    if not src or not dst or src == dst:
+        return None
+    a, b = osr.SpatialReference(), osr.SpatialReference()
+    try:
+        with _exceptions():
+            if a.SetFromUserInput(src) != 0 or b.SetFromUserInput(dst) != 0:
+                return None
+            if a.IsSame(b):
+                return None
+            for srs in (a, b):
+                srs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+            ct = osr.CoordinateTransformation(a, b)
+    except RuntimeError:
+        return None
+
+    def transform(x, y):
+        with _exceptions():
+            p = ct.TransformPoint(x, y)
+        return p[0], p[1]
+    return transform
 
 
 def file_sha256(path, chunk=1 << 20):
@@ -385,7 +439,9 @@ class Library:
         diakrytycznych) trafiają do jednej mapy z opisem pierwszej z nich (kopiowanym do pozostałych);
         analizy bez tytułu – każda do osobnej mapy."""
         self._add_fields(self.ds.CreateLayer(_MAPS, None, ogr.wkbNone, ["FID=fid"]), _MAPS)
-        _ok(self._layer(_ANALYSES).CreateField(ogr.FieldDefn("map_id", I)), "analyses.map_id")
+        lyr = self._layer(_ANALYSES)
+        if lyr.GetLayerDefn().GetFieldIndex("map_id") < 0:
+            _ok(lyr.CreateField(ogr.FieldDefn("map_id", I)), "analyses.map_id")
         self.ds.ExecuteSQL(_INDEXES[-1])
         groups = {}
         for a in sorted(self.analyses(), key=lambda a: a.analysis_id):
@@ -399,6 +455,12 @@ class Library:
             for f in MAP_FIELDS:                          # opis mapy wspólny dla jej arkuszy
                 setattr(a, f, getattr(m, f))
             self._write_analysis(a)
+
+    def _migrate_2(self):
+        """2 → 3: ramka mapy na skanie (analyses.frame)."""
+        lyr = self._layer(_ANALYSES)
+        if lyr.GetLayerDefn().GetFieldIndex("frame") < 0:
+            _ok(lyr.CreateField(ogr.FieldDefn("frame", S)), "analyses.frame")
 
     def close(self):
         self.ds = None
@@ -657,8 +719,8 @@ class Library:
     # --- analizy ----------------------------------------------------------------
     def _analysis_from(self, feat):
         kw = {f: _get(feat, f) for f in _ANALYSIS_FIELDS if feat.GetFieldIndex(f) >= 0}
-        for k in ("title", "author", "sheet", "scan_path", "scan_sha256", "ref_crs", "note", "created", "modified"):
-            kw[k] = kw[k] or ""
+        for k in ("title", "author", "sheet", "scan_path", "scan_sha256", "ref_crs", "note", "created", "modified", "frame"):
+            kw[k] = kw.get(k) or ""
         return Analysis(analysis_id=feat.GetFID(), **kw)
 
     def _write_analysis(self, a):
@@ -669,7 +731,10 @@ class Library:
             feat = ogr.Feature(lyr.GetLayerDefn())
             a.created = a.created or _now()
         a.modified = _now()
+        defn = lyr.GetLayerDefn()
         for f in _ANALYSIS_FIELDS:
+            if defn.GetFieldIndex(f) < 0:
+                continue                      # w trakcie migracji pole może jeszcze nie istnieć
             v = getattr(a, f)
             _set(feat, f, None if v == "" else v)
         _ok(lyr.CreateFeature(feat) if new else lyr.SetFeature(feat), "save analysis")

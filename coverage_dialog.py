@@ -25,6 +25,7 @@ CELL_STYLE = {
     "illegible": ("×", (128, 128, 128, 90)),
     "disabled": ("–", (128, 128, 128, 60)),
     "absent": ("○", (70, 130, 220, 100)),
+    "outside": ("·", (128, 128, 128, 25)),
 }
 
 
@@ -36,6 +37,7 @@ def cell_labels():
     return {
         "sure": tr("pewny"), "uncertain": tr("niepewny"), "outlier": tr("odstający (test Baardy)"),
         "illegible": tr("nieczytelny"), "disabled": tr("wyłączony"), "absent": tr("brak na mapie"),
+        "outside": tr("poza zasięgiem arkusza"),
         None: tr("nie wskazany"),
     }
 

@@ -25,7 +25,7 @@ Tryb serii – później (0.3.x / 0.4), liczony na żądanie.
 8. **Biblioteka jako zwykła warstwa** – edycję, tabelę atrybutów i przyciąganie zapewnia QGIS;
    wtyczka zakłada schemat, styl, wyszukiwarkę i powiązanie z GCP.
 
-## Schemat (wersja 2)
+## Schemat (wersja 3)
 
 | Tabela | Pola | Klucz |
 |---|---|---|
@@ -33,7 +33,7 @@ Tryb serii – później (0.3.x / 0.4), liczony na żądanie.
 | point_sets | set_id, name, description | set_id |
 | set_members | set_id, uid | set_id + uid |
 | maps (od wersji 2) | map_id, title, author, year_from, year_to, scale, note | map_id |
-| analyses | analysis_id, map_id, scan_path, scan_sha256, title, author, year_from, year_to, scale, sheet, dpi, ref_crs | analysis_id |
+| analyses | analysis_id, map_id, frame (od 3), scan_path, scan_sha256, title, author, year_from, year_to, scale, sheet, dpi, ref_crs | analysis_id |
 | gcp_links | analysis_id, seq, uid, name, x_old, y_old, ref_x, ref_y, enabled, status, comment | analysis_id + uid (gdy uid niepusty) |
 | qma_meta | key, value (wersja schematu) | key |
 
@@ -94,6 +94,10 @@ Stan:
 - etap 8 – zestawy: zestaw roboczy oddzielony od filtra mapy (przygaszanie punktów spoza zestawu – zmienna
   warstwy `qma_set_uids`, „Tylko punkty zestawu”), menu zestawów, zestaw z punktów analizy, okno „Punkty
   zestawu” (`sets_dialog.py`), lista zestawów w zakładce GCP (`tests/library_sets_qgis.py`).
+- zasięg mapy: schemat 3 (`analyses.frame` – ramka we współrzędnych skanu, JSON), `frame.py` (4 rogi albo cały
+  skan, obrys na obu mapach), zasięg na mapie współczesnej liczony z bieżącej transformacji
+  (`coverage.footprint`), „Następny z zestawu” pomija punkty spoza zasięgu, kod `outside` w macierzy
+  (`library.point_in_polygon`, `crs_transformer`) (`tests/library_frame_qgis.py`).
 
 ## Etapy
 

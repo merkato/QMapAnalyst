@@ -140,6 +140,26 @@
         <translation>Powiąż zaznaczone (bez zaznaczenia – wszystkie) punkty spoza biblioteki z istniejącymi punktami biblioteki: ta sama nazwa (także dawna) do 5 km albo najbliższy punkt do 500 m. Przed zmianą pokazuje listę propozycji.</translation>
     </message>
     <message>
+        <source>Zasięg mapy</source>
+        <translation>Zasięg mapy</translation>
+    </message>
+    <message>
+        <source>Ramka mapy na skanie: 4 rogi wskazane na mapie dawnej albo cały skan. Po obliczeniu transformacji zasięg jest widoczny na mapie głównej; „Następny z zestawu” pomija punkty spoza zasięgu, a macierz pokrycia oznacza je jako „poza zasięgiem”.</source>
+        <translation>Ramka mapy na skanie: 4 rogi wskazane na mapie dawnej albo cały skan. Po obliczeniu transformacji zasięg jest widoczny na mapie głównej; „Następny z zestawu” pomija punkty spoza zasięgu, a macierz pokrycia oznacza je jako „poza zasięgiem”.</translation>
+    </message>
+    <message>
+        <source>Wskaż 4 rogi ramki na skanie</source>
+        <translation>Wskaż 4 rogi ramki na skanie</translation>
+    </message>
+    <message>
+        <source>Zasięg = cały skan</source>
+        <translation>Zasięg = cały skan</translation>
+    </message>
+    <message>
+        <source>Pokaż zasięg na mapie głównej</source>
+        <translation>Pokaż zasięg na mapie głównej</translation>
+    </message>
+    <message>
         <source>Wczytaj GCP (CSV / .points)…</source>
         <translation>Wczytaj GCP (CSV / .points)…</translation>
     </message>
@@ -664,10 +684,6 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Wybierz zestaw punktów w zakładce Biblioteka.</translation>
     </message>
     <message>
-        <source>Wszystkie punkty zestawu są już w analizie.</source>
-        <translation>Wszystkie punkty zestawu są już w analizie.</translation>
-    </message>
-    <message>
         <source>Zaznacz punkty GCP w tabeli.</source>
         <translation>Zaznacz punkty GCP w tabeli.</translation>
     </message>
@@ -848,6 +864,10 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Anulowano dodawanie pary. KROK 1/2: kliknij punkt na mapie dawnej.</translation>
     </message>
     <message>
+        <source>Wszystkie punkty zestawu są już w analizie.</source>
+        <translation>Wszystkie punkty zestawu są już w analizie.</translation>
+    </message>
+    <message>
         <source>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</source>
         <translation>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</translation>
     </message>
@@ -980,6 +1000,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Dodano parę #{n}: {name} (z biblioteki). KROK 1/2: kliknij kolejny punkt na mapie dawnej.</translation>
     </message>
     <message>
+        <source>Poza zasięgiem mapy: {n} pkt zestawu (pominięte).</source>
+        <translation>Poza zasięgiem mapy: {n} pkt zestawu (pominięte).</translation>
+    </message>
+    <message>
         <source>Zestaw: {name}.</source>
         <translation>Zestaw: {name}.</translation>
     </message>
@@ -1040,10 +1064,6 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Podaj wartość parametru: {p}</translation>
     </message>
     <message>
-        <source>Brakuje jeszcze {n} pkt zestawu.</source>
-        <translation>Brakuje jeszcze {n} pkt zestawu.</translation>
-    </message>
-    <message>
         <source>GCP {n}</source>
         <translation>GCP {n}</translation>
     </message>
@@ -1082,6 +1102,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>Szerokość poza zakresem ±90°: {p}</source>
         <translation>Szerokość poza zakresem ±90°: {p}</translation>
+    </message>
+    <message>
+        <source>Brakuje jeszcze {n} pkt zestawu.</source>
+        <translation>Brakuje jeszcze {n} pkt zestawu.</translation>
     </message>
     <message>
         <source>Punkt biblioteki ({uid})</source>
@@ -1256,6 +1280,22 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Brak na mapie ({n}): {names}</source>
         <translation>Brak na mapie ({n}): {names}</translation>
+    </message>
+    <message>
+        <source>Zasięg mapy: kliknij na skanie 4 rogi ramki mapy (1/4)…</source>
+        <translation>Zasięg mapy: kliknij na skanie 4 rogi ramki mapy (1/4)…</translation>
+    </message>
+    <message>
+        <source>Zasięg mapy: cały skan.</source>
+        <translation>Zasięg mapy: cały skan.</translation>
+    </message>
+    <message>
+        <source>Zapisano zasięg mapy (4 rogi ramki). Zapisz analizę, aby zachować go w bibliotece.</source>
+        <translation>Zapisano zasięg mapy (4 rogi ramki). Zapisz analizę, aby zachować go w bibliotece.</translation>
+    </message>
+    <message>
+        <source>Zasięg mapy: kliknij kolejny róg ramki ({n}/4)…</source>
+        <translation>Zasięg mapy: kliknij kolejny róg ramki ({n}/4)…</translation>
     </message>
     <message>
         <source>Helmert (4 parametry)</source>
@@ -2863,6 +2903,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>wyłączony</source>
         <translation>wyłączony</translation>
+    </message>
+    <message>
+        <source>poza zasięgiem arkusza</source>
+        <translation>poza zasięgiem arkusza</translation>
     </message>
     <message>
         <source>nie wskazany</source>

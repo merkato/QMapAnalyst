@@ -6,6 +6,7 @@ Domieszka (mixin) panelu QMapAnalystDockWidget – korzysta z jego pól (gcps, a
 library_panel, old_raster_layer…) i metod (add_gcp, gcps_changed, set_status…).
 """
 
+import dataclasses
 import os
 
 from qgis.PyQt.QtWidgets import QApplication, QInputDialog, QMessageBox
@@ -51,7 +52,7 @@ class LibraryAnalysisMixin:
         def num(v):
             return None if v is None else round(float(v), 6)
         return tuple((ln.uid, ln.name, num(ln.x_old), num(ln.y_old), num(ln.ref_x), num(ln.ref_y), bool(ln.enabled),
-                      ln.status, ln.comment) for ln in self.library_links())
+                      ln.status, ln.comment) for ln in self.library_links()) + (self.frame_text(),)
 
     def mark_analysis_saved(self):
         self._saved_signature = self._links_signature()
@@ -66,8 +67,10 @@ class LibraryAnalysisMixin:
         return self._links_signature() != self._saved_signature
 
     def current_analysis_state(self):
-        """Dla macierzy pokrycia: (Analysis lub None, punkty, niezapisane)."""
-        return self.library_analysis, self.library_links(), self.analysis_dirty()
+        """Dla macierzy pokrycia: (Analysis – kopia z bieżącym zasięgiem i układem, punkty, niezapisane)."""
+        a = self.library_analysis or lb.Analysis(title=self.old_raster_layer.name() if self.old_raster_layer else "")
+        a = dataclasses.replace(a, frame=self.frame_text(), ref_crs=self._crs_definition(self._ensure_ref_crs()))
+        return a, self.library_links(), self.analysis_dirty()
 
     def update_analysis_label(self):
         has_lib = self.library_panel.path is not None
@@ -99,6 +102,8 @@ class LibraryAnalysisMixin:
         """Nowy skan: analiza innego skanu przestaje być bieżąca; podpowiedź o analizach tego skanu w bibliotece."""
         a = self.library_analysis
         path = self._scan_path()
+        self.map_frame = None                  # nowy skan – ramka do wskazania (domyślnie cały skan)
+        self.update_frame_bands()
         if a is not None and a.scan_path and os.path.normcase(os.path.abspath(a.scan_path)) != os.path.normcase(os.path.abspath(path)):
             self.library_analysis = None
             self.update_analysis_label()
@@ -176,6 +181,7 @@ class LibraryAnalysisMixin:
     def _store_analysis(self, a, dlg=None):
         a.ref_crs = self._crs_definition(self._ensure_ref_crs())
         a.scan_path = self._scan_path() or a.scan_path
+        a.frame = self.frame_text()
         links = self.library_links()
         try:
             with self.library_panel.library() as lib:
@@ -306,6 +312,8 @@ class LibraryAnalysisMixin:
                 self.add_gcp(ln.x_old, ln.y_old, ln.ref_x, ln.ref_y, enabled=ln.enabled, name=ln.name,
                              uid=ln.uid, status=ln.status, comment=ln.comment)
         self.library_analysis = a
+        frame = lb.frame_points(a.frame)
+        self.map_frame = None if frame == self.scan_frame() else frame
         self.mark_analysis_saved()
         self.update_absent_label()
         if any(g.name for g in self.gcps) and not self.chk_names.isChecked():

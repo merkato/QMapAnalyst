@@ -140,6 +140,26 @@
         <translation>Link the selected (with no selection – all) points outside the library to existing library points: the same name (also a historical one) within 5 km or the nearest point within 500 m. A list of proposals is shown before any change.</translation>
     </message>
     <message>
+        <source>Zasięg mapy</source>
+        <translation>Map extent</translation>
+    </message>
+    <message>
+        <source>Ramka mapy na skanie: 4 rogi wskazane na mapie dawnej albo cały skan. Po obliczeniu transformacji zasięg jest widoczny na mapie głównej; „Następny z zestawu” pomija punkty spoza zasięgu, a macierz pokrycia oznacza je jako „poza zasięgiem”.</source>
+        <translation>The map frame on the scan: 4 corners indicated on the old map or the whole scan. Once the transformation is computed the extent is shown on the main map; “Next from set” skips points outside it and the coverage matrix marks them as “outside the extent”.</translation>
+    </message>
+    <message>
+        <source>Wskaż 4 rogi ramki na skanie</source>
+        <translation>Indicate the 4 frame corners on the scan</translation>
+    </message>
+    <message>
+        <source>Zasięg = cały skan</source>
+        <translation>Extent = whole scan</translation>
+    </message>
+    <message>
+        <source>Pokaż zasięg na mapie głównej</source>
+        <translation>Show the extent on the main map</translation>
+    </message>
+    <message>
         <source>Wczytaj GCP (CSV / .points)…</source>
         <translation>Load GCPs (CSV / .points)…</translation>
     </message>
@@ -664,10 +684,6 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Choose a point set on the Library tab.</translation>
     </message>
     <message>
-        <source>Wszystkie punkty zestawu są już w analizie.</source>
-        <translation>All points of the set are already in the analysis.</translation>
-    </message>
-    <message>
         <source>Zaznacz punkty GCP w tabeli.</source>
         <translation>Select GCPs in the table.</translation>
     </message>
@@ -848,6 +864,10 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Pair cancelled. STEP 1/2: click a point on the historical map.</translation>
     </message>
     <message>
+        <source>Wszystkie punkty zestawu są już w analizie.</source>
+        <translation>All points of the set are already in the analysis.</translation>
+    </message>
+    <message>
         <source>Punkty GCP zmieniły się – wynik estymacji jest nieaktualny. Uruchom ją ponownie.</source>
         <translation>The GCPs have changed – the estimation result is out of date. Run it again.</translation>
     </message>
@@ -980,6 +1000,10 @@ No – append the new points to the existing ones.</translation>
         <translation>Added pair #{n}: {name} (from the library). STEP 1/2: click the next point on the historical map.</translation>
     </message>
     <message>
+        <source>Poza zasięgiem mapy: {n} pkt zestawu (pominięte).</source>
+        <translation>Outside the map extent: {n} set points (skipped).</translation>
+    </message>
+    <message>
         <source>Zestaw: {name}.</source>
         <translation>Set: {name}.</translation>
     </message>
@@ -1040,10 +1064,6 @@ No – append the new points to the existing ones.</translation>
         <translation>Enter a value for: {p}</translation>
     </message>
     <message>
-        <source>Brakuje jeszcze {n} pkt zestawu.</source>
-        <translation>{n} points of the set are still missing.</translation>
-    </message>
-    <message>
         <source>GCP {n}</source>
         <translation>GCP {n}</translation>
     </message>
@@ -1082,6 +1102,10 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>Szerokość poza zakresem ±90°: {p}</source>
         <translation>Latitude outside ±90°: {p}</translation>
+    </message>
+    <message>
+        <source>Brakuje jeszcze {n} pkt zestawu.</source>
+        <translation>{n} points of the set are still missing.</translation>
     </message>
     <message>
         <source>Punkt biblioteki ({uid})</source>
@@ -1256,6 +1280,22 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Brak na mapie ({n}): {names}</source>
         <translation>Not on map ({n}): {names}</translation>
+    </message>
+    <message>
+        <source>Zasięg mapy: kliknij na skanie 4 rogi ramki mapy (1/4)…</source>
+        <translation>Map extent: click the 4 corners of the map frame on the scan (1/4)…</translation>
+    </message>
+    <message>
+        <source>Zasięg mapy: cały skan.</source>
+        <translation>Map extent: whole scan.</translation>
+    </message>
+    <message>
+        <source>Zapisano zasięg mapy (4 rogi ramki). Zapisz analizę, aby zachować go w bibliotece.</source>
+        <translation>Map extent set (4 frame corners). Save the analysis to keep it in the library.</translation>
+    </message>
+    <message>
+        <source>Zasięg mapy: kliknij kolejny róg ramki ({n}/4)…</source>
+        <translation>Map extent: click the next frame corner ({n}/4)…</translation>
     </message>
     <message>
         <source>Helmert (4 parametry)</source>
@@ -2863,6 +2903,10 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>wyłączony</source>
         <translation>disabled</translation>
+    </message>
+    <message>
+        <source>poza zasięgiem arkusza</source>
+        <translation>outside the sheet extent</translation>
     </message>
     <message>
         <source>nie wskazany</source>
