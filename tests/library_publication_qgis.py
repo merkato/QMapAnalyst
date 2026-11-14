@@ -90,6 +90,18 @@ QFileDialog.getSaveFileName = staticmethod(lambda *a, **k: (out, ""))
 dlg.export()
 assert open(out + ".csv", encoding="utf-8-sig").readline().startswith("analysis_id,sheet")
 
+# wykresy i raport
+assert len(dlg.charts) == 2 and len(dlg.charts_view.labels) == 2
+QFileDialog.getSaveFileName = staticmethod(lambda *a, **k: (os.path.join(TMP, "wyd"), ""))
+pdf = dlg.export_report("pdf")
+assert pdf.endswith(".pdf") and open(pdf, "rb").read(5) == b"%PDF-"
+html = open(dlg.export_report("html"), encoding="utf-8").read()
+assert html.count("<svg") == 2 and "Zakładki" in html and "Z1" in html
+charts_dir = os.path.join(TMP, "wykresy")
+os.makedirs(charts_dir)
+QFileDialog.getExistingDirectory = staticmethod(lambda *a, **k: charts_dir)
+assert len(dlg.export_charts()) == 4
+
 # dwuklik w arkusz – wczytanie arkusza
 dlg.on_sheet_double_clicked(2, 0)
 assert dlg.chosen_analysis == ids["10"] and dock.library_analysis.analysis_id == ids["10"]

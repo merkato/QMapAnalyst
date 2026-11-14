@@ -8,7 +8,7 @@ import math
 from qgis.PyQt.QtCore import QCoreApplication, Qt
 from qgis.PyQt.QtGui import QBrush, QColor
 from qgis.PyQt.QtWidgets import (
-    QComboBox, QDialog, QFileDialog, QHBoxLayout, QHeaderView, QLabel, QPushButton, QTabWidget, QVBoxLayout,
+    QComboBox, QDialog, QFileDialog, QHBoxLayout, QHeaderView, QLabel, QMenu, QPushButton, QTabWidget, QVBoxLayout,
 )
 from qgis.core import (
     QgsFeature, QgsField, QgsFillSymbol, QgsGeometry, QgsPalLayerSettings, QgsPointXY, QgsProject,
@@ -18,6 +18,7 @@ from qgis.core import (
 from . import library as lb
 from . import math_engine as me
 from . import publication as pb
+from . import series_report as srep
 from .series_dialog import _INT, _REAL, _STR, _item, _num, _table
 
 
@@ -59,6 +60,9 @@ class PublicationDialog(QDialog):
         self.tbl_overlaps = _table([tr("Punkt"), tr("Arkusz A"), tr("Arkusz B"), tr("Rozbieżność [m]")])
         self.tbl_overlaps.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.tabs.addTab(self.tbl_overlaps, tr("Zakładki"))
+        self.charts_view = srep.ChartsView()
+        self.tabs.addTab(self.charts_view, tr("Wykresy"))
+        self.charts = []
         lay.addWidget(self.tabs, 1)
 
         self.lbl_summary = QLabel()
@@ -71,8 +75,14 @@ class PublicationDialog(QDialog):
         self.btn_index.setToolTip(tr("Warstwa zasięgów arkuszy na mapie głównej (ramka mapy na skanie przeliczona "
                                      "transformacją arkusza) z numerem arkusza i statystyką"))
         self.btn_index.clicked.connect(self.add_index_layer)
-        self.btn_export = QPushButton(tr("Eksport CSV…"))
-        self.btn_export.clicked.connect(self.export)
+        self.btn_export = QPushButton(tr("Eksport"))
+        menu = QMenu(self.btn_export)
+        menu.addAction(tr("Raport PDF…"), lambda: self.export_report("pdf"))
+        menu.addAction(tr("Raport HTML…"), lambda: self.export_report("html"))
+        menu.addAction(tr("Wykresy (SVG i PNG)…"), self.export_charts)
+        menu.addSeparator()
+        menu.addAction(tr("Dane (CSV)…"), self.export)
+        self.btn_export.setMenu(menu)
         close = QPushButton(tr("Zamknij"))
         close.clicked.connect(self.reject)
         row.addWidget(self.btn_index)
@@ -98,6 +108,33 @@ class PublicationDialog(QDialog):
         self._fill_sheets()
         self._fill_overlaps()
         self._fill_summary()
+        self.charts = srep.publication_charts(self.pub, self._sheet_label)
+        self.charts_view.set_charts(self.charts)
+
+    def _title(self):
+        return tr("Wydawnictwo wieloarkuszowe") + f": {self.pub.map.title or '?'}"
+
+    def export_report(self, kind):
+        if self.pub is None:
+            return None
+        path = srep.ask_report_path(self, tr("Raport wydawnictwa wieloarkuszowego"),
+                                    f"{self.pub.map.title or 'mapa'}_arkusze", kind)
+        if not path:
+            return None
+        html, images = srep.publication_report(self.pub, kind)
+        srep.save_report(path, html, images, self._title(), self.cmb_model.currentText())
+        self.lbl_summary.setText(tr("Zapisano: {f}").format(f=path))
+        return path
+
+    def export_charts(self):
+        if self.pub is None:
+            return None
+        folder = srep.ask_charts_folder(self)
+        if not folder:
+            return None
+        files = srep.export_charts(folder, self.charts, srep.safe_name(self.pub.map.title) + "_")
+        self.lbl_summary.setText(tr("Zapisano wykresy ({n} plików) w folderze {f}").format(n=len(files), f=folder))
+        return files
 
     def _sheet_label(self, s):
         label = tr("arkusz {s}").format(s=s.analysis.sheet) if s.analysis.sheet else f"#{s.analysis.analysis_id}"

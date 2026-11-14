@@ -17,7 +17,13 @@ supportsQt6=True
 experimental=True
 deprecated=False
 changelog=0.3.0-dev
-    - Library of reference points (GeoPackage): regional point sets, point quality per map (work in progress)
+    - New: library of reference points (GeoPackage) – regional point sets, import from layers/CSV, snapping, search, "next from set"
+    - New: point identification status per map (sure / uncertain / illegible / not on map) and optional a priori weights
+    - New: maps and sheets in the library, map frame (extent) on the scan and on the modern map, coverage matrix point × map
+    - New: time series – comparison of maps from different years (accuracy, point position errors, residual similarity as a trace of copying, error vectors and trajectories)
+    - New: multi-sheet publications – sheet consistency, overlaps, sheet index
+    - New: PDF/HTML reports with charts and chart export (SVG, PNG) for the time series and multi-sheet publications
+    - GCP files (CSV, .points companion file) keep library links, status and comments
     0.2.1
     - Fix: overlays (isolines, grids, vectors) missing from the maps PDF for scans without georeferencing
     - Maps PDF: first page shows all visible overlays together, with report header and page numbers

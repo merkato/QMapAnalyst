@@ -3221,6 +3221,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Błędy punktów</translation>
     </message>
     <message>
+        <source>Wykresy</source>
+        <translation>Wykresy</translation>
+    </message>
+    <message>
         <source>Wektory błędów na mapie są powiększone, by były widoczne w skali mapy współczesnej</source>
         <translation>Wektory błędów na mapie są powiększone, by były widoczne w skali mapy współczesnej</translation>
     </message>
@@ -3241,12 +3245,32 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Dla każdego punktu: łamana przez położenia, które nadają mu kolejne mapy (wg roku)</translation>
     </message>
     <message>
-        <source>Eksport…</source>
-        <translation>Eksport…</translation>
+        <source>Eksport</source>
+        <translation>Eksport</translation>
     </message>
     <message>
-        <source>CSV map, CSV błędów punktów albo JSON z całą serią</source>
-        <translation>CSV map, CSV błędów punktów albo JSON z całą serią</translation>
+        <source>Raport PDF lub HTML z wykresami, same wykresy (SVG i PNG – do prezentacji) albo dane: CSV map, CSV błędów punktów, JSON z całą serią</source>
+        <translation>Raport PDF lub HTML z wykresami, same wykresy (SVG i PNG – do prezentacji) albo dane: CSV map, CSV błędów punktów, JSON z całą serią</translation>
+    </message>
+    <message>
+        <source>Raport PDF…</source>
+        <translation>Raport PDF…</translation>
+    </message>
+    <message>
+        <source>Raport HTML…</source>
+        <translation>Raport HTML…</translation>
+    </message>
+    <message>
+        <source>Wykresy (SVG i PNG)…</source>
+        <translation>Wykresy (SVG i PNG)…</translation>
+    </message>
+    <message>
+        <source>Dane (CSV / JSON)…</source>
+        <translation>Dane (CSV / JSON)…</translation>
+    </message>
+    <message>
+        <source>Raport serii czasowej</source>
+        <translation>Raport serii czasowej</translation>
     </message>
     <message>
         <source>Błąd położenia punktu: gdzie mapa umieszcza obiekt względem jego położenia w bibliotece, po usunięciu transformacji arkusza (arkusze wydawnictwa wieloarkuszowego wyrównywane osobno). Podobieństwo reszt: korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.</source>
@@ -3313,6 +3337,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Brak par map o istotnie podobnych błędach.</translation>
     </message>
     <message>
+        <source>Zapisano wykresy ({n} plików) w folderze {f}</source>
+        <translation>Zapisano wykresy ({n} plików) w folderze {f}</translation>
+    </message>
+    <message>
         <source>arkusze: {names}</source>
         <translation>arkusze: {names}</translation>
     </message>
@@ -3363,6 +3391,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Warstwa zasięgów arkuszy na mapie głównej (ramka mapy na skanie przeliczona transformacją arkusza) z numerem arkusza i statystyką</source>
         <translation>Warstwa zasięgów arkuszy na mapie głównej (ramka mapy na skanie przeliczona transformacją arkusza) z numerem arkusza i statystyką</translation>
+    </message>
+    <message>
+        <source>Dane (CSV)…</source>
+        <translation>Dane (CSV)…</translation>
+    </message>
+    <message>
+        <source>Raport wydawnictwa wieloarkuszowego</source>
+        <translation>Raport wydawnictwa wieloarkuszowego</translation>
     </message>
     <message>
         <source>Eksport wydawnictwa wieloarkuszowego</source>
@@ -3423,6 +3459,134 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Zakładki: {n} par wskazań; największa rozbieżność {d} m – {name} ({a} / {b}).</source>
         <translation>Zakładki: {n} par wskazań; największa rozbieżność {d} m – {name} ({a} / {b}).</translation>
+    </message>
+    <message>
+        <source>Dokładność map w czasie</source>
+        <translation>Dokładność map w czasie</translation>
+    </message>
+    <message>
+        <source>RMSE wyrównania (skala logarytmiczna); kreska – lata wydania</source>
+        <translation>RMSE wyrównania (skala logarytmiczna); kreska – lata wydania</translation>
+    </message>
+    <message>
+        <source>rok</source>
+        <translation>rok</translation>
+    </message>
+    <message>
+        <source>punkty</source>
+        <translation>punkty</translation>
+    </message>
+    <message>
+        <source>Błędy położenia punktów na mapach</source>
+        <translation>Błędy położenia punktów na mapach</translation>
+    </message>
+    <message>
+        <source>każdy punkt to obiekt zestawu; kreska – mediana (skala logarytmiczna)</source>
+        <translation>każdy punkt to obiekt zestawu; kreska – mediana (skala logarytmiczna)</translation>
+    </message>
+    <message>
+        <source>mediana</source>
+        <translation>mediana</translation>
+    </message>
+    <message>
+        <source>Podobieństwo błędów między mapami</source>
+        <translation>Podobieństwo błędów między mapami</translation>
+    </message>
+    <message>
+        <source>korelacja wektorowa r błędów punktów wspólnych; * – istotne (p &lt; 0,05)</source>
+        <translation>korelacja wektorowa r błędów punktów wspólnych; * – istotne (p &lt; 0,05)</translation>
+    </message>
+    <message>
+        <source>podobne</source>
+        <translation>podobne</translation>
+    </message>
+    <message>
+        <source>bez związku</source>
+        <translation>bez związku</translation>
+    </message>
+    <message>
+        <source>przeciwne</source>
+        <translation>przeciwne</translation>
+    </message>
+    <message>
+        <source>za mało punktów wspólnych</source>
+        <translation>za mało punktów wspólnych</translation>
+    </message>
+    <message>
+        <source>Wektory błędów położenia</source>
+        <translation>Wektory błędów położenia</translation>
+    </message>
+    <message>
+        <source>kierunek i wielkość przesunięcia obiektów; powiększenie różne w każdym panelu – patrz podziałka</source>
+        <translation>kierunek i wielkość przesunięcia obiektów; powiększenie różne w każdym panelu – patrz podziałka</translation>
+    </message>
+    <message>
+        <source>błędu</source>
+        <translation>błędu</translation>
+    </message>
+    <message>
+        <source>Arkusze wydawnictwa</source>
+        <translation>Arkusze wydawnictwa</translation>
+    </message>
+    <message>
+        <source>RMSE arkusza</source>
+        <translation>RMSE arkusza</translation>
+    </message>
+    <message>
+        <source>Odchylenie skali od średniej</source>
+        <translation>Odchylenie skali od średniej</translation>
+    </message>
+    <message>
+        <source>zasięgi arkuszy na mapie współczesnej; punkty – zakładki (wskazania na dwóch arkuszach)</source>
+        <translation>zasięgi arkuszy na mapie współczesnej; punkty – zakładki (wskazania na dwóch arkuszach)</translation>
+    </message>
+    <message>
+        <source>zakładka</source>
+        <translation>zakładka</translation>
+    </message>
+    <message>
+        <source>największa rozbieżność</source>
+        <translation>największa rozbieżność</translation>
+    </message>
+    <message>
+        <source>brak danych</source>
+        <translation>brak danych</translation>
+    </message>
+    <message>
+        <source>Elementem serii jest mapa: wydawnictwo wieloarkuszowe to jeden element (arkusze wyrównywane osobno, wyniki łączone). Wszystkie mapy wyrównano tym samym modelem.</source>
+        <translation>Elementem serii jest mapa: wydawnictwo wieloarkuszowe to jeden element (arkusze wyrównywane osobno, wyniki łączone). Wszystkie mapy wyrównano tym samym modelem.</translation>
+    </message>
+    <message>
+        <source>Raport PDF (*.pdf)</source>
+        <translation>Raport PDF (*.pdf)</translation>
+    </message>
+    <message>
+        <source>Strona HTML (*.html)</source>
+        <translation>Strona HTML (*.html)</translation>
+    </message>
+    <message>
+        <source>Folder na wykresy (SVG i PNG)</source>
+        <translation>Folder na wykresy (SVG i PNG)</translation>
+    </message>
+    <message>
+        <source>Zestaw punktów</source>
+        <translation>Zestaw punktów</translation>
+    </message>
+    <message>
+        <source>Model</source>
+        <translation>Model</translation>
+    </message>
+    <message>
+        <source>Data</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <source>Autor / wydawca</source>
+        <translation>Autor / wydawca</translation>
+    </message>
+    <message>
+        <source>Rok</source>
+        <translation>Rok</translation>
     </message>
 </context>
 <context>

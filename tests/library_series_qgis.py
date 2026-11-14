@@ -97,6 +97,22 @@ QFileDialog.getSaveFileName = staticmethod(lambda *a_, **k: (out, "Mapy (CSV) (*
 dlg.export()
 assert open(out + ".csv", encoding="utf-8-sig").readline().startswith("key,map,sheets")
 
+# wykresy, raport PDF/HTML, eksport wykresów
+assert len(dlg.charts) == 4 and len(dlg.charts_view.labels) == 4
+assert dlg.tabs.tabText(3) == "Wykresy"
+for kind in ("pdf", "html"):
+    QFileDialog.getSaveFileName = staticmethod(lambda *a_, kind=kind, **k: (os.path.join(TMP, "raport"), ""))
+    rpath = dlg.export_report(kind)
+    assert rpath.endswith("." + kind) and os.path.getsize(rpath) > 10000, rpath
+html = open(os.path.join(TMP, "raport.html"), encoding="utf-8").read()
+assert html.count("<svg") == 4 and "Mapa A (1770)" in html and "Podobieństwo" in html
+assert open(os.path.join(TMP, "raport.pdf"), "rb").read(5) == b"%PDF-"
+charts_dir = os.path.join(TMP, "wykresy")
+os.makedirs(charts_dir)
+QFileDialog.getExistingDirectory = staticmethod(lambda *a_, **k: charts_dir)
+files = dlg.export_charts()
+assert len(files) == 8 and sorted(os.listdir(charts_dir))[0] == "S_bledy_punktow.png", sorted(os.listdir(charts_dir))
+
 # stan bieżący: niezapisane punkty w panelu GCP jako dodatkowy arkusz
 with ts.lb.Library.open(path) as lib:
     links = lib.links(c)

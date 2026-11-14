@@ -113,6 +113,15 @@ Biblioteka punktów referencyjnych to jeden plik GeoPackage użytkownika, wspól
 * **Skorowidz arkuszy** – warstwa zasięgów arkuszy na mapie głównej (ramka mapy z arkusza przeliczona jego transformacją) z numerem arkusza i statystyką. Arkusz bez wskazanej ramki ma zasięg całego skanu.
 * **Eksport CSV…** – arkusze i zakładki.
 
+**Wykresy i raporty** (okna *Seria czasowa* i *Wydawnictwo wieloarkuszowe*). Karta **Wykresy** pokazuje gotowe wykresy, a przycisk **Eksport** zapisuje:
+
+* **Raport PDF…** – raport A4 z nagłówkiem i numeracją stron: dane wejściowe, podsumowanie, wykresy i tabele;
+* **Raport HTML…** – ten sam raport jako strona internetowa; wykresy są wektorowe (SVG), ostre w każdym powiększeniu, z podpowiedziami po najechaniu kursorem na punkt, słupek czy komórkę;
+* **Wykresy (SVG i PNG)…** – każdy wykres osobno, jako SVG (do dalszej obróbki, np. w Inkscape) i PNG w podwójnej rozdzielczości (slajdy);
+* **Dane (CSV / JSON)…** – tabele do arkusza kalkulacyjnego lub dalszych analiz.
+
+Wykresy serii czasowej: *Dokładność map w czasie* (RMSE na osi lat, skala logarytmiczna; pasek – lata wydania), *Błędy położenia punktów na mapach* (każdy obiekt zestawu jako kropka, kreska – mediana, czerwone – odstające z nazwą), *Podobieństwo błędów między mapami* (macierz r: czerwony – podobne, niebieski – przeciwne, szary – bez związku; * – istotne) i *Wektory błędów położenia* (mała mapka dla każdej mapy; powiększenie różne w panelach – długość odczytasz z podziałki). Wykresy wydawnictwa: *Arkusze wydawnictwa* (RMSE i odchylenie skali arkuszy od średniej) i *Skorowidz arkuszy* (zasięgi arkuszy i zakładki, największa rozbieżność na czerwono).
+
 **Dodawanie i poprawianie punktów** odbywa się narzędziami edycji QGIS na warstwie biblioteki. Formularz ma listę typów, a identyfikator punktu (uid) nadawany jest automatycznie i nie zmienia się – na nim opierają się powiązania z analizami. Nazwy dawne i obce wpisuje się w jednym polu, oddzielone znakiem `|` (np. `Ilza|Ilsa`).
 
 ---

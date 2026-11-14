@@ -33,6 +33,7 @@ CONTEXTS = {
     "sets_dialog.py": "QMapAnalystLibrary",
     "series_dialog.py": "QMapAnalystLibrary",
     "publication_dialog.py": "QMapAnalystLibrary",
+    "series_report.py": "QMapAnalystLibrary",
 }
 
 

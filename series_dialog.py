@@ -9,7 +9,7 @@ import math
 from qgis.PyQt.QtCore import QCoreApplication, Qt
 from qgis.PyQt.QtGui import QBrush, QColor, QFont
 from qgis.PyQt.QtWidgets import (
-    QAbstractItemView, QComboBox, QDialog, QFileDialog, QHBoxLayout, QHeaderView, QLabel, QPushButton, QSpinBox,
+    QAbstractItemView, QComboBox, QDialog, QFileDialog, QHBoxLayout, QHeaderView, QLabel, QMenu, QPushButton, QSpinBox,
     QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout,
 )
 from qgis.core import (
@@ -22,6 +22,7 @@ from . import coverage as cv
 from . import library as lb
 from . import math_engine as me
 from . import series as sr
+from . import series_report as srep
 
 try:
     from qgis.PyQt.QtCore import QMetaType
@@ -95,6 +96,9 @@ class SeriesDialog(QDialog):
         self.tabs.addTab(self.tbl_pairs, tr("Podobieństwo reszt"))
         self.tbl_points = _table([])
         self.tabs.addTab(self.tbl_points, tr("Błędy punktów"))
+        self.charts_view = srep.ChartsView()
+        self.tabs.addTab(self.charts_view, tr("Wykresy"))
+        self.charts = []
         lay.addWidget(self.tabs, 1)
 
         self.lbl_summary = QLabel()
@@ -120,9 +124,16 @@ class SeriesDialog(QDialog):
         row.addWidget(self.btn_vectors)
         row.addWidget(self.btn_traj)
         row.addStretch()
-        self.btn_export = QPushButton(tr("Eksport…"))
-        self.btn_export.setToolTip(tr("CSV map, CSV błędów punktów albo JSON z całą serią"))
-        self.btn_export.clicked.connect(self.export)
+        self.btn_export = QPushButton(tr("Eksport"))
+        self.btn_export.setToolTip(tr("Raport PDF lub HTML z wykresami, same wykresy (SVG i PNG – do prezentacji) "
+                                      "albo dane: CSV map, CSV błędów punktów, JSON z całą serią"))
+        menu = QMenu(self.btn_export)
+        menu.addAction(tr("Raport PDF…"), lambda: self.export_report("pdf"))
+        menu.addAction(tr("Raport HTML…"), lambda: self.export_report("html"))
+        menu.addAction(tr("Wykresy (SVG i PNG)…"), self.export_charts)
+        menu.addSeparator()
+        menu.addAction(tr("Dane (CSV / JSON)…"), self.export)
+        self.btn_export.setMenu(menu)
         close = QPushButton(tr("Zamknij"))
         close.clicked.connect(self.reject)
         row.addWidget(self.btn_export)
@@ -148,6 +159,36 @@ class SeriesDialog(QDialog):
         self._fill_pairs()
         self._fill_points()
         self._fill_summary()
+        self.charts = srep.series_charts(self.series, self._unit_m(), self._label)
+        self.charts_view.set_charts(self.charts)
+
+    def _unit_m(self):
+        unit = lb.crs_metres_per_unit(self.panel._crs_wkt or self.panel._crs_authid)
+        return unit if math.isfinite(unit) else 1.0
+
+    def _title(self):
+        return tr("Seria czasowa") + f": {self.series.set_name}"
+
+    def export_report(self, kind):
+        if self.series is None:
+            return None
+        path = srep.ask_report_path(self, tr("Raport serii czasowej"), f"{self.series.set_name}_seria_czasowa", kind)
+        if not path:
+            return None
+        html, images = srep.series_report(self.series, kind, self._unit_m())
+        srep.save_report(path, html, images, self._title(), self.cmb_model.currentText())
+        self.lbl_summary.setText(tr("Zapisano: {f}").format(f=path))
+        return path
+
+    def export_charts(self):
+        if self.series is None:
+            return None
+        folder = srep.ask_charts_folder(self)
+        if not folder:
+            return None
+        files = srep.export_charts(folder, self.charts, srep.safe_name(self.series.set_name) + "_")
+        self.lbl_summary.setText(tr("Zapisano wykresy ({n} plików) w folderze {f}").format(n=len(files), f=folder))
+        return files
 
     def _label(self, s):
         label = cv.analysis_label(s.column) if s.key != cv.CURRENT else (s.analysis.title or tr("bieżąca analiza"))
@@ -243,7 +284,7 @@ class SeriesDialog(QDialog):
                     "korelacja wektorowa r błędów punktów wspólnych, p – test permutacyjny.")]
         if similar:
             lines.append(tr("Podobne błędy (możliwe kopiowanie): {pairs}").format(
-                pairs="; ".join(f"{self._label(by_key[p.a])} → {self._label(by_key[p.b])} (r = {p.r:.2f})" for p in similar)))
+                pairs="; ".join(f"{self._label(by_key[p.a])} → {self._label(by_key[p.b])} (r = {_num(p.r, 2)})" for p in similar)))
         else:
             lines.append(tr("Brak par map o istotnie podobnych błędach."))
         self.lbl_summary.setText("\n".join(lines))

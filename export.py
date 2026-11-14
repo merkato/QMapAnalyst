@@ -4,9 +4,10 @@ Eksport wyników: obraz mapy dawnej, wielostronicowy raport PDF, tabele CSV.
 
 import csv
 import os
+import re
 from datetime import datetime
 
-from qgis.PyQt.QtCore import QCoreApplication, QMarginsF, QRectF, QSize, QSizeF, Qt
+from qgis.PyQt.QtCore import QCoreApplication, QMarginsF, QRectF, QSize, QSizeF, Qt, QUrl
 from qgis.PyQt.QtGui import (
     QAbstractTextDocumentLayout, QColor, QFont, QImage, QPageLayout, QPageSize, QPainter, QPalette,
     QPdfWriter, QPen, QTextDocument,
@@ -149,12 +150,22 @@ class _PdfPages:
         return painter
 
 
-def export_html_pdf(path, body_html, title, subtitle=""):
-    """Wielostronicowy PDF A4 z raportem HTML: nagłówek, stopka z numeracją stron, automatyczne łamanie."""
+FULL_WIDTH = "__QMA_FULL_WIDTH__"        # w HTML raportu: szerokość obrazu = szerokość strony PDF
+
+
+def export_html_pdf(path, body_html, title, subtitle="", images=None):
+    """Wielostronicowy PDF A4 z raportem HTML: nagłówek, stopka z numeracją stron, automatyczne łamanie.
+    images – {nazwa: funkcja(szerokość_px) -> QImage}: obrazy <img src='nazwa'> (np. wykresy SVG)."""
     pdf = _PdfPages(path, title, subtitle)
     width, body_h = pdf.width, pdf.body_h
 
     doc = QTextDocument()
+    for name, render in (images or {}).items():
+        doc.addResource(QTextDocument.ResourceType.ImageResource, QUrl(name), render(int(width)))
+    # szerokość <img> w pikselach CSS (96 dpi), strona PDF – w pikselach urządzenia (DPI)
+    css_px = width * 96.0 / max(pdf.writer.logicalDpiX(), 1)
+    body_html = body_html.replace(FULL_WIDTH, str(int(css_px)))
+    body_html = re.sub(r"__QMA_WIDTH_([0-9.]+)__", lambda m: str(int(css_px * float(m.group(1)))), body_html)
     doc.documentLayout().setPaintDevice(pdf.writer)
     font = QFont("Arial")
     font.setPointSizeF(9)

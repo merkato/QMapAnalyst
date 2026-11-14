@@ -108,6 +108,9 @@ Stan:
   (`publication.py`, `publication_dialog.py`, z okna „Mapy i arkusze”): zgodność arkuszy (rozrzut skali, obrotu,
   RMSE), zakładki (rozbieżność położeń punktu wskazanego na dwóch arkuszach), skorowidz arkuszy
   (`tests/test_publication.py`, `tests/library_publication_qgis.py`).
+- wykresy i raporty: `charts.py` (SVG bez QGIS i matplotlib: dokładność w czasie, błędy punktów, macierz
+  podobieństwa, wektory – małe mapki, arkusze, skorowidz), `series_report.py` (raport HTML z SVG, PDF z obrazami
+  wykresów – `export_html_pdf(images=…)`, eksport SVG/PNG, karta „Wykresy” w oknach) (`tests/test_charts.py`).
 
 ## Etapy
 
@@ -127,7 +130,7 @@ Stan:
    zestaw z punktów analizy lub zasięgu mapy, mniej przycisków.
 9. Pilot „Kielecczyzna-18” na danych użytkownika.
 10. Wydanie 0.3.0: instrukcja, PR do `main`, wersja bez `-dev`.
-Później: raport serii czasowej i wydawnictwa (HTML/PDF), import z sieci (Overpass, PRNG),
+Później: import z sieci (Overpass, PRNG),
 wagi w estymacji odwzorowania.
 
 Na bieżąco: tłumaczenia EN, testy, dokumentacja.
