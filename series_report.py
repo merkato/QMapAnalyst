@@ -47,6 +47,9 @@ def chart_texts():
         "index_title": tr("Skorowidz arkuszy"),
         "index_sub": tr("zasięgi arkuszy na mapie współczesnej; punkty – zakładki (wskazania na dwóch arkuszach)"),
         "overlap": tr("zakładka"), "overlap_worst": tr("największa rozbieżność"), "no_data": tr("brak danych"),
+        "tradeoff_title": tr("Zszycie arkuszy: dopasowanie a szczeliny"),
+        "tradeoff_sub": tr("każdy punkt to pozycja suwaka „niezależne ↔ zszyte”; obwódka – pozycja bieżąca"),
+        "seam_gap": tr("średnia szczelina na stykach"),
     }
 
 

@@ -3397,6 +3397,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zakładki</translation>
     </message>
     <message>
+        <source>Wyrównanie blokowe</source>
+        <translation>Wyrównanie blokowe</translation>
+    </message>
+    <message>
         <source>Skorowidz arkuszy</source>
         <translation>Skorowidz arkuszy</translation>
     </message>
@@ -3471,6 +3475,94 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Zakładki: {n} par wskazań; największa rozbieżność {d} m – {name} ({a} / {b}).</source>
         <translation>Zakładki: {n} par wskazań; największa rozbieżność {d} m – {name} ({a} / {b}).</translation>
+    </message>
+    <message>
+        <source>Biliniowa w ramce (8 parametrów)</source>
+        <translation>Biliniowa w ramce (8 parametrów)</translation>
+    </message>
+    <message>
+        <source>Afiniczna (6 parametrów)</source>
+        <translation>Afiniczna (6 parametrów)</translation>
+    </message>
+    <message>
+        <source>Helmert (4 parametry)</source>
+        <translation>Helmert (4 parametry)</translation>
+    </message>
+    <message>
+        <source>Waga warunków zgodności wspólnych narożników ramek względem punktów dopasowania: w lewo – arkusze wpasowane osobno, w prawo – styki domknięte</source>
+        <translation>Waga warunków zgodności wspólnych narożników ramek względem punktów dopasowania: w lewo – arkusze wpasowane osobno, w prawo – styki domknięte</translation>
+    </message>
+    <message>
+        <source>Zasięgi i szczeliny na mapie</source>
+        <translation>Zasięgi i szczeliny na mapie</translation>
+    </message>
+    <message>
+        <source>Warstwy: zasięgi arkuszy po wyrównaniu blokowym i wektory szczelin na stykach oraz w punktach wiążących</source>
+        <translation>Warstwy: zasięgi arkuszy po wyrównaniu blokowym i wektory szczelin na stykach oraz w punktach wiążących</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe – zasięgi arkuszy</source>
+        <translation>Wyrównanie blokowe – zasięgi arkuszy</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe – szczeliny</source>
+        <translation>Wyrównanie blokowe – szczeliny</translation>
+    </message>
+    <message>
+        <source>Model arkusza:</source>
+        <translation>Model arkusza:</translation>
+    </message>
+    <message>
+        <source>niezależne</source>
+        <translation>niezależne</translation>
+    </message>
+    <message>
+        <source>zszyte</source>
+        <translation>zszyte</translation>
+    </message>
+    <message>
+        <source>Siatka</source>
+        <translation>Siatka</translation>
+    </message>
+    <message>
+        <source>Przesunięcie wzgl. sąsiadów [m]</source>
+        <translation>Przesunięcie wzgl. sąsiadów [m]</translation>
+    </message>
+    <message>
+        <source>Odstający</source>
+        <translation>Odstający</translation>
+    </message>
+    <message>
+        <source>Brak arkuszy z ramką mapy – wyrównanie blokowe wymaga ramek (Zasięg mapy w panelu GCP).</source>
+        <translation>Brak arkuszy z ramką mapy – wyrównanie blokowe wymaga ramek (Zasięg mapy w panelu GCP).</translation>
+    </message>
+    <message>
+        <source>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu</source>
+        <translation>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu</translation>
+    </message>
+    <message>
+        <source>σ₀ = {s} m, RMSE punktów = {r} m, liczba nadwyżkowa {f}.</source>
+        <translation>σ₀ = {s} m, RMSE punktów = {r} m, liczba nadwyżkowa {f}.</translation>
+    </message>
+    <message>
+        <source>Szczeliny na stykach (narożniki ramek): średnio {a} m, maks. {b} m.</source>
+        <translation>Szczeliny na stykach (narożniki ramek): średnio {a} m, maks. {b} m.</translation>
+    </message>
+    <message>
+        <source>Punkty wiążące (ten sam obiekt na dwóch arkuszach): {n}, odstające {k}.</source>
+        <translation>Punkty wiążące (ten sam obiekt na dwóch arkuszach): {n}, odstające {k}.</translation>
+    </message>
+    <message>
+        <source>Arkusz odstający: {s} – jego punkty są systematycznie przesunięte względem sąsiadów.</source>
+        <translation>Arkusz odstający: {s} – jego punkty są systematycznie przesunięte względem sąsiadów.</translation>
+    </message>
+    <message>
+        <source>Pominięte arkusze bez ramki mapy: {s}.</source>
+        <translation>Pominięte arkusze bez ramki mapy: {s}.</translation>
+    </message>
+    <message>
+        <source>Nie można wyrównać: {e}</source>
+        <translation>Nie można wyrównać: {e}</translation>
     </message>
     <message>
         <source>Dokładność map w czasie</source>
@@ -3563,6 +3655,18 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>brak danych</source>
         <translation>brak danych</translation>
+    </message>
+    <message>
+        <source>Zszycie arkuszy: dopasowanie a szczeliny</source>
+        <translation>Zszycie arkuszy: dopasowanie a szczeliny</translation>
+    </message>
+    <message>
+        <source>każdy punkt to pozycja suwaka „niezależne ↔ zszyte”; obwódka – pozycja bieżąca</source>
+        <translation>każdy punkt to pozycja suwaka „niezależne ↔ zszyte”; obwódka – pozycja bieżąca</translation>
+    </message>
+    <message>
+        <source>średnia szczelina na stykach</source>
+        <translation>średnia szczelina na stykach</translation>
     </message>
     <message>
         <source>Elementem serii jest mapa: wydawnictwo wieloarkuszowe to jeden element (arkusze wyrównywane osobno, wyniki łączone). Wszystkie mapy wyrównano tym samym modelem.</source>

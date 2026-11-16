@@ -3397,6 +3397,10 @@ Update the reference coordinates of these points?</translation>
         <translation>Overlaps</translation>
     </message>
     <message>
+        <source>Wyrównanie blokowe</source>
+        <translation>Block adjustment</translation>
+    </message>
+    <message>
         <source>Skorowidz arkuszy</source>
         <translation>Sheet index</translation>
     </message>
@@ -3471,6 +3475,94 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Zakładki: {n} par wskazań; największa rozbieżność {d} m – {name} ({a} / {b}).</source>
         <translation>Overlaps: {n} pairs of identifications; largest discrepancy {d} m – {name} ({a} / {b}).</translation>
+    </message>
+    <message>
+        <source>Biliniowa w ramce (8 parametrów)</source>
+        <translation>Bilinear in the frame (8 parameters)</translation>
+    </message>
+    <message>
+        <source>Afiniczna (6 parametrów)</source>
+        <translation>Affine (6 parameters)</translation>
+    </message>
+    <message>
+        <source>Helmert (4 parametry)</source>
+        <translation>Helmert (4 parameters)</translation>
+    </message>
+    <message>
+        <source>Waga warunków zgodności wspólnych narożników ramek względem punktów dopasowania: w lewo – arkusze wpasowane osobno, w prawo – styki domknięte</source>
+        <translation>Weight of the conditions that shared frame corners coincide, relative to the control points: left – sheets fitted separately, right – seams closed</translation>
+    </message>
+    <message>
+        <source>Zasięgi i szczeliny na mapie</source>
+        <translation>Footprints and seam gaps on the map</translation>
+    </message>
+    <message>
+        <source>Warstwy: zasięgi arkuszy po wyrównaniu blokowym i wektory szczelin na stykach oraz w punktach wiążących</source>
+        <translation>Layers: sheet footprints after the block adjustment and gap vectors at the seams and tie points</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe – zasięgi arkuszy</source>
+        <translation>Block adjustment – sheet footprints</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe – szczeliny</source>
+        <translation>Block adjustment – seam gaps</translation>
+    </message>
+    <message>
+        <source>Model arkusza:</source>
+        <translation>Sheet model:</translation>
+    </message>
+    <message>
+        <source>niezależne</source>
+        <translation>independent</translation>
+    </message>
+    <message>
+        <source>zszyte</source>
+        <translation>stitched</translation>
+    </message>
+    <message>
+        <source>Siatka</source>
+        <translation>Grid</translation>
+    </message>
+    <message>
+        <source>Przesunięcie wzgl. sąsiadów [m]</source>
+        <translation>Offset from neighbours [m]</translation>
+    </message>
+    <message>
+        <source>Odstający</source>
+        <translation>Outlier</translation>
+    </message>
+    <message>
+        <source>Brak arkuszy z ramką mapy – wyrównanie blokowe wymaga ramek (Zasięg mapy w panelu GCP).</source>
+        <translation>No sheets with a map frame – the block adjustment needs frames (Map extent in the GCP panel).</translation>
+    </message>
+    <message>
+        <source>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu</source>
+        <translation>row, column in the sheet grid – detected after a preliminary fit</translation>
+    </message>
+    <message>
+        <source>σ₀ = {s} m, RMSE punktów = {r} m, liczba nadwyżkowa {f}.</source>
+        <translation>σ₀ = {s} m, point RMSE = {r} m, redundancy {f}.</translation>
+    </message>
+    <message>
+        <source>Szczeliny na stykach (narożniki ramek): średnio {a} m, maks. {b} m.</source>
+        <translation>Seam gaps (frame corners): mean {a} m, max. {b} m.</translation>
+    </message>
+    <message>
+        <source>Punkty wiążące (ten sam obiekt na dwóch arkuszach): {n}, odstające {k}.</source>
+        <translation>Tie points (the same object on two sheets): {n}, outliers {k}.</translation>
+    </message>
+    <message>
+        <source>Arkusz odstający: {s} – jego punkty są systematycznie przesunięte względem sąsiadów.</source>
+        <translation>Outlier sheet: {s} – its points are systematically shifted relative to the neighbours.</translation>
+    </message>
+    <message>
+        <source>Pominięte arkusze bez ramki mapy: {s}.</source>
+        <translation>Skipped sheets without a map frame: {s}.</translation>
+    </message>
+    <message>
+        <source>Nie można wyrównać: {e}</source>
+        <translation>Cannot adjust: {e}</translation>
     </message>
     <message>
         <source>Dokładność map w czasie</source>
@@ -3563,6 +3655,18 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>brak danych</source>
         <translation>no data</translation>
+    </message>
+    <message>
+        <source>Zszycie arkuszy: dopasowanie a szczeliny</source>
+        <translation>Stitching sheets: fit versus gaps</translation>
+    </message>
+    <message>
+        <source>każdy punkt to pozycja suwaka „niezależne ↔ zszyte”; obwódka – pozycja bieżąca</source>
+        <translation>each point is a position of the “independent ↔ stitched” slider; outline – current position</translation>
+    </message>
+    <message>
+        <source>średnia szczelina na stykach</source>
+        <translation>mean seam gap</translation>
     </message>
     <message>
         <source>Elementem serii jest mapa: wydawnictwo wieloarkuszowe to jeden element (arkusze wyrównywane osobno, wyniki łączone). Wszystkie mapy wyrównano tym samym modelem.</source>

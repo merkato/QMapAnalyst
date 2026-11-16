@@ -60,6 +60,9 @@ class PublicationDialog(QDialog):
         self.tbl_overlaps = _table([tr("Punkt"), tr("Arkusz A"), tr("Arkusz B"), tr("Rozbieżność [m]")])
         self.tbl_overlaps.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.tabs.addTab(self.tbl_overlaps, tr("Zakładki"))
+        from .block_panel import BlockPanel
+        self.block = BlockPanel(panel)
+        self.tabs.addTab(self.block, tr("Wyrównanie blokowe"))
         self.charts_view = srep.ChartsView()
         self.tabs.addTab(self.charts_view, tr("Wykresy"))
         self.charts = []
@@ -101,6 +104,7 @@ class PublicationDialog(QDialog):
         try:
             with self.panel.library() as lib:
                 self.pub = pb.build_publication(lib, self.map_id, self.cmb_model.currentData(), current=current)
+                self.block.load(lib, self.map_id, current)
         except lb.LibraryError as e:
             self.pub = None
             self.lbl_summary.setText(self.panel._library_error(e))
