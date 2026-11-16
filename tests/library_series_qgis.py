@@ -96,6 +96,7 @@ diff = dlg.fields.add_diff_layer()
 assert diff.featureCount() == res[0].nodes and diff.crs().authid() == "EPSG:2180"
 sfp = __import__(f"{PKG}.series_fields_panel", fromlist=["*"])
 rdlg = sfp.SeriesRectifyDialog(dlg)
+rdlg.background = False
 assert rdlg.run() == [] and "brak skanu" in rdlg.lbl.text()           # mapy testowe bez skanów
 
 # eksport

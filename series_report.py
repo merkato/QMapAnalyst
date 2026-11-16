@@ -263,6 +263,36 @@ def save_report(path, html, images, title, subtitle=""):
 # ---------------------------------------------------------------------------
 #  Interfejs: podgląd wykresów i zapis
 # ---------------------------------------------------------------------------
+class SvgChart(QWidget):
+    """Wykres SVG rysowany wprost w widżecie – skaluje się z oknem, zachowując proporcje (ostry przy każdym rozmiarze)."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._renderer = None
+        self.svg = None
+        self.setMinimumSize(240, 140)
+
+    def set_svg(self, svg):
+        self.svg = svg
+        self._renderer = QSvgRenderer(QByteArray(svg.encode("utf-8"))) if svg else None
+        self.update()
+
+    def paintEvent(self, _event):
+        if self._renderer is None or not self._renderer.isValid():
+            return
+        size = self._renderer.defaultSize()
+        if size.width() <= 0 or size.height() <= 0:
+            return
+        k = min(self.width() / size.width(), self.height() / size.height())
+        w, h = size.width() * k, size.height() * k
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        rect = QRectF((self.width() - w) / 2, (self.height() - h) / 2, w, h)
+        p.fillRect(rect, Qt.GlobalColor.white)
+        self._renderer.render(p, rect)
+        p.end()
+
+
 class ChartsView(QScrollArea):
     """Przewijana kolumna wykresów (podgląd w oknie serii / wydawnictwa)."""
 

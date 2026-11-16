@@ -12,7 +12,7 @@ import numpy as np
 from qgis.PyQt.QtCore import QCoreApplication, Qt, QTimer
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QFormLayout,
-    QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QProgressDialog, QPushButton,
+    QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QProgressBar, QPushButton,
     QSlider, QVBoxLayout,
 )
 from qgis.core import QgsProject, QgsRasterLayer
@@ -22,6 +22,7 @@ from . import library as lb
 from . import publication_rectify as pr
 from . import rectify as rc
 from .rectify_dialog import _m, format_labels, method_labels, nice_resolution
+from .tasks import run_task
 
 
 def tr(text):
@@ -39,6 +40,8 @@ class PublicationRectifyDialog(QDialog):
         self.model = model
         self.plan = None
         self.outputs = []
+        self.task = None
+        self.background = True
         self.setWindowTitle(tr("Rektyfikacja wydawnictwa wieloarkuszowego"))
         self.resize(620, 640)
         self._timer = QTimer(self)
@@ -130,11 +133,19 @@ class PublicationRectifyDialog(QDialog):
         for c in (self.chk_add, self.chk_composite, self.chk_save):
             form.addRow("", c)
         lay.addLayout(form)
+        self.lbl_progress = QLabel()
+        self.progress = QProgressBar()
+        self.progress.setRange(0, 1000)
+        lay.addWidget(self.lbl_progress)
+        lay.addWidget(self.progress)
         bb = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         self.btn_run = bb.addButton(tr("Rektyfikuj"), QDialogButtonBox.ButtonRole.AcceptRole)
         self.btn_run.clicked.connect(self.run)
+        self.btn_cancel = bb.addButton(tr("Przerwij"), QDialogButtonBox.ButtonRole.ActionRole)
+        self.btn_cancel.clicked.connect(self.cancel)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
+        self._set_running(False)
 
     def _default_resolution(self):
         vals = []
@@ -211,46 +222,62 @@ class PublicationRectifyDialog(QDialog):
 
     # --- przetworzenie -----------------------------------------------------------
     def run(self):
-        if self.plan is None:
+        """Przetworzenie w tle (QgsTask) – okno i QGIS odpowiadają, pasek postępu, możliwość przerwania.
+        background=False – od razu (testy); wtedy zwraca listę arkuszy."""
+        if self.plan is None or self.task is not None:
             return []
         out_dir = self.ed_dir.text().strip()
         if not out_dir:
             return []
         scans = {s.key: s.analysis.scan_path for s in self.sheets if s.analysis is not None}
         crs = self.panel.library_crs()
-        crs_text = crs.authid() or crs.toWkt()
-        prog = QProgressDialog(tr("Przetwarzanie arkuszy…"), tr("Przerwij"), 0, 1000, self)
-        prog.setWindowModality(Qt.WindowModality.WindowModal)
-        prog.setMinimumDuration(300)
+        job = {"plan": self.plan, "scans": scans, "dir": out_dir, "crs": crs.authid() or crs.toWkt(),
+               "res": self.spin_res.value(), "fmt": self.cmb_format.currentData(), "width": self.blend_width(),
+               "composite": self.chk_composite.isEnabled() and self.chk_composite.isChecked(),
+               "name": pr.safe_name(self.map.title or "mozaika")}
+        self._set_running(True)
+        self.task = run_task(tr("Rektyfikacja wydawnictwa"), lambda progress, canceled: _publication_job(job, progress),
+                             self._done, self.background, self._on_progress)
+        return self.outputs if not self.background else []
 
-        def progress(k, n, frac):
-            prog.setValue(int(1000 * (k + frac) / max(n, 1)))
-            prog.setLabelText(tr("Arkusz {k} z {n}…").format(k=k + 1, n=n))
-            QCoreApplication.processEvents()
-            return not prog.wasCanceled()
-        try:
-            self.outputs = pr.warp_sheets(self.plan, scans, out_dir, crs_text, self.spin_res.value(),
-                                          self.cmb_format.currentData(), progress)
-            mosaic = pr.write_mosaic(self.plan, os.path.join(out_dir, pr.safe_name(self.map.title or "mozaika") + ".vrt"),
-                                     self.spin_res.value()) if self.outputs else None
-            width = self.blend_width()
-            layers = pr.write_blend_vrts(self.plan, width) if self.outputs else []
-            blended = None
-            if self.chk_composite.isEnabled() and self.chk_composite.isChecked() and layers:
-                blended = pr.composite(layers, os.path.join(out_dir, pr.safe_name(self.map.title or "mozaika") + "_blend.tif"),
-                                       fmt=self.cmb_format.currentData())
-        except RuntimeError as e:
-            prog.close()
-            QMessageBox.warning(self, tr("Rektyfikacja wydawnictwa"), tr("Nie udało się przetworzyć arkuszy: {e}").format(e=e))
-            return []
-        prog.close()
+    def _set_running(self, on):
+        self.progress.setVisible(on)
+        self.lbl_progress.setVisible(on)
+        self.progress.setValue(0)
+        self.btn_run.setEnabled(not on)
+        self.btn_cancel.setVisible(on)
+
+    def _on_progress(self, frac, text):
+        self.progress.setValue(int(1000 * frac))
+        self.lbl_progress.setText(text)
+
+    def cancel(self):
+        if self.task is not None:
+            self.task.cancel()
+
+    def _done(self, result, error):
+        self.task = None
+        self._set_running(False)
+        if error is not None:
+            if not isinstance(error, InterruptedError):
+                QMessageBox.warning(self, tr("Rektyfikacja wydawnictwa"), tr("Nie udało się przetworzyć arkuszy: {e}").format(e=error))
+            else:
+                self.lbl_stats.setText(self.lbl_stats.text() + "<br>" + tr("Przerwano."))
+            return
+        self.outputs = result["outputs"]
         if self.chk_save.isChecked():
             self._save_library()
         if self.chk_add.isChecked() and self.outputs:
-            self._add_to_project(mosaic, layers, blended)
+            self._add_to_project(result["mosaic"], result["layers"], result["blended"])
         self.lbl_stats.setText(self.lbl_stats.text() + "<br>" + tr("Zapisano {n} arkuszy w katalogu {d}.").format(
-            n=len(self.outputs), d=out_dir))
-        return self.outputs
+            n=len(self.outputs), d=result["dir"]))
+
+    def reject(self):
+        if self.task is not None and QMessageBox.question(
+                self, tr("Rektyfikacja wydawnictwa"), tr("Przetwarzanie trwa. Przerwać?")) != QMessageBox.StandardButton.Yes:
+            return
+        self.cancel()
+        super().reject()
 
     def _save_library(self):
         prio = self.priorities()
@@ -284,3 +311,24 @@ class PublicationRectifyDialog(QDialog):
             if lyr.isValid():
                 project.addMapLayer(lyr, False)
                 group.addLayer(lyr)
+
+
+def _publication_job(job, progress):
+    """Wątek roboczy: arkusze, mozaika, maski blendowania, mozaika z blendowaniem (tylko GDAL i numpy)."""
+    plan = job["plan"]
+    n = max(len(plan.sheets), 1)
+    steps = 1.15 if job["composite"] else 1.0
+
+    def sheet_progress(k, _n, frac):
+        return progress((k + frac) / n / steps, tr("Arkusz {k} z {n}: {s}").format(
+            k=k + 1, n=n, s=plan.sheets[k].sheet.label))
+    outputs = pr.warp_sheets(plan, job["scans"], job["dir"], job["crs"], job["res"], job["fmt"], sheet_progress)
+    progress(1.0 / steps, tr("Mozaika VRT…"))
+    mosaic = pr.write_mosaic(plan, os.path.join(job["dir"], job["name"] + ".vrt"), job["res"]) if outputs else None
+    layers = pr.write_blend_vrts(plan, job["width"]) if outputs else []
+    blended = None
+    if job["composite"] and layers:
+        progress(1.0 / steps, tr("Mozaika z blendowaniem…"))
+        blended = pr.composite(layers, os.path.join(job["dir"], job["name"] + "_blend.tif"), fmt=job["fmt"])
+    progress(1.0, "")
+    return {"outputs": outputs, "mosaic": mosaic, "layers": layers, "blended": blended, "dir": job["dir"]}

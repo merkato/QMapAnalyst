@@ -3445,12 +3445,12 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Rektyfikuj</translation>
     </message>
     <message>
-        <source>Rektyfikacja map serii…</source>
-        <translation>Rektyfikacja map serii…</translation>
-    </message>
-    <message>
         <source>Przerwij</source>
         <translation>Przerwij</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii</source>
+        <translation>Rektyfikacja serii</translation>
     </message>
     <message>
         <source>Punkty podejrzane – duży błąd na wszystkich mapach w zgodnym kierunku (sprawdź współrzędne w bibliotece albo zmianę obiektu): {p}.</source>
@@ -3501,16 +3501,24 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zrektyfikowano map: {n}.</translation>
     </message>
     <message>
+        <source>Przerwano.</source>
+        <translation>Przerwano.</translation>
+    </message>
+    <message>
         <source>Seria „{s}” – rektyfikacja</source>
         <translation>Seria „{s}” – rektyfikacja</translation>
+    </message>
+    <message>
+        <source>{m} – brak skanu</source>
+        <translation>{m} – brak skanu</translation>
     </message>
     <message>
         <source>Pominięte: {s}.</source>
         <translation>Pominięte: {s}.</translation>
     </message>
     <message>
-        <source>{m} – brak skanu</source>
-        <translation>{m} – brak skanu</translation>
+        <source>Mapa {k} z {n}: {m}</source>
+        <translation>Mapa {k} z {n}: {m}</translation>
     </message>
     <message>
         <source>Wydawnictwo wieloarkuszowe</source>
@@ -3713,6 +3721,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Nie można wyrównać: {e}</translation>
     </message>
     <message>
+        <source>Mozaika VRT…</source>
+        <translation>Mozaika VRT…</translation>
+    </message>
+    <message>
         <source>Rektyfikacja wydawnictwa wieloarkuszowego</source>
         <translation>Rektyfikacja wydawnictwa wieloarkuszowego</translation>
     </message>
@@ -3769,12 +3781,16 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zapisz siatkę, priorytet i zasięgi arkuszy w bibliotece</translation>
     </message>
     <message>
-        <source>Przetwarzanie arkuszy…</source>
-        <translation>Przetwarzanie arkuszy…</translation>
+        <source>Rektyfikacja wydawnictwa</source>
+        <translation>Rektyfikacja wydawnictwa</translation>
     </message>
     <message>
         <source>wydawnictwo</source>
         <translation>wydawnictwo</translation>
+    </message>
+    <message>
+        <source>Mozaika z blendowaniem…</source>
+        <translation>Mozaika z blendowaniem…</translation>
     </message>
     <message>
         <source>luźno</source>
@@ -3805,12 +3821,16 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>RMSE przed korekcją {a} m → po korekcji {b} m</translation>
     </message>
     <message>
-        <source>Rektyfikacja wydawnictwa</source>
-        <translation>Rektyfikacja wydawnictwa</translation>
+        <source>Przetwarzanie trwa. Przerwać?</source>
+        <translation>Przetwarzanie trwa. Przerwać?</translation>
     </message>
     <message>
         <source>{t} – rektyfikacja</source>
         <translation>{t} – rektyfikacja</translation>
+    </message>
+    <message>
+        <source>Arkusz {k} z {n}: {s}</source>
+        <translation>Arkusz {k} z {n}: {s}</translation>
     </message>
     <message>
         <source>walidacja krzyżowa {v} m</source>
@@ -3819,10 +3839,6 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Zakładki arkuszy: {n} par.</source>
         <translation>Zakładki arkuszy: {n} par.</translation>
-    </message>
-    <message>
-        <source>Arkusz {k} z {n}…</source>
-        <translation>Arkusz {k} z {n}…</translation>
     </message>
     <message>
         <source>Zapisano {n} arkuszy w katalogu {d}.</source>
@@ -4084,12 +4100,12 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Rektyfikuj</translation>
     </message>
     <message>
-        <source>Przetwarzanie rastra…</source>
-        <translation>Przetwarzanie rastra…</translation>
-    </message>
-    <message>
         <source>Przerwij</source>
         <translation>Przerwij</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja mapy</source>
+        <translation>Rektyfikacja mapy</translation>
     </message>
     <message>
         <source>luźno</source>
@@ -4108,8 +4124,8 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Rektyfikacja</translation>
     </message>
     <message>
-        <source>Zapisano raster po rektyfikacji: {p}</source>
-        <translation>Zapisano raster po rektyfikacji: {p}</translation>
+        <source>Przetwarzanie trwa. Przerwać?</source>
+        <translation>Przetwarzanie trwa. Przerwać?</translation>
     </message>
     <message>
         <source>{n} – korekcja</source>
@@ -4120,6 +4136,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>walidacja krzyżowa {v} m (błąd w miejscu pominiętego punktu)</translation>
     </message>
     <message>
+        <source>Przetwarzanie rastra…</source>
+        <translation>Przetwarzanie rastra…</translation>
+    </message>
+    <message>
+        <source>Zapisano raster po rektyfikacji: {p}</source>
+        <translation>Zapisano raster po rektyfikacji: {p}</translation>
+    </message>
+    <message>
         <source>Błąd: {e}</source>
         <translation>Błąd: {e}</translation>
     </message>
@@ -4128,12 +4152,12 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Odwzorowanie ma fałdy ({p}% ramki). Kontynuować?</translation>
     </message>
     <message>
-        <source>Nie udało się przetworzyć rastra: {e}</source>
-        <translation>Nie udało się przetworzyć rastra: {e}</translation>
-    </message>
-    <message>
         <source>Fałdy: {p}% ramki – odwzorowanie zmienia orientację; zwiększ wygładzanie albo sprawdź punkty.</source>
         <translation>Fałdy: {p}% ramki – odwzorowanie zmienia orientację; zwiększ wygładzanie albo sprawdź punkty.</translation>
+    </message>
+    <message>
+        <source>Nie udało się przetworzyć rastra: {e}</source>
+        <translation>Nie udało się przetworzyć rastra: {e}</translation>
     </message>
 </context>
 <context>

@@ -15,7 +15,7 @@ from qgis.PyQt.QtCore import QCoreApplication, Qt
 from qgis.PyQt.QtGui import QBrush, QColor
 from qgis.PyQt.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QHBoxLayout, QHeaderView, QLabel,
-    QLineEdit, QProgressDialog, QPushButton, QVBoxLayout, QWidget,
+    QLineEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget,
 )
 from qgis.core import QgsFeature, QgsField, QgsGeometry, QgsPointXY, QgsProject, QgsRasterLayer, QgsVectorLayer
 
@@ -26,6 +26,7 @@ from . import rectify as rc
 from . import series_fields as sf
 from .rectify_dialog import format_labels, method_labels, nice_resolution
 from .series_dialog import _REAL, _STR, _item, _num, _table
+from .tasks import run_task
 
 
 def tr(text):
@@ -173,6 +174,8 @@ class SeriesRectifyDialog(QDialog):
         super().__init__(parent or dialog)
         self.dialog = dialog
         self.outputs = []
+        self.task = None
+        self.background = True
         self.setWindowTitle(tr("Rektyfikacja serii czasowej"))
         self.resize(520, 300)
         lay = QVBoxLayout(self)
@@ -203,11 +206,17 @@ class SeriesRectifyDialog(QDialog):
         self.lbl = QLabel()
         self.lbl.setWordWrap(True)
         lay.addWidget(self.lbl)
+        self.progress = QProgressBar()
+        self.progress.setRange(0, 1000)
+        lay.addWidget(self.progress)
         bb = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         self.btn_run = bb.addButton(tr("Rektyfikuj"), QDialogButtonBox.ButtonRole.AcceptRole)
         self.btn_run.clicked.connect(self.run)
+        self.btn_cancel = bb.addButton(tr("Przerwij"), QDialogButtonBox.ButtonRole.ActionRole)
+        self.btn_cancel.clicked.connect(self.cancel)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
+        self._set_running(False)
 
     def browse(self):
         path = QFileDialog.getExistingDirectory(self, tr("Katalog wynikowy"), self.ed_dir.text())
@@ -215,33 +224,65 @@ class SeriesRectifyDialog(QDialog):
             self.ed_dir.setText(path)
 
     def run(self):
+        """Mapy serii w tle (QgsTask); background=False – od razu (testy), zwraca [(etykieta, ścieżka)]."""
         ser = self.dialog.series
-        if ser is None or not ser.maps:
+        if ser is None or not ser.maps or self.task is not None:
             return []
         out_root = self.ed_dir.text().strip()
         method = self.cmb_method.currentData()
         model = "helmert" if ser.model == "helmert" else "affine"
         crs = self.dialog.panel.library_crs()
         crs_text = crs.authid() or crs.toWkt()
-        prog = QProgressDialog(tr("Rektyfikacja map serii…"), tr("Przerwij"), 0, len(ser.maps), self)
-        prog.setWindowModality(Qt.WindowModality.WindowModal)
-        done, problems = [], []
+        fmt = self.cmb_format.currentData()
         try:
             with self.dialog.panel.library() as lib:
-                jobs = [(m, series_map_sheets(lib, m.analysis)) for m in ser.maps]
+                jobs = [(self.dialog._label(m), series_map_sheets(lib, m.analysis)) for m in ser.maps]
         except lb.LibraryError as e:
             self.lbl.setText(self.dialog.panel._library_error(e))
             return []
-        for k, (m, sheets) in enumerate(jobs):
-            prog.setValue(k)
-            QCoreApplication.processEvents()
-            if prog.wasCanceled():
-                break
-            label = self.dialog._label(m)
-            result = self._rectify_map(label, sheets, method, model, out_root, crs_text, problems)
-            if result:
-                done.append((label, result))
-        prog.close()
+
+        def job(progress, canceled):
+            done, problems = [], []
+            for k, (label, sheets) in enumerate(jobs):
+                if canceled():
+                    break
+                progress(k / len(jobs), tr("Mapa {k} z {n}: {m}").format(k=k + 1, n=len(jobs), m=label))
+                result = rectify_series_map(label, sheets, method, model, out_root, crs_text, fmt, problems,
+                                            lambda f, k=k: progress((k + f) / len(jobs), label))
+                if result:
+                    done.append((label, result))
+            return done, problems
+        self._set_running(True)
+        self.task = run_task(tr("Rektyfikacja serii"), job, self._done, self.background, self._on_progress)
+        return self.outputs if not self.background else []
+
+    def _set_running(self, on):
+        self.progress.setVisible(on)
+        self.progress.setValue(0)
+        self.btn_run.setEnabled(not on)
+        self.btn_cancel.setVisible(on)
+
+    def _on_progress(self, frac, text):
+        self.progress.setValue(int(1000 * frac))
+        if text:
+            self.lbl.setText(text)
+
+    def cancel(self):
+        if self.task is not None:
+            self.task.cancel()
+
+    def reject(self):
+        if self.task is not None:
+            self.cancel()
+        super().reject()
+
+    def _done(self, result, error):
+        self.task = None
+        self._set_running(False)
+        if error is not None:
+            self.lbl.setText(tr("Przerwano.") if isinstance(error, InterruptedError) else str(error))
+            return
+        done, problems = result
         self.outputs = done
         if self.chk_add.isChecked() and done:
             self._add_group(done)
@@ -249,25 +290,9 @@ class SeriesRectifyDialog(QDialog):
         if problems:
             msg += " " + tr("Pominięte: {s}.").format(s="; ".join(problems))
         self.lbl.setText(msg)
-        return done
 
     def _rectify_map(self, label, sheets, method, model, out_root, crs_text, problems):
-        scans = {s.key: s.analysis.scan_path for s in sheets if s.analysis is not None and s.analysis.scan_path}
-        if not sheets or not any(os.path.exists(p) for p in scans.values()):
-            problems.append(tr("{m} – brak skanu").format(m=label))
-            return None
-        stitch = pr.STITCH_NODES if len(sheets) > 1 and all(s.grid is not None for s in sheets) else pr.STITCH_BLOCK
-        try:
-            plan = pr.build_plan(sheets, method, None, stitch, model, 0.0 if len(sheets) == 1 else None)
-            out_dir = os.path.join(out_root, pr.safe_name(label))
-            res = _resolution(sheets)
-            paths = pr.warp_sheets(plan, scans, out_dir, crs_text, res, self.cmb_format.currentData())
-        except (bk.BlockError, rc.RectifyError, RuntimeError) as e:
-            problems.append(f"{label} – {e}")
-            return None
-        if not paths:
-            return None
-        return paths[0] if len(paths) == 1 else pr.write_mosaic(plan, os.path.join(out_dir, "mozaika.vrt"), res)
+        return rectify_series_map(label, sheets, method, model, out_root, crs_text, self.cmb_format.currentData(), problems)
 
     def _add_group(self, done):
         project = QgsProject.instance()
@@ -287,3 +312,24 @@ def suspect_text(ser):
     return tr("Punkty podejrzane – duży błąd na wszystkich mapach w zgodnym kierunku (sprawdź współrzędne w bibliotece "
               "albo zmianę obiektu): {p}.").format(p=", ".join(f"{s.name} ({s.maps} map, {s.mean_m:.0f} m)" for s in sus[:8]))
 
+
+
+def rectify_series_map(label, sheets, method, model, out_root, crs_text, fmt, problems, progress=None):
+    """Rektyfikacja jednej mapy serii (wątek roboczy – bez interfejsu). Zwraca ścieżkę rastra/mozaiki albo None."""
+    scans = {s.key: s.analysis.scan_path for s in sheets if s.analysis is not None and s.analysis.scan_path}
+    if not sheets or not any(os.path.exists(p) for p in scans.values()):
+        problems.append(tr("{m} – brak skanu").format(m=label))
+        return None
+    stitch = pr.STITCH_NODES if len(sheets) > 1 and all(s.grid is not None for s in sheets) else pr.STITCH_BLOCK
+    try:
+        plan = pr.build_plan(sheets, method, None, stitch, model, 0.0 if len(sheets) == 1 else None)
+        out_dir = os.path.join(out_root, pr.safe_name(label))
+        res = _resolution(sheets)
+        cb = (lambda k, n, f: progress((k + f) / max(n, 1))) if progress else None
+        paths = pr.warp_sheets(plan, scans, out_dir, crs_text, res, fmt, cb)
+    except (bk.BlockError, rc.RectifyError, RuntimeError) as e:
+        problems.append(f"{label} – {e}")
+        return None
+    if not paths:
+        return None
+    return paths[0] if len(paths) == 1 else pr.write_mosaic(plan, os.path.join(out_dir, "mozaika.vrt"), res)

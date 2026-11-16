@@ -7,7 +7,7 @@ szczeliny na stykach, krzywa RMSE ↔ szczelina i warstwy (zasięgi po wyrównan
 import math
 
 from qgis.PyQt.QtCore import QCoreApplication, Qt, QTimer
-from qgis.PyQt.QtGui import QBrush, QColor, QPixmap
+from qgis.PyQt.QtGui import QBrush, QColor
 from qgis.PyQt.QtWidgets import (
     QComboBox, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSlider, QSplitter, QVBoxLayout, QWidget,
 )
@@ -70,11 +70,9 @@ class BlockPanel(QWidget):
         self.tbl.itemChanged.connect(self.on_item_changed)
         self._filling = False
         split.addWidget(self.tbl)
-        self.lbl_chart = QLabel()
-        self.lbl_chart.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lbl_chart.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
-        self.lbl_chart.setMinimumWidth(320)
-        split.addWidget(self.lbl_chart)
+        self.chart = srep.SvgChart()
+        self.chart.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        split.addWidget(self.chart)
         split.setSizes([520, 380])
         lay.addWidget(split, 1)
         self.lbl_info = QLabel()
@@ -205,10 +203,7 @@ class BlockPanel(QWidget):
 
     def _draw_chart(self):
         svg = ch.tradeoff_curve(self.curve, self._nearest_curve_pos(), srep.chart_texts())
-        img = srep.svg_to_image(svg, 560)
-        if img is not None and not img.isNull():
-            self.lbl_chart.setPixmap(QPixmap.fromImage(img).scaledToWidth(
-                max(300, min(self.lbl_chart.width(), 560)), Qt.TransformationMode.SmoothTransformation))
+        self.chart.set_svg(svg)
         self.chart_svg = svg
 
     def _nearest_curve_pos(self):

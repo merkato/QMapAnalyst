@@ -11,6 +11,7 @@ import os
 import shutil
 import sys
 import tempfile
+import time
 
 import numpy as np
 
@@ -98,7 +99,12 @@ out = os.path.join(TMP, "wynik.tif")
 dlg.ed_out.setText(out)
 dlg.spin_res.setValue(5.0)
 n_layers = len(project.mapLayers())
-assert dlg.run() == out and os.path.exists(out)
+assert dlg.run() is None and dlg.task is not None and not dlg.progress.isHidden() and not dlg.btn_run.isEnabled()   # zadanie w tle
+deadline = time.time() + 180
+while dlg.output is None and time.time() < deadline:
+    qgs.processEvents()
+    time.sleep(0.05)
+assert dlg.output == out and os.path.exists(out) and dlg.task is None and dlg.progress.isHidden() and dlg.btn_run.isEnabled()
 info = gdal.Info(out, format="json")
 assert info["bands"][-1]["colorInterpretation"] == "Alpha" and len(info["bands"]) == 4, [b["colorInterpretation"] for b in info["bands"]]
 assert "2180" in info["coordinateSystem"]["wkt"] and abs(info["geoTransform"][1] - 5.0) < 1e-9

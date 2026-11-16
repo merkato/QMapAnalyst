@@ -96,6 +96,7 @@ rd.ed_dir.setText(os.path.join(TMP, "wynik"))
 rd.spin_res.setValue(10.0)
 rd.cmb_format.setCurrentIndex(rd.cmb_format.findData("gtiff_lzw"))
 n_before = len(project.mapLayers())
+rd.background = False
 outs = rd.run()
 assert len(outs) == 4 and all(os.path.exists(p) for p in outs)
 vrt = os.path.join(TMP, "wynik", "Testkarte.vrt")

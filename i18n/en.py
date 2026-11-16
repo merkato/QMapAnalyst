@@ -1038,4 +1038,14 @@ EN = {
     'Seria „{s}” – rektyfikacja': 'Series “{s}” – rectification',
     'Pominięte: {s}.': 'Skipped: {s}.',
     '{m} – brak skanu': '{m} – no scan',
+
+    # --- zadania w tle (0.3.2)
+    'Rektyfikacja serii': 'Series rectification',
+    'Przerwano.': 'Canceled.',
+    'Mapa {k} z {n}: {m}': 'Map {k} of {n}: {m}',
+    'Mozaika VRT…': 'VRT mosaic…',
+    'Mozaika z blendowaniem…': 'Blended mosaic…',
+    'Przetwarzanie trwa. Przerwać?': 'Processing is running. Cancel it?',
+    'Arkusz {k} z {n}: {s}': 'Sheet {k} of {n}: {s}',
+    'Rektyfikacja mapy': 'Map rectification',
 }

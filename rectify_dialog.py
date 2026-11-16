@@ -15,12 +15,13 @@ from qgis.PyQt.QtCore import QCoreApplication, Qt, QTimer
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QFormLayout, QHBoxLayout,
-    QLabel, QLineEdit, QMessageBox, QProgressDialog, QPushButton, QSlider, QVBoxLayout,
+    QLabel, QLineEdit, QMessageBox, QProgressBar, QPushButton, QSlider, QVBoxLayout,
 )
 from qgis.core import QgsFeature, QgsGeometry, QgsPointXY, QgsProject, QgsRasterLayer, QgsVectorLayer
 
 from . import math_engine as me
 from . import rectify as rc
+from .tasks import run_task
 
 SETTINGS_KEY = "QMapAnalyst/rectify_dir"
 
@@ -69,6 +70,8 @@ class RectifyDialog(QDialog):
         self.correction = None
         self.output = None
         self.folds = 0.0
+        self.task = None
+        self.background = True
         self.P, self.E, self.W = correction_inputs(self.st.fit)
         self.setWindowTitle(tr("Rektyfikacja mapy dawnej"))
         self.resize(560, 520)
@@ -141,11 +144,17 @@ class RectifyDialog(QDialog):
         form.addRow("", self.chk_vectors)
         lay.addLayout(form)
         lay.addStretch()
+        self.progress = QProgressBar()
+        self.progress.setRange(0, 1000)
+        lay.addWidget(self.progress)
         bb = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         self.btn_run = bb.addButton(tr("Rektyfikuj"), QDialogButtonBox.ButtonRole.AcceptRole)
         self.btn_run.clicked.connect(self.run)
+        self.btn_cancel = bb.addButton(tr("Przerwij"), QDialogButtonBox.ButtonRole.ActionRole)
+        self.btn_cancel.clicked.connect(self.cancel)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
+        self._set_running(False)
 
     def _default_output(self):
         src = self.dock.old_raster_layer.source() if self.dock.old_raster_layer else ""
@@ -222,27 +231,47 @@ class RectifyDialog(QDialog):
         gcps = [(px, -ln, X, Y) for px, ln, X, Y in rc.gcp_grid(func, frame, k=24)]
         ring = rc.cutline(func, frame).tolist() if self.chk_frame.isChecked() else None
         crs = self.st.ref_crs.authid() or self.st.ref_crs.toWkt()
-        prog = QProgressDialog(tr("Przetwarzanie rastra…"), tr("Przerwij"), 0, 100, self)
-        prog.setWindowModality(Qt.WindowModality.WindowModal)
-        prog.setMinimumDuration(300)
+        scan, res, fmt = self.dock.old_raster_layer.source(), self.spin_res.value(), self.cmb_format.currentData()
+        settings = self.settings()
 
-        def progress(pct):
-            prog.setValue(int(pct * 100))
-            QCoreApplication.processEvents()
-            return not prog.wasCanceled()
-        try:
-            rr.warp_scan(self.dock.old_raster_layer.source(), gcps, ring, out, crs, self.spin_res.value(),
-                         self.cmb_format.currentData(), progress)
-        except RuntimeError as e:
-            prog.close()
-            QMessageBox.warning(self, tr("Rektyfikacja"), tr("Nie udało się przetworzyć rastra: {e}").format(e=e))
-            return None
-        prog.close()
-        rr.write_settings(out, self.settings())
-        self.output = out
-        self._add_layers(out, func)
-        self.dock.set_status(tr("Zapisano raster po rektyfikacji: {p}").format(p=out), "ok")
-        return out
+        def job(progress, _canceled):
+            rr.warp_scan(scan, gcps, ring, out, crs, res, fmt, lambda f: progress(f, tr("Przetwarzanie rastra…")))
+            rr.write_settings(out, settings)
+            return out
+
+        def done(result, error):
+            self.task = None
+            self._set_running(False)
+            if error is not None:
+                if not isinstance(error, InterruptedError):
+                    QMessageBox.warning(self, tr("Rektyfikacja"), tr("Nie udało się przetworzyć rastra: {e}").format(e=error))
+                return
+            self.output = result
+            self._add_layers(result, func)
+            self.dock.set_status(tr("Zapisano raster po rektyfikacji: {p}").format(p=result), "ok")
+        self._set_running(True)
+        self.task = run_task(tr("Rektyfikacja mapy"), job, done, self.background, self._on_progress)
+        return self.output if not self.background else None
+
+    def _set_running(self, on):
+        self.progress.setVisible(on)
+        self.progress.setValue(0)
+        self.btn_run.setEnabled(not on)
+        self.btn_cancel.setVisible(on)
+
+    def _on_progress(self, frac, _text=""):
+        self.progress.setValue(int(1000 * frac))
+
+    def cancel(self):
+        if self.task is not None:
+            self.task.cancel()
+
+    def reject(self):
+        if self.task is not None and QMessageBox.question(
+                self, tr("Rektyfikacja"), tr("Przetwarzanie trwa. Przerwać?")) != QMessageBox.StandardButton.Yes:
+            return
+        self.cancel()
+        super().reject()
 
     def settings(self):
         c = self.correction

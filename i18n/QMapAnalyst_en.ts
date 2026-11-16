@@ -3445,12 +3445,12 @@ Update the reference coordinates of these points?</translation>
         <translation>Rectify</translation>
     </message>
     <message>
-        <source>Rektyfikacja map serii…</source>
-        <translation>Rectifying the maps of the series…</translation>
-    </message>
-    <message>
         <source>Przerwij</source>
         <translation>Cancel</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii</source>
+        <translation>Series rectification</translation>
     </message>
     <message>
         <source>Punkty podejrzane – duży błąd na wszystkich mapach w zgodnym kierunku (sprawdź współrzędne w bibliotece albo zmianę obiektu): {p}.</source>
@@ -3501,16 +3501,24 @@ Update the reference coordinates of these points?</translation>
         <translation>Maps rectified: {n}.</translation>
     </message>
     <message>
+        <source>Przerwano.</source>
+        <translation>Canceled.</translation>
+    </message>
+    <message>
         <source>Seria „{s}” – rektyfikacja</source>
         <translation>Series “{s}” – rectification</translation>
+    </message>
+    <message>
+        <source>{m} – brak skanu</source>
+        <translation>{m} – no scan</translation>
     </message>
     <message>
         <source>Pominięte: {s}.</source>
         <translation>Skipped: {s}.</translation>
     </message>
     <message>
-        <source>{m} – brak skanu</source>
-        <translation>{m} – no scan</translation>
+        <source>Mapa {k} z {n}: {m}</source>
+        <translation>Map {k} of {n}: {m}</translation>
     </message>
     <message>
         <source>Wydawnictwo wieloarkuszowe</source>
@@ -3713,6 +3721,10 @@ Update the reference coordinates of these points?</translation>
         <translation>Cannot adjust: {e}</translation>
     </message>
     <message>
+        <source>Mozaika VRT…</source>
+        <translation>VRT mosaic…</translation>
+    </message>
+    <message>
         <source>Rektyfikacja wydawnictwa wieloarkuszowego</source>
         <translation>Rectification of a multi-sheet publication</translation>
     </message>
@@ -3769,12 +3781,16 @@ Update the reference coordinates of these points?</translation>
         <translation>Save the grid, priority and sheet footprints in the library</translation>
     </message>
     <message>
-        <source>Przetwarzanie arkuszy…</source>
-        <translation>Processing sheets…</translation>
+        <source>Rektyfikacja wydawnictwa</source>
+        <translation>Publication rectification</translation>
     </message>
     <message>
         <source>wydawnictwo</source>
         <translation>publication</translation>
+    </message>
+    <message>
+        <source>Mozaika z blendowaniem…</source>
+        <translation>Blended mosaic…</translation>
     </message>
     <message>
         <source>luźno</source>
@@ -3805,12 +3821,16 @@ Update the reference coordinates of these points?</translation>
         <translation>RMSE before correction {a} m → after correction {b} m</translation>
     </message>
     <message>
-        <source>Rektyfikacja wydawnictwa</source>
-        <translation>Publication rectification</translation>
+        <source>Przetwarzanie trwa. Przerwać?</source>
+        <translation>Processing is running. Cancel it?</translation>
     </message>
     <message>
         <source>{t} – rektyfikacja</source>
         <translation>{t} – rectification</translation>
+    </message>
+    <message>
+        <source>Arkusz {k} z {n}: {s}</source>
+        <translation>Sheet {k} of {n}: {s}</translation>
     </message>
     <message>
         <source>walidacja krzyżowa {v} m</source>
@@ -3819,10 +3839,6 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Zakładki arkuszy: {n} par.</source>
         <translation>Sheet overlaps: {n} pairs.</translation>
-    </message>
-    <message>
-        <source>Arkusz {k} z {n}…</source>
-        <translation>Sheet {k} of {n}…</translation>
     </message>
     <message>
         <source>Zapisano {n} arkuszy w katalogu {d}.</source>
@@ -4084,12 +4100,12 @@ Update the reference coordinates of these points?</translation>
         <translation>Rectify</translation>
     </message>
     <message>
-        <source>Przetwarzanie rastra…</source>
-        <translation>Processing the raster…</translation>
-    </message>
-    <message>
         <source>Przerwij</source>
         <translation>Cancel</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja mapy</source>
+        <translation>Map rectification</translation>
     </message>
     <message>
         <source>luźno</source>
@@ -4108,8 +4124,8 @@ Update the reference coordinates of these points?</translation>
         <translation>Rectification</translation>
     </message>
     <message>
-        <source>Zapisano raster po rektyfikacji: {p}</source>
-        <translation>Rectified raster saved: {p}</translation>
+        <source>Przetwarzanie trwa. Przerwać?</source>
+        <translation>Processing is running. Cancel it?</translation>
     </message>
     <message>
         <source>{n} – korekcja</source>
@@ -4120,6 +4136,14 @@ Update the reference coordinates of these points?</translation>
         <translation>cross-validation {v} m (error at a left-out point)</translation>
     </message>
     <message>
+        <source>Przetwarzanie rastra…</source>
+        <translation>Processing the raster…</translation>
+    </message>
+    <message>
+        <source>Zapisano raster po rektyfikacji: {p}</source>
+        <translation>Rectified raster saved: {p}</translation>
+    </message>
+    <message>
         <source>Błąd: {e}</source>
         <translation>Error: {e}</translation>
     </message>
@@ -4128,12 +4152,12 @@ Update the reference coordinates of these points?</translation>
         <translation>The mapping has folds ({p}% of the frame). Continue?</translation>
     </message>
     <message>
-        <source>Nie udało się przetworzyć rastra: {e}</source>
-        <translation>Could not process the raster: {e}</translation>
-    </message>
-    <message>
         <source>Fałdy: {p}% ramki – odwzorowanie zmienia orientację; zwiększ wygładzanie albo sprawdź punkty.</source>
         <translation>Folds: {p}% of the frame – the mapping flips orientation; increase smoothing or check the points.</translation>
+    </message>
+    <message>
+        <source>Nie udało się przetworzyć rastra: {e}</source>
+        <translation>Could not process the raster: {e}</translation>
     </message>
 </context>
 <context>
