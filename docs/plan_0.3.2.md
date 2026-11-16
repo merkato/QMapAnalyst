@@ -6,6 +6,18 @@ Szkic z 16.11.2026, na podstawie wpasowania 9 arkuszy mapy Schmettaua (Górny Ś
 Wersja 0.3.2, a nie 0.4.0: wydawnictwa wieloarkuszowe i serie pojawiły się w 0.3.0, a rektyfikacja
 rozwija ten sam moduł. Przy tym wydaniu zamykamy też zgłoszenie #13 (usunięcie `supportsQt6` z `metadata.txt`).
 
+## Powiązane zgłoszenia
+
+| Zgłoszenie | Co wchodzi do 0.3.2 |
+|---|---|
+| [#13](https://github.com/merkato/QMapAnalyst/issues/13) supportsQt6 | usunięcie flagi z `metadata.txt` (`qgisMaximumVersion=4.99` już jest) |
+| [#8](https://github.com/merkato/QMapAnalyst/issues/8) łączne wyrównanie arkuszy z punktami wiążącymi | część analityczna wyrównania wydawnictwa (sekcja „Wyrównanie blokowe – analiza”) |
+| [#5](https://github.com/merkato/QMapAnalyst/issues/5) wykrywanie map kopiowanych | korelacja reszt z testem permutacyjnym jest od 0.3.0; dochodzi porównanie pól korekcji na siatce i test Mantela |
+
+Poza zakresem: [#6](https://github.com/merkato/QMapAnalyst/issues/6) (siatka kartograficzna λ/φ – osobny moduł
+estymacji odwzorowania; przy wydawnictwie mogłaby później zasilić wspólną estymację) i
+[#7](https://github.com/merkato/QMapAnalyst/issues/7) (skala w jednostkach historycznych).
+
 ## Ustalenia (16.11.2026)
 
 1. **Biblioteka (GeoPackage) przechowuje zasięgi ramek arkuszy.** Dziś `analyses.frame` trzyma ramkę
@@ -108,6 +120,30 @@ Model sprawdzony na mapie Schmettaua:
 Każdą metodę z tabeli wyrażamy jako **gęstą siatkę GCP** (skan → teren), więc wystarczy GDAL i nie trzeba
 własnego przetwarzania rastra. Siatka jest na tyle gęsta, że TPS GDAL między węzłami odtwarza metodę.
 
+## Wyrównanie blokowe – analiza (#8)
+
+Część analityczna wydawnictwa, zgodnie z zasadą „analiza ≠ rektyfikacja”:
+
+- **Model:** transformacja na arkusz (Helmert albo afiniczna, ten sam model dla wszystkich arkuszy – jak
+  w serii czasowej; różne modele na arkusz na razie nie).
+- **Obserwacje:**
+  - GCP każdego arkusza;
+  - **punkty wiążące**: ten sam obiekt na dwóch arkuszach, z punktem biblioteki albo bez niego
+    (para skan A ↔ skan B);
+  - **wspólne narożniki ramek** sąsiednich arkuszy jako warunki zszycia (z wagą).
+- **Wyniki:**
+  - σ₀ całości i każdego arkusza, macierz kowariancji;
+  - test Baardy dla GCP i punktów wiążących;
+  - **wektory niezgodności na stykach**, czyli to, co przy osobnych wpasowaniach dawało u Schmettaua
+    szczeliny do 4,9 km;
+  - wskazanie arkusza „odstającego”.
+- **Warstwy i raport:** zasięgi arkuszy (`sheet_footprints`), wektory niezgodności na stykach, raport
+  wydawnictwa rozszerzony o wyrównanie blokowe (obok dzisiejszej zakładki „Zakładki”).
+- **Test syntetyczny (z #8):** 4 arkusze z jednej transformacji plus szum, część arkuszy tylko z punktami
+  wiążącymi. Transformacje mają zostać odtworzone, a arkusz z błędem przesunięcia wykryty.
+- Wspólna estymacja odwzorowania dla całej mapy – po wyrównaniu blokowym, na wszystkich GCP w jednym
+  układzie (później, razem z #6).
+
 ## Narzędzie „Rektyfikacja”
 
 Okno, które robi coś, czego Georeferencer nie potrafi:
@@ -148,8 +184,14 @@ z rektyfikacji i biblioteki:
 - **Spójność punktu w serii.** Duża reszta tego samego punktu na wszystkich mapach sugeruje błąd
   współrzędnych w bibliotece albo zmianę obiektu, a nie błąd mapy. Takie punkty trzeba wskazać
   przed rektyfikacją.
-- **Pola korekcji porównywalne między mapami.** Podobne pola korekcji to drugi, obok korelacji reszt,
-  wskaźnik kopiowania (np. Helwig → Mercator).
+- **Pola korekcji porównywalne między mapami (#5).** Podobne pola korekcji to drugi, obok korelacji
+  reszt, wskaźnik kopiowania (np. Helwig → Mercator):
+  - pola na regularnej siatce we wspólnym obszarze (przecięcie otoczek punktów obu map): lokalna skala,
+    obrót, anizotropia i wektor korekcji;
+  - korelacja pól z testem Mantela albo permutacyjnym (obrót i przesunięcie pola), żeby odróżnić kopię
+    od podobieństwa wynikającego z tego samego terenu;
+  - mapa różnic pól, ostrzeżenie przy zbyt małym zasięgu lub liczbie punktów;
+  - normalizacja przy różnej skali obu map: pola względne, skala podzielona przez skalę globalną.
 - **Rektyfikacja całej serii jednym ustawieniem:** ta sama metoda, wygładzanie z walidacji krzyżowej
   osobno dla każdej mapy, warstwy w grupie projektu w kolejności lat.
 
@@ -158,10 +200,12 @@ z rektyfikacji i biblioteki:
 1. **Silnik:** pole korekcji (wygładzony TPS z walidacją krzyżową, trójkąty, MLS), kontrola fałd,
    generowanie gęstej siatki GCP i linii cięcia. Testy na danych syntetycznych (znane zniekształcenie).
 2. **Rektyfikacja jednej mapy:** okno, wyjście COG/VRT, raport i warstwa wielkości korekcji.
-3. **Wyrównanie wydawnictwa:** schemat biblioteki 4 (siatka arkuszy, `sheet_footprints`), wspólne węzły
+3. **Wyrównanie wydawnictwa – analiza (#8):** wyrównanie blokowe z punktami wiążącymi i warunkami
+   na narożnikach, σ₀, test Baardy, wektory niezgodności na stykach, arkusz odstający.
+4. **Wyrównanie wydawnictwa – rektyfikacja:** schemat biblioteki 4 (siatka arkuszy, `sheet_footprints`), wspólne węzły
    i punkty wiążące, korekcja w terenie, mozaika VRT z suwakiem przycinanie ↔ blendowanie. Raport szczelin.
-4. **Seria:** spójność punktów w serii, porównanie pól korekcji, rektyfikacja całej serii.
-5. **Dokumentacja i zrzuty:** Schmettau (wydawnictwo), Helwig / Mercator (seria).
+5. **Seria:** spójność punktów w serii, porównanie pól korekcji z testem Mantela (#5), rektyfikacja całej serii.
+6. **Wydanie:** #13 (`supportsQt6`), dokumentacja i zrzuty: Schmettau (wydawnictwo), Helwig / Mercator (seria).
 
 ## Pytania otwarte
 
