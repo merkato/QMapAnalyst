@@ -88,6 +88,16 @@ traj = dlg.add_trajectories_layer()
 assert traj.featureCount() == 15 and next(traj.getFeatures())["maps"] == 3
 assert vec.id() in project.mapLayers() and traj.id() in project.mapLayers()
 
+# pola korekcji (#5) i rektyfikacja serii
+res = dlg.fields.compute()
+assert len(res) == 3 and dlg.fields.tbl.rowCount() == 3 and dlg.fields.btn_diff.isEnabled()
+assert all(r.nodes > 0 for r in res) and res[0].ok
+diff = dlg.fields.add_diff_layer()
+assert diff.featureCount() == res[0].nodes and diff.crs().authid() == "EPSG:2180"
+sfp = __import__(f"{PKG}.series_fields_panel", fromlist=["*"])
+rdlg = sfp.SeriesRectifyDialog(dlg)
+assert rdlg.run() == [] and "brak skanu" in rdlg.lbl.text()           # mapy testowe bez skanów
+
 # eksport
 out = os.path.join(TMP, "seria")
 QFileDialog.getSaveFileName = staticmethod(lambda *a_, **k: (out, "JSON (*.json)"))
@@ -99,7 +109,7 @@ assert open(out + ".csv", encoding="utf-8-sig").readline().startswith("key,map,s
 
 # wykresy, raport PDF/HTML, eksport wykresów
 assert len(dlg.charts) == 4 and len(dlg.charts_view.labels) == 4
-assert dlg.tabs.tabText(3) == "Wykresy"
+assert dlg.tabs.tabText(4) == "Wykresy" and dlg.tabs.tabText(3) == "Pola korekcji"
 for kind in ("pdf", "html"):
     QFileDialog.getSaveFileName = staticmethod(lambda *a_, kind=kind, **k: (os.path.join(TMP, "raport"), ""))
     rpath = dlg.export_report(kind)

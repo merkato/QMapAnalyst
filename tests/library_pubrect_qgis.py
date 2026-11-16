@@ -115,6 +115,17 @@ rd.cmb_stitch.setCurrentIndex(1)
 rd.recompute()
 assert rd.plan.stitch == "block" and rd.sld_blend.isEnabled() == bool(rd.plan.overlaps())
 
+# rektyfikacja mapy w ramach serii (wydawnictwo → węzły, mozaika VRT)
+sfp = __import__(f"{PKG}.series_fields_panel", fromlist=["*"])
+rs = sfp.SeriesRectifyDialog(dlg)
+rs.cmb_format.setCurrentIndex(rs.cmb_format.findData("gtiff_lzw"))
+with lb.Library.open(path) as lib:
+    msheets = sfp.series_map_sheets(lib, lib.get_analysis(ids["00"]))
+problems = []
+mos = rs._rectify_map("Testkarte", msheets, "tps", "affine", os.path.join(TMP, "seria"), "EPSG:2180", problems)
+assert not problems and mos.endswith("mozaika.vrt") and os.path.exists(mos), problems
+assert sfp.scan_frame(scans[sheets[0].key]) == [(0, 0), (401, 0), (401, -301), (0, -301)]
+
 dock.cleanup()
 project.removeAllMapLayers()
 QgsSettings().setValue(lp.SETTINGS_PATH, PATH_BEFORE)

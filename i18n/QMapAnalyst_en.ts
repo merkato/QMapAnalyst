@@ -3229,6 +3229,10 @@ Update the reference coordinates of these points?</translation>
         <translation>Point errors</translation>
     </message>
     <message>
+        <source>Pola korekcji</source>
+        <translation>Correction fields</translation>
+    </message>
+    <message>
         <source>Wykresy</source>
         <translation>Charts</translation>
     </message>
@@ -3251,6 +3255,14 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Dla każdego punktu: łamana przez położenia, które nadają mu kolejne mapy (wg roku)</source>
         <translation>For each point: a polyline through the positions given to it by successive maps (by year)</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii…</source>
+        <translation>Rectify the series…</translation>
+    </message>
+    <message>
+        <source>Wszystkie mapy serii jedną metodą rektyfikacji – warstwy w grupie projektu w kolejności lat</source>
+        <translation>All maps of the series with one rectification method – layers in a project group in order of years</translation>
     </message>
     <message>
         <source>Eksport</source>
@@ -3387,6 +3399,118 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>za mało punktów wspólnych do porównania (min. {k})</source>
         <translation>too few common points to compare (min. {k})</translation>
+    </message>
+    <message>
+        <source>Pole korekcji mapy – wygładzony TPS jej reszt (jak w rektyfikacji). Podobne pola dwóch map to drugi, obok korelacji reszt w punktach, ślad kopiowania. Istotność: losowy obrót pola drugiej mapy (zachowuje jego gładkość).</source>
+        <translation>The correction field of a map is a smoothed TPS of its residuals (as in rectification). Similar fields of two maps are a second trace of copying, besides the correlation of residuals at the points. Significance: random rotation of the second map's field (preserves its smoothness).</translation>
+    </message>
+    <message>
+        <source>Porównaj pola korekcji</source>
+        <translation>Compare correction fields</translation>
+    </message>
+    <message>
+        <source>Warstwa różnic pól</source>
+        <translation>Field difference layer</translation>
+    </message>
+    <message>
+        <source>Dla zaznaczonej pary: wektory c_A − c_B w węzłach wspólnego obszaru</source>
+        <translation>For the selected pair: vectors c_A − c_B at the nodes of the common area</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii czasowej</source>
+        <translation>Time series rectification</translation>
+    </message>
+    <message>
+        <source>Każda mapa serii tą samą metodą; wygładzanie dobierane walidacją krzyżową osobno dla każdej mapy. Wydawnictwa wieloarkuszowe zszywane węzłami siatki. Warstwy w grupie projektu w kolejności lat.</source>
+        <translation>Every map of the series with the same method; smoothing chosen by cross-validation separately for each map. Multi-sheet publications stitched with grid nodes. Layers in a project group in order of years.</translation>
+    </message>
+    <message>
+        <source>Metoda</source>
+        <translation>Method</translation>
+    </message>
+    <message>
+        <source>Format</source>
+        <translation>Format</translation>
+    </message>
+    <message>
+        <source>Katalog wynikowy</source>
+        <translation>Output folder</translation>
+    </message>
+    <message>
+        <source>Dodaj do projektu</source>
+        <translation>Add to the project</translation>
+    </message>
+    <message>
+        <source>Rektyfikuj</source>
+        <translation>Rectify</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja map serii…</source>
+        <translation>Rectifying the maps of the series…</translation>
+    </message>
+    <message>
+        <source>Przerwij</source>
+        <translation>Cancel</translation>
+    </message>
+    <message>
+        <source>Punkty podejrzane – duży błąd na wszystkich mapach w zgodnym kierunku (sprawdź współrzędne w bibliotece albo zmianę obiektu): {p}.</source>
+        <translation>Suspect points – a large error on all maps in a consistent direction (check the coordinates in the library or whether the object moved): {p}.</translation>
+    </message>
+    <message>
+        <source>za mało punktów na jednej z map</source>
+        <translation>too few points on one of the maps</translation>
+    </message>
+    <message>
+        <source>brak wspólnego obszaru punktów</source>
+        <translation>no common area of points</translation>
+    </message>
+    <message>
+        <source>za mały wspólny obszar</source>
+        <translation>common area too small</translation>
+    </message>
+    <message>
+        <source>Węzły</source>
+        <translation>Nodes</translation>
+    </message>
+    <message>
+        <source>r pól</source>
+        <translation>field r</translation>
+    </message>
+    <message>
+        <source>Mantel r</source>
+        <translation>Mantel r</translation>
+    </message>
+    <message>
+        <source>r dylatacji</source>
+        <translation>dilation r</translation>
+    </message>
+    <message>
+        <source>r obrotu</source>
+        <translation>rotation r</translation>
+    </message>
+    <message>
+        <source>Uwagi</source>
+        <translation>Notes</translation>
+    </message>
+    <message>
+        <source>Różnica pól korekcji: {a} − {b}</source>
+        <translation>Correction field difference: {a} − {b}</translation>
+    </message>
+    <message>
+        <source>Zrektyfikowano map: {n}.</source>
+        <translation>Maps rectified: {n}.</translation>
+    </message>
+    <message>
+        <source>Seria „{s}” – rektyfikacja</source>
+        <translation>Series “{s}” – rectification</translation>
+    </message>
+    <message>
+        <source>Pominięte: {s}.</source>
+        <translation>Skipped: {s}.</translation>
+    </message>
+    <message>
+        <source>{m} – brak skanu</source>
+        <translation>{m} – no scan</translation>
     </message>
     <message>
         <source>Wydawnictwo wieloarkuszowe</source>
@@ -3637,18 +3761,6 @@ Update the reference coordinates of these points?</translation>
         <translation>Resolution</translation>
     </message>
     <message>
-        <source>Format</source>
-        <translation>Format</translation>
-    </message>
-    <message>
-        <source>Katalog wynikowy</source>
-        <translation>Output folder</translation>
-    </message>
-    <message>
-        <source>Dodaj do projektu</source>
-        <translation>Add to the project</translation>
-    </message>
-    <message>
         <source>Zapisz też mozaikę COG z blendowaniem</source>
         <translation>Also save a blended COG mosaic</translation>
     </message>
@@ -3657,16 +3769,8 @@ Update the reference coordinates of these points?</translation>
         <translation>Save the grid, priority and sheet footprints in the library</translation>
     </message>
     <message>
-        <source>Rektyfikuj</source>
-        <translation>Rectify</translation>
-    </message>
-    <message>
         <source>Przetwarzanie arkuszy…</source>
         <translation>Processing sheets…</translation>
-    </message>
-    <message>
-        <source>Przerwij</source>
-        <translation>Cancel</translation>
     </message>
     <message>
         <source>wydawnictwo</source>

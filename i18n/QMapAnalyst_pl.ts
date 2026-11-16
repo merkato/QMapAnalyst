@@ -3229,6 +3229,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Błędy punktów</translation>
     </message>
     <message>
+        <source>Pola korekcji</source>
+        <translation>Pola korekcji</translation>
+    </message>
+    <message>
         <source>Wykresy</source>
         <translation>Wykresy</translation>
     </message>
@@ -3251,6 +3255,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Dla każdego punktu: łamana przez położenia, które nadają mu kolejne mapy (wg roku)</source>
         <translation>Dla każdego punktu: łamana przez położenia, które nadają mu kolejne mapy (wg roku)</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii…</source>
+        <translation>Rektyfikacja serii…</translation>
+    </message>
+    <message>
+        <source>Wszystkie mapy serii jedną metodą rektyfikacji – warstwy w grupie projektu w kolejności lat</source>
+        <translation>Wszystkie mapy serii jedną metodą rektyfikacji – warstwy w grupie projektu w kolejności lat</translation>
     </message>
     <message>
         <source>Eksport</source>
@@ -3387,6 +3399,118 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>za mało punktów wspólnych do porównania (min. {k})</source>
         <translation>za mało punktów wspólnych do porównania (min. {k})</translation>
+    </message>
+    <message>
+        <source>Pole korekcji mapy – wygładzony TPS jej reszt (jak w rektyfikacji). Podobne pola dwóch map to drugi, obok korelacji reszt w punktach, ślad kopiowania. Istotność: losowy obrót pola drugiej mapy (zachowuje jego gładkość).</source>
+        <translation>Pole korekcji mapy – wygładzony TPS jej reszt (jak w rektyfikacji). Podobne pola dwóch map to drugi, obok korelacji reszt w punktach, ślad kopiowania. Istotność: losowy obrót pola drugiej mapy (zachowuje jego gładkość).</translation>
+    </message>
+    <message>
+        <source>Porównaj pola korekcji</source>
+        <translation>Porównaj pola korekcji</translation>
+    </message>
+    <message>
+        <source>Warstwa różnic pól</source>
+        <translation>Warstwa różnic pól</translation>
+    </message>
+    <message>
+        <source>Dla zaznaczonej pary: wektory c_A − c_B w węzłach wspólnego obszaru</source>
+        <translation>Dla zaznaczonej pary: wektory c_A − c_B w węzłach wspólnego obszaru</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii czasowej</source>
+        <translation>Rektyfikacja serii czasowej</translation>
+    </message>
+    <message>
+        <source>Każda mapa serii tą samą metodą; wygładzanie dobierane walidacją krzyżową osobno dla każdej mapy. Wydawnictwa wieloarkuszowe zszywane węzłami siatki. Warstwy w grupie projektu w kolejności lat.</source>
+        <translation>Każda mapa serii tą samą metodą; wygładzanie dobierane walidacją krzyżową osobno dla każdej mapy. Wydawnictwa wieloarkuszowe zszywane węzłami siatki. Warstwy w grupie projektu w kolejności lat.</translation>
+    </message>
+    <message>
+        <source>Metoda</source>
+        <translation>Metoda</translation>
+    </message>
+    <message>
+        <source>Format</source>
+        <translation>Format</translation>
+    </message>
+    <message>
+        <source>Katalog wynikowy</source>
+        <translation>Katalog wynikowy</translation>
+    </message>
+    <message>
+        <source>Dodaj do projektu</source>
+        <translation>Dodaj do projektu</translation>
+    </message>
+    <message>
+        <source>Rektyfikuj</source>
+        <translation>Rektyfikuj</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja map serii…</source>
+        <translation>Rektyfikacja map serii…</translation>
+    </message>
+    <message>
+        <source>Przerwij</source>
+        <translation>Przerwij</translation>
+    </message>
+    <message>
+        <source>Punkty podejrzane – duży błąd na wszystkich mapach w zgodnym kierunku (sprawdź współrzędne w bibliotece albo zmianę obiektu): {p}.</source>
+        <translation>Punkty podejrzane – duży błąd na wszystkich mapach w zgodnym kierunku (sprawdź współrzędne w bibliotece albo zmianę obiektu): {p}.</translation>
+    </message>
+    <message>
+        <source>za mało punktów na jednej z map</source>
+        <translation>za mało punktów na jednej z map</translation>
+    </message>
+    <message>
+        <source>brak wspólnego obszaru punktów</source>
+        <translation>brak wspólnego obszaru punktów</translation>
+    </message>
+    <message>
+        <source>za mały wspólny obszar</source>
+        <translation>za mały wspólny obszar</translation>
+    </message>
+    <message>
+        <source>Węzły</source>
+        <translation>Węzły</translation>
+    </message>
+    <message>
+        <source>r pól</source>
+        <translation>r pól</translation>
+    </message>
+    <message>
+        <source>Mantel r</source>
+        <translation>Mantel r</translation>
+    </message>
+    <message>
+        <source>r dylatacji</source>
+        <translation>r dylatacji</translation>
+    </message>
+    <message>
+        <source>r obrotu</source>
+        <translation>r obrotu</translation>
+    </message>
+    <message>
+        <source>Uwagi</source>
+        <translation>Uwagi</translation>
+    </message>
+    <message>
+        <source>Różnica pól korekcji: {a} − {b}</source>
+        <translation>Różnica pól korekcji: {a} − {b}</translation>
+    </message>
+    <message>
+        <source>Zrektyfikowano map: {n}.</source>
+        <translation>Zrektyfikowano map: {n}.</translation>
+    </message>
+    <message>
+        <source>Seria „{s}” – rektyfikacja</source>
+        <translation>Seria „{s}” – rektyfikacja</translation>
+    </message>
+    <message>
+        <source>Pominięte: {s}.</source>
+        <translation>Pominięte: {s}.</translation>
+    </message>
+    <message>
+        <source>{m} – brak skanu</source>
+        <translation>{m} – brak skanu</translation>
     </message>
     <message>
         <source>Wydawnictwo wieloarkuszowe</source>
@@ -3637,18 +3761,6 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Rozdzielczość</translation>
     </message>
     <message>
-        <source>Format</source>
-        <translation>Format</translation>
-    </message>
-    <message>
-        <source>Katalog wynikowy</source>
-        <translation>Katalog wynikowy</translation>
-    </message>
-    <message>
-        <source>Dodaj do projektu</source>
-        <translation>Dodaj do projektu</translation>
-    </message>
-    <message>
         <source>Zapisz też mozaikę COG z blendowaniem</source>
         <translation>Zapisz też mozaikę COG z blendowaniem</translation>
     </message>
@@ -3657,16 +3769,8 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zapisz siatkę, priorytet i zasięgi arkuszy w bibliotece</translation>
     </message>
     <message>
-        <source>Rektyfikuj</source>
-        <translation>Rektyfikuj</translation>
-    </message>
-    <message>
         <source>Przetwarzanie arkuszy…</source>
         <translation>Przetwarzanie arkuszy…</translation>
-    </message>
-    <message>
-        <source>Przerwij</source>
-        <translation>Przerwij</translation>
     </message>
     <message>
         <source>wydawnictwo</source>
