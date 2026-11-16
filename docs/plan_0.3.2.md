@@ -39,6 +39,8 @@ estymacji odwzorowania; przy wydawnictwie mogłaby później zasilić wspólną 
      rysowaniu warstw z kanałem alfa. Zmiana suwaka to tylko przeliczenie małych masek.
    - *Eksport:* ta sama maska w pełnej rozdzielczości, mieszanie blokami w numpy, zapis jednej mozaiki COG.
    - Bez funkcji pikseli w Pythonie w VRT: GDAL domyślnie je blokuje ze względów bezpieczeństwa.
+6. **Zszycie arkuszy: suwak „niezależne ↔ zszyte”** (wyrównanie blokowe, #8). Waga warunków zgodności
+   wspólnych narożników względem punktów dopasowania. Przy suwaku widać na bieżąco RMSE i szczeliny na stykach.
 
 ## Problem
 
@@ -124,8 +126,25 @@ własnego przetwarzania rastra. Siatka jest na tyle gęsta, że TPS GDAL między
 
 Część analityczna wydawnictwa, zgodnie z zasadą „analiza ≠ rektyfikacja”:
 
-- **Model:** transformacja na arkusz (Helmert albo afiniczna, ten sam model dla wszystkich arkuszy – jak
-  w serii czasowej; różne modele na arkusz na razie nie).
+- **Model:** transformacja na arkusz, ta sama dla wszystkich arkuszy (jak w serii czasowej): Helmert,
+  afiniczna albo **biliniowa w ramce** (8 parametrów). Różne modele na arkusz na razie nie.
+- **Suwak „niezależne ↔ zszyte”** (ustalenie 6): waga w warunków zgodności wspólnych narożników ramek.
+  Przy w = 0 arkusze są wpasowane osobno, przy dużym w styki są domknięte. Prototyp na mapie Schmettaua
+  (9 arkuszy, 93 punkty; w – metr szczeliny względem metra reszty punktu):
+
+  | w | afiniczna: RMSE / szczelina śr. / maks. [m] | biliniowa: RMSE / szczelina śr. / maks. [m] |
+  |---|---|---|
+  | 0 | 672 / 1660 / 4918 | 568 / 1624 / 6800 |
+  | 0,3 | 680 / 1445 / 4587 | 587 / 932 / 3324 |
+  | 1 | 812 / 967 / 3092 | 678 / 307 / 973 |
+  | 3 | 1345 / 414 / 1098 | 746 / 49 / 138 |
+  | 10 | 1862 / 61 / 148 | 760 / 5 / 13 |
+  | 100 | 1957 / 1 / 2 | 761 / 0 / 0 |
+
+  Wniosek: przy modelu afinicznym zszycie jest drogie (RMSE rośnie prawie trzykrotnie), bo afiniczna nie
+  przeprowadzi czterech narożników ramki w dowolny czworokąt. Model biliniowy zszywa się prawie za darmo
+  (568 → 761 m) i przy dużym w daje to samo co wspólne węzły z części rektyfikacyjnej. Sama krzywa
+  „RMSE ↔ szczelina” to też wynik analizy: pokazuje, czy arkusze były rysowane jako jedna konstrukcja.
 - **Obserwacje:**
   - GCP każdego arkusza;
   - **punkty wiążące**: ten sam obiekt na dwóch arkuszach, z punktem biblioteki albo bez niego
