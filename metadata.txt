@@ -3,20 +3,27 @@ name=QMapAnalyst
 qgisMinimumVersion=3.34
 qgisMaximumVersion=4.99
 description=Cartometric analysis of historical maps: Helmert, affine and polynomial transformations with full statistics, outlier detection, distortion grids and isolines, estimation of the map projection, a reference point library and comparison of map series.
-version=0.3.1
+version=0.3.2
 author=Tomasz Nycz
 email=tomasz@nycz.beskidy.pl
-about=Modern QGIS plugin inspired by MapAnalyst, built with Python, NumPy and SciPy (Qt5 and Qt6). Computes Helmert, affine and 2nd-order polynomial transformations between a historical map scan and a reference map with standard errors, cross-validation, Baarda outlier test, model comparison (AICc), spatial autocorrelation of residuals and Tissot-based local distortion analysis. Estimates the most likely map projection (Bonne, Cassini-Soldner, equidistant conic, Sanson-Flamsteed, trapezoidal, Mercator and more) and draws its graticule on the scan. Keeps a reference point library (GeoPackage) with regional point sets and per-map point quality, and compares maps: coverage matrix, time series of maps from different years (accuracy, position errors, residual similarity as a trace of copying, error vectors and trajectories) and multi-sheet publications, with PDF/HTML reports and charts.
+about=Modern QGIS plugin inspired by MapAnalyst, built with Python, NumPy and SciPy (Qt5 and Qt6). Computes Helmert, affine and 2nd-order polynomial transformations between a historical map scan and a reference map with standard errors, cross-validation, Baarda outlier test, model comparison (AICc), spatial autocorrelation of residuals and Tissot-based local distortion analysis. Estimates the most likely map projection (Bonne, Cassini-Soldner, equidistant conic, Sanson-Flamsteed, trapezoidal, Mercator and more) and draws its graticule on the scan. Keeps a reference point library (GeoPackage) with regional point sets and per-map point quality, and compares maps: coverage matrix, time series of maps from different years (accuracy, position errors, residual similarity as a trace of copying, error vectors and trajectories) and multi-sheet publications, with PDF/HTML reports and charts. Rectifies maps with methods missing from the Georeferencer (global model plus a smoothed TPS correction field chosen by cross-validation, triangles, MLS), stitches multi-sheet publications into seamless mosaics (block adjustment with tie points and shared frame corners) and rectifies whole time series.
 repository=https://github.com/merkato/QMapAnalyst
 tracker=https://github.com/merkato/QMapAnalyst/issues
 homepage=https://github.com/merkato/QMapAnalyst
-tags=history,historical maps,mapanalyst,transformation,helmert,affine,rbf,cartometry,georeferencing,map projection,accuracy,hgis,time series,gazetteer
+tags=history,historical maps,mapanalyst,transformation,helmert,affine,rbf,tps,cartometry,georeferencing,rectification,mosaic,map projection,accuracy,hgis,time series,gazetteer
 category=Raster
 hasProcessingProvider=no
-supportsQt6=True
 experimental=False
 deprecated=False
-changelog=0.3.1
+changelog=0.3.2
+    - New: rectification of a map (Analysis tab) – global model plus a local correction field: smoothed TPS with automatic smoothing (cross-validation) or a slider, interpolating TPS, triangles, MLS; fold check, clipping to the map frame, COG/GeoTIFF with alpha, correction vectors layer, settings file
+    - New: block adjustment of multi-sheet publications (#8) – Helmert / affine / bilinear sheet model, tie points, shared frame corners with an "independent ↔ stitched" slider, sigma0 per sheet, Baarda test, seam gaps, outlier sheet, RMSE ↔ gap curve
+    - New: rectification of a multi-sheet publication – seamless mosaic (shared grid nodes), local correction field, sheet priority and a clip ↔ blend slider for overlaps, VRT mosaic and optional blended COG
+    - New: time series – comparison of correction fields of maps (#5, field rotation test, Mantel statistic), suspect library points, rectification of the whole series
+    - Library schema 4: sheet grid and priority, sheet footprints (automatic migration with a backup copy)
+    - Charts: unsaved analysis marked "[unsaved]" (the asterisk means a similar pair); similarity legend shows both thresholds
+    - Metadata: deprecated supportsQt6 flag removed (#13)
+    0.3.1
     - Fix: Qt6 compatibility – marker placement enums in the time series layers (Qgis.MarkerLinePlacement), reported by the plugins.qgis.org validator (#10)
     0.3.0 "Falkenberg"
     - New: library of reference points (GeoPackage) – regional point sets, import from layers/CSV, snapping, search, "next from set"

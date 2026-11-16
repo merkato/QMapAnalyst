@@ -128,6 +128,9 @@ Biblioteka punktów referencyjnych to jeden plik GeoPackage użytkownika, wspól
 * **Warstwa trajektorii** – dla każdego punktu obecnego na co najmniej dwóch mapach łamana przez położenia, które nadają mu kolejne mapy (według roku, w tym samym powiększeniu): widać, czy błąd punktu trwa, narasta, czy jest losowy.
 
   ![Trajektorie punktów: położenia, które nadają miejscowościom kolejne mapy (×3)](series_trajectories_main.jpg)
+* **Pola korekcji** (od 0.3.2) – *Porównaj pola korekcji* liczy dla każdej mapy **pole korekcji**, czyli wygładzony TPS jej reszt (jak w rektyfikacji), i porównuje pola par map na regularnej siatce we wspólnym obszarze (przecięcie otoczek punktów obu map): *r pól* to korelacja wektorowa pól w węzłach, *p* to istotność z losowego **obrotu** pola drugiej mapy wokół środka wspólnego obszaru. Obrót zachowuje gładkość pola, więc dwa gładkie, niezależne pola nie wychodzą fałszywie podobne (w przeciwieństwie do permutacji węzłów w klasycznym teście Mantela). Dodatkowo: statystyka Mantela (korelacja macierzy różnic pól między węzłami, z tym samym testem), korelacja lokalnej **dylatacji** i **obrotu** oraz *Warstwa różnic pól* (wektory c_A − c_B dla zaznaczonej pary). Podobne pola to drugi, obok korelacji reszt w punktach, ślad kopiowania. W serii Śląska Cieszyńskiego para Helwig 1561 → Polonia et Silesia 1585 ma *r pól* = 0,68 (*p* = 0,005), a pozostałe pary są nieistotne.
+* **Punkty podejrzane** – podsumowanie serii wymienia punkty z błędem większym niż 1,5 × RMSE mapy na co najmniej trzech mapach i to w zgodnym kierunku. Taki wzór sugeruje błąd współrzędnych w bibliotece albo przeniesienie obiektu, a nie błąd map. Sprawdź je przed rektyfikacją i przed wnioskami o kopiowaniu.
+* **Rektyfikacja serii…** – wszystkie mapy serii jedną metodą rektyfikacji (wygładzanie dobierane walidacją krzyżową osobno dla każdej mapy). Wydawnictwa wieloarkuszowe są zszywane węzłami siatki, a arkusz bez ramki obejmuje cały skan. Warstwy trafiają do grupy w projekcie w kolejności lat, z najnowszą u góry.
 * **Eksport…** – CSV map, CSV błędów punktów albo JSON z całą serią (mapy z arkuszami, wektory błędów, pary).
 
 **Wydawnictwo wieloarkuszowe** (*Mapy i arkusze…* → zaznacz mapę z co najmniej dwoma arkuszami → *Wydawnictwo wieloarkuszowe…*) – zgodność arkuszy jednej mapy, wyrównanych tym samym modelem:
@@ -143,6 +146,29 @@ Biblioteka punktów referencyjnych to jeden plik GeoPackage użytkownika, wspól
 
 * **Eksport CSV…** – arkusze i zakładki.
 
+**Wyrównanie blokowe** (karta w oknie wydawnictwa, od 0.3.2) – wszystkie arkusze wyrównywane naraz. Transformacja arkusza: *Biliniowa w ramce* (8 parametrów, domyślna), *Afiniczna* albo *Helmert*. Obserwacje to:
+
+* punkty dopasowania każdego arkusza (w układzie biblioteki),
+* **punkty wiążące** – ten sam punkt biblioteki wskazany na dwóch arkuszach,
+* **warunki zszycia** – wspólne narożniki ramek sąsiednich arkuszy, z wagą ustawianą suwakiem **„niezależne ↔ zszyte”** (lewy koniec – arkusze wpasowane osobno, prawy – styki domknięte).
+
+Wymaga ramek mapy w arkuszach (*Zasięg mapy* w panelu GCP). **Układ siatki** (wiersz, kolumna) wykrywa wtyczka po wstępnym wpasowaniu afinicznym każdego arkusza. Kolumnę *Siatka* można poprawić dwuklikiem (np. „2, 3”), a *Zapisz układ siatki* zapisuje ją w bibliotece. Tabela pokazuje σ₀ i RMSE każdego arkusza oraz **przesunięcie względem sąsiadów**, czyli średnie przesunięcie punktów arkusza względem położenia przewidzianego z pozostałych arkuszy. Arkusz wyraźnie przesunięty względem sąsiadów jest oznaczony jako **odstający** (np. inny podkład albo błąd montażu). Podsumowanie podaje σ₀ całości, szczeliny na stykach i odstające punkty wiążące (test Baardy).
+
+Wykres **„Zszycie arkuszy: dopasowanie a szczeliny”** pokazuje RMSE punktów wobec średniej szczeliny na stykach dla kolejnych pozycji suwaka. Jeśli szczeliny znikają tanio, arkusze rysowano jako jedną konstrukcję. Jeśli zszycie kosztuje dużo, każdy arkusz ma własne zniekształcenia. *Zasięgi i szczeliny na mapie* dodaje warstwy zasięgów arkuszy po wyrównaniu i wektorów szczelin.
+
+![Zszycie 9 arkuszy mapy Schmettaua (Górny Śląsk, 1:50 000), model biliniowy: RMSE wobec średniej szczeliny dla pozycji suwaka](chart_zszycie.png)
+
+Na mapie Schmettaua (9 arkuszy, 93 punkty) arkusze wpasowane osobno rozjeżdżają się na stykach średnio o 1,6 km (maks. 6,8 km). Zszyte modelem biliniowym nie mają szczelin przy RMSE 761 m zamiast 568 m. Model afiniczny zszywa się znacznie drożej (RMSE prawie 2 km), bo afiniczna nie przeprowadzi czterech narożników ramki w dowolny czworokąt.
+
+**Rektyfikacja wydawnictwa…** (przycisk w oknie wydawnictwa) – wszystkie arkusze jako jedna mozaika:
+
+* **Zszycie:** *Węzły siatki* (domyślnie) uśrednia wspólne narożniki do węzłów i rozpina każdy arkusz biliniowo między swoimi czterema węzłami, więc styki nie mają szczelin. *Wyrównanie blokowe* używa transformacji z karty wyrównania (z suwakiem) i służy arkuszom zachodzącym na siebie.
+* **Korekcja:** pole korekcji lokalnej, jak w rektyfikacji jednej mapy, liczone ze wszystkich arkuszy we **współrzędnych terenowych**. Wspólna krawędź dwóch arkuszy przesuwa się w obu tak samo.
+* **Zakładki:** *Priorytet* (przeciągnij arkusze, u góry najważniejszy) i suwak **„przycinanie ↔ blendowanie”**. Na lewym końcu strefa zakładki należy do arkusza o wyższym priorytecie. Przesunięcie w prawo poszerza płynne przejście: kanał alfa arkusza narasta od jego krawędzi tylko tam, gdzie leży pod nim inny arkusz.
+* **Wynik:** arkusze jako COG z kanałem alfa na wspólnej siatce pikseli, mozaika VRT i opcjonalnie mozaika COG z blendowaniem. Siatka, priorytet i **zasięgi arkuszy** (z RMSE przed i po korekcji) zapisują się w bibliotece (warstwa `sheet_footprints`, schemat 4).
+
+Na mapie Schmettaua pole korekcji zmniejsza RMSE z 761 do 192 m (walidacja krzyżowa 645 m). Miasta (Bytom, Karniów, Kietrz) trafiają na swoje miejsca, a styki pozostają bez szczelin.
+
 **Wykresy i raporty** (okna *Seria czasowa* i *Wydawnictwo wieloarkuszowe*). Karta **Wykresy** pokazuje gotowe wykresy, a przycisk **Eksport** zapisuje:
 
 * **Raport PDF…** – raport A4 z nagłówkiem i numeracją stron: dane wejściowe, podsumowanie, wykresy i tabele;
@@ -152,7 +178,7 @@ Biblioteka punktów referencyjnych to jeden plik GeoPackage użytkownika, wspól
 
 ![Karta „Wykresy” w oknie serii czasowej](series_charts.png)
 
-Wykresy serii czasowej: *Dokładność map w czasie* (RMSE na osi lat, skala logarytmiczna; pasek – lata wydania), *Błędy położenia punktów na mapach* (każdy obiekt zestawu jako kropka, kreska – mediana, czerwone – odstające z nazwą), *Podobieństwo błędów między mapami* (macierz r: czerwony – podobne, niebieski – przeciwne, szary – bez związku; * – istotne) i *Wektory błędów położenia* (mała mapka dla każdej mapy; powiększenie różne w panelach – długość odczytasz z podziałki). Wykresy wydawnictwa: *Arkusze wydawnictwa* (RMSE i odchylenie skali arkuszy od średniej) i *Skorowidz arkuszy* (zasięgi arkuszy i zakładki, największa rozbieżność na czerwono).
+Wykresy serii czasowej: *Dokładność map w czasie* (RMSE na osi lat, skala logarytmiczna; pasek – lata wydania), *Błędy położenia punktów na mapach* (każdy obiekt zestawu jako kropka, kreska – mediana, czerwone – odstające z nazwą), *Podobieństwo błędów między mapami* (macierz r: czerwony – podobne, niebieski – przeciwne, szary – bez związku; * – podobne: r ≥ 0,5 i p < 0,05; niezapisana analiza oznaczona na wykresach „[niezapisana]”) i *Wektory błędów położenia* (mała mapka dla każdej mapy; powiększenie różne w panelach – długość odczytasz z podziałki). Wykresy wydawnictwa: *Arkusze wydawnictwa* (RMSE i odchylenie skali arkuszy od średniej) i *Skorowidz arkuszy* (zasięgi arkuszy i zakładki, największa rozbieżność na czerwono).
 
 | Raport PDF serii czasowej – strona 1 | strona 2 |
 |---|---|
@@ -187,6 +213,13 @@ Raport zawiera:
 * **Autokorelację przestrzenną reszt** (Moran I, test permutacyjny) – istotna autokorelacja wskazuje na błędy systematyczne (np. łączenie arkuszy, różne źródła pomiarów).
 
 ---
+
+**Rektyfikacja…** (od 0.3.2) – raster mapy dawnej dopasowany do mapy współczesnej metodą, której nie ma Georeferencer QGIS. Okno działa na bieżącym stanie panelu: skan, aktywne punkty, obliczona transformacja i zasięg mapy.
+
+* **Zasada „analiza ≠ rektyfikacja”.** Analiza ocenia mapę modelem globalnym, a reszty są jej wynikiem. Rektyfikacja dodaje do modelu globalnego **pole korekcji lokalnej**, które usuwa reszty w kontrolowany sposób, żeby raster pokrył się z mapą współczesną. O dokładności mapy nadal mówi analiza, a nie raster.
+* **Metody:** *Wygładzony TPS* (zalecana) – wygładzanie dobiera automatycznie walidacja krzyżowa (pozycja *auto*), a suwak pozwala ustawić je luźniej albo sztywniej. *TPS interpolujący* to wariant jak w Georeferencerze: każdy punkt trafia dokładnie w swoje miejsce, także błędnie zidentyfikowany. *Trójkąty* to afiniczna w trójkątach Delaunaya, dokładna w punktach i bez fałd. *MLS* to lokalnie sztywna afiniczna ważona odległością. Punkty odstające (test Baardy) wpływają na pole słabiej.
+* **Wynik na bieżąco:** RMSE modelu globalnego i po korekcji oraz błąd walidacji krzyżowej, czyli błąd w miejscu pominiętego punktu – miara tego, czy pole poprawia też miejsca między punktami. Ostrzeżenie pojawia się o **fałdach**, czyli miejscach, gdzie odwzorowanie zmienia orientację.
+* **Wyjście:** przycięcie do ramki mapy, rozdzielczość (domyślnie z transformacji), format COG WEBP, COG JPEG albo GeoTIFF LZW, zawsze z kanałem alfa. Skany jednokanałowe i z paletą są rozwijane do RGB. Opcjonalnie powstaje warstwa **wektorów korekcji**, a obok rastra zapisuje się plik ustawień `*.rectify.json` (metoda, wygładzanie, punkty), z którego można odtworzyć wynik.
 
 **Wagi a priori**. Przełącznik *Wagi a priori* włącza wyrównanie ważone. Waga punktu to czynnik statusu (*pewny* 1, *niepewny* 0,25 – ok. dwukrotnie większy błąd wskazania) pomnożony przez σ²ₘ / (σ²ₘ + σ²ᵣ), gdzie σᵣ to niepewność współrzędnych punktu z biblioteki (pole *niepewność współrzędnych [m]*), a σₘ – typowy błąd współrzędnej mapy (σ₀ wyrównania z samymi czynnikami statusu). Punkt pewny o dokładnych współrzędnych ma wagę 1; środek wsi z niepewnością ±200 m na dokładnej mapie katastralnej dostaje wagę bliską zera, a na mapie o błędach rzędu kilometra – prawie 1. Reszty, RMSE i błędy punktów są geometryczne (bez wag); σ₀ (błąd jednostkowy), błędy parametrów, test Baardy, LOO i AICc uwzględniają wagi. Wagę punktu pokazuje podpowiedź w kolumnie *w*, a raport – wiersz *Wagi a priori*. Estymacja odwzorowania nie używa wag. Domyślnie wyłączone – wyniki jak w wersji 0.2.
 

@@ -1,7 +1,7 @@
 # QMapAnalyst 0.3.2 – rektyfikacja i wyrównanie wydawnictw
 
 Szkic z 16.11.2026, na podstawie wpasowania 9 arkuszy mapy Schmettaua (Górny Śląsk, 1:50 000,
-93 punkty biblioteki). Nic z tego nie jest jeszcze zaimplementowane we wtyczce.
+93 punkty biblioteki). Zrealizowane w wersji 0.3.2 (gałąź `feature/v0.3.2`, etapy 1–6).
 
 Wersja 0.3.2, a nie 0.4.0: wydawnictwa wieloarkuszowe i serie pojawiły się w 0.3.0, a rektyfikacja
 rozwija ten sam moduł. Przy tym wydaniu zamykamy też zgłoszenie #13 (usunięcie `supportsQt6` z `metadata.txt`).

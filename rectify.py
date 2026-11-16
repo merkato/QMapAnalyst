@@ -111,11 +111,11 @@ def choose_lambda(P, E, w=None, candidates=AUTO_CANDIDATES):
     scores = []
     for lam in candidates:
         try:
-            scores.append((float(lam), SmoothTPS(P, E, lam, w).loo_rmse()))
-        except RectifyError:
-            raise
-        except Exception:
-            continue
+            v = SmoothTPS(P, E, lam, w).loo_rmse()
+        except (np.linalg.LinAlgError, ValueError, FloatingPointError):
+            v = float("nan")                    # układ zdegenerowany dla tego λ – pomijamy
+        if math.isfinite(v):
+            scores.append((float(lam), v))
     if not scores:
         raise RectifyError("nie udało się dobrać wygładzania")
     best = min(scores, key=lambda t: t[1])

@@ -4,6 +4,19 @@
 
 ![QMapAnalyst panel: reference grid, scale isolines and displacement vectors on an Austrian cadastral sheet (1:2880)](docs/results_en.png)
 
+## 🆕 What's new in 0.3.2
+
+Rectification – rasters that match the modern map, with methods the QGIS Georeferencer does not offer:
+
+* **Rectification of a map** (*Analysis* tab → *Rectification…*) – the global model of the analysis plus a **local correction field**: a smoothed thin plate spline whose smoothing is chosen by cross-validation (or set with a slider), an interpolating TPS, triangles or MLS. Fold check, clipping to the map frame, Cloud Optimized GeoTIFF with alpha, a layer of correction vectors and a settings file next to the result. *Analysis ≠ rectification*: the accuracy of the map is still reported by the analysis.
+* **Block adjustment of multi-sheet publications** – all sheets at once (Helmert, affine or bilinear in the frame), tie points and shared frame corners weighted with an **“independent ↔ stitched” slider**; σ₀ per sheet, Baarda test, seam gaps, outlier sheet and the RMSE ↔ gap curve. The sheet grid is detected after fitting and saved in the library.
+* **Rectification of a publication** – one seamless mosaic: shared grid nodes, a correction field computed in ground coordinates (shared edges move identically in both sheets), sheet priority and a **clip ↔ blend slider** for overlapping sheets, VRT mosaic and an optional blended COG.
+* **Time series** – comparison of **correction fields** of two maps (vector correlation with a field-rotation test, Mantel statistic, dilation and rotation), **suspect library points** (a large error on every map in the same direction) and **rectification of the whole series**.
+
+![Stitching the nine sheets of the Schmettau map (Upper Silesia, 1:50 000): bilinear sheet model, RMSE versus mean seam gap for the slider positions](docs/chart_zszycie_en.png)
+
+*Schmettau, Kartenwerk für Schlesien (1767–1787), 9 sheets, 93 library points: sheets fitted separately leave seam gaps of up to 4.9 km; stitched – no gaps, RMSE 761 m; with the smoothed TPS correction field – 192 m (cross-validation 645 m).*
+
 ## 🆕 What's new in 0.3.0 „Falkenberg”
 
 Version 0.3 turns QMapAnalyst from a single-map tool into a workbench for **series of maps**:
