@@ -256,6 +256,14 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Zapisz pełny raport analizy (dane wejściowe, statystyki, punkty, odwzorowanie) jako PDF, TXT lub HTML</translation>
     </message>
     <message>
+        <source>Rektyfikacja…</source>
+        <translation>Rektyfikacja…</translation>
+    </message>
+    <message>
+        <source>Raster mapy dawnej dopasowany do mapy współczesnej: model globalny + pole korekcji lokalnej (wygładzony TPS, trójkąty, MLS), przycięcie do ramki</source>
+        <translation>Raster mapy dawnej dopasowany do mapy współczesnej: model globalny + pole korekcji lokalnej (wygładzony TPS, trójkąty, MLS), przycięcie do ramki</translation>
+    </message>
+    <message>
         <source>Wyniki analizy pojawią się tutaj.</source>
         <translation>Wyniki analizy pojawią się tutaj.</translation>
     </message>
@@ -3591,6 +3599,153 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Rok</source>
         <translation>Rok</translation>
+    </message>
+</context>
+<context>
+    <name>QMapAnalystRectify</name>
+    <message>
+        <source>Wygładzony TPS (zalecana)</source>
+        <translation>Wygładzony TPS (zalecana)</translation>
+    </message>
+    <message>
+        <source>TPS interpolujący (jak Georeferencer)</source>
+        <translation>TPS interpolujący (jak Georeferencer)</translation>
+    </message>
+    <message>
+        <source>Trójkąty (afiniczna w trójkątach)</source>
+        <translation>Trójkąty (afiniczna w trójkątach)</translation>
+    </message>
+    <message>
+        <source>MLS – lokalnie sztywna</source>
+        <translation>MLS – lokalnie sztywna</translation>
+    </message>
+    <message>
+        <source>Tylko model globalny</source>
+        <translation>Tylko model globalny</translation>
+    </message>
+    <message>
+        <source>COG, WEBP (mały, z kanałem alfa)</source>
+        <translation>COG, WEBP (mały, z kanałem alfa)</translation>
+    </message>
+    <message>
+        <source>COG, JPEG</source>
+        <translation>COG, JPEG</translation>
+    </message>
+    <message>
+        <source>GeoTIFF, LZW (bezstratny, duży)</source>
+        <translation>GeoTIFF, LZW (bezstratny, duży)</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja mapy dawnej</source>
+        <translation>Rektyfikacja mapy dawnej</translation>
+    </message>
+    <message>
+        <source>Analiza ocenia mapę modelem globalnym; rektyfikacja dodatkowo usuwa lokalne zniekształcenia (pole korekcji), żeby raster pokrył się z mapą współczesną. O dokładności mapy mówi analiza, nie raster.</source>
+        <translation>Analiza ocenia mapę modelem globalnym; rektyfikacja dodatkowo usuwa lokalne zniekształcenia (pole korekcji), żeby raster pokrył się z mapą współczesną. O dokładności mapy mówi analiza, nie raster.</translation>
+    </message>
+    <message>
+        <source>Metoda</source>
+        <translation>Metoda</translation>
+    </message>
+    <message>
+        <source>auto</source>
+        <translation>auto</translation>
+    </message>
+    <message>
+        <source>Wygładzanie z walidacji krzyżowej (najmniejszy błąd dla pominiętego punktu)</source>
+        <translation>Wygładzanie z walidacji krzyżowej (najmniejszy błąd dla pominiętego punktu)</translation>
+    </message>
+    <message>
+        <source>W lewo – luźniej (bliżej TPS interpolującego), w prawo – sztywniej (bliżej modelu globalnego)</source>
+        <translation>W lewo – luźniej (bliżej TPS interpolującego), w prawo – sztywniej (bliżej modelu globalnego)</translation>
+    </message>
+    <message>
+        <source>Wygładzanie</source>
+        <translation>Wygładzanie</translation>
+    </message>
+    <message>
+        <source>Wynik</source>
+        <translation>Wynik</translation>
+    </message>
+    <message>
+        <source>Przytnij do ramki mapy (zasięg z panelu GCP)</source>
+        <translation>Przytnij do ramki mapy (zasięg z panelu GCP)</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość</source>
+        <translation>Rozdzielczość</translation>
+    </message>
+    <message>
+        <source>Format</source>
+        <translation>Format</translation>
+    </message>
+    <message>
+        <source>Plik wynikowy</source>
+        <translation>Plik wynikowy</translation>
+    </message>
+    <message>
+        <source>Dodaj raster do projektu</source>
+        <translation>Dodaj raster do projektu</translation>
+    </message>
+    <message>
+        <source>Dodaj warstwę wektorów korekcji</source>
+        <translation>Dodaj warstwę wektorów korekcji</translation>
+    </message>
+    <message>
+        <source>Rektyfikuj</source>
+        <translation>Rektyfikuj</translation>
+    </message>
+    <message>
+        <source>Przetwarzanie rastra…</source>
+        <translation>Przetwarzanie rastra…</translation>
+    </message>
+    <message>
+        <source>Przerwij</source>
+        <translation>Przerwij</translation>
+    </message>
+    <message>
+        <source>luźno</source>
+        <translation>luźno</translation>
+    </message>
+    <message>
+        <source>sztywno</source>
+        <translation>sztywno</translation>
+    </message>
+    <message>
+        <source>RMSE modelu globalnego {a} m → po korekcji {b} m</source>
+        <translation>RMSE modelu globalnego {a} m → po korekcji {b} m</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja</source>
+        <translation>Rektyfikacja</translation>
+    </message>
+    <message>
+        <source>Zapisano raster po rektyfikacji: {p}</source>
+        <translation>Zapisano raster po rektyfikacji: {p}</translation>
+    </message>
+    <message>
+        <source>{n} – korekcja</source>
+        <translation>{n} – korekcja</translation>
+    </message>
+    <message>
+        <source>walidacja krzyżowa {v} m (błąd w miejscu pominiętego punktu)</source>
+        <translation>walidacja krzyżowa {v} m (błąd w miejscu pominiętego punktu)</translation>
+    </message>
+    <message>
+        <source>Błąd: {e}</source>
+        <translation>Błąd: {e}</translation>
+    </message>
+    <message>
+        <source>Odwzorowanie ma fałdy ({p}% ramki). Kontynuować?</source>
+        <translation>Odwzorowanie ma fałdy ({p}% ramki). Kontynuować?</translation>
+    </message>
+    <message>
+        <source>Nie udało się przetworzyć rastra: {e}</source>
+        <translation>Nie udało się przetworzyć rastra: {e}</translation>
+    </message>
+    <message>
+        <source>Fałdy: {p}% ramki – odwzorowanie zmienia orientację; zwiększ wygładzanie albo sprawdź punkty.</source>
+        <translation>Fałdy: {p}% ramki – odwzorowanie zmienia orientację; zwiększ wygładzanie albo sprawdź punkty.</translation>
     </message>
 </context>
 <context>

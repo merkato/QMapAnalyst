@@ -654,8 +654,13 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, MapFrameMixin, QDockWidget):
                                        self.tr("Zapisz pełny raport analizy (dane wejściowe, statystyki, punkty, odwzorowanie) "
                                                "jako PDF, TXT lub HTML"))
         self.btn_save_report.clicked.connect(self.save_report_dialog)
+        self.btn_rectify = _button(self.tr("Rektyfikacja…"), "/mActionGeoreference.svg",
+                                   self.tr("Raster mapy dawnej dopasowany do mapy współczesnej: model globalny + pole "
+                                           "korekcji lokalnej (wygładzony TPS, trójkąty, MLS), przycięcie do ramki"))
+        self.btn_rectify.clicked.connect(self.open_rectify_dialog)
         row.addWidget(self.btn_calculate, 1)
         row.addWidget(self.btn_save_report)
+        row.addWidget(self.btn_rectify)
         row.addWidget(self.chk_auto)
         lay.addLayout(row)
 
@@ -1073,6 +1078,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, MapFrameMixin, QDockWidget):
             b.setEnabled(has_res and has_raster)
         self.btn_sync_views.setEnabled(has_res)
         self.btn_save_report.setEnabled(has_res)
+        self.btn_rectify.setEnabled(has_res and has_raster)
         self.btn_graticule.setEnabled(self.projection is not None and has_raster)
         self.btn_save_gcp.setEnabled(bool(self.gcps))
         self.btn_remove_gcp.setEnabled(bool(self.gcps) or bool(self.absent))
@@ -2827,6 +2833,15 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, MapFrameMixin, QDockWidget):
 
     def export_report_html(self, path):
         return ex.write_html(path, self.build_full_report_html(dict(report.LIGHT)), self.report_title())
+
+    @guarded
+    def open_rectify_dialog(self):
+        if self.analysis is None or self.old_raster_layer is None:
+            return None
+        from .rectify_dialog import RectifyDialog
+        dlg = RectifyDialog(self)
+        dlg.exec()
+        return dlg
 
     @guarded
     def save_report_dialog(self):
