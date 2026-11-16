@@ -161,7 +161,7 @@ class SeriesDialog(QDialog):
         self._fill_pairs()
         self._fill_points()
         self._fill_summary()
-        self.charts = srep.series_charts(self.series, self._unit_m(), self._label)
+        self.charts = srep.series_charts(self.series, self._unit_m(), self._chart_label)
         self.charts_view.set_charts(self.charts)
 
     def _unit_m(self):
@@ -192,11 +192,16 @@ class SeriesDialog(QDialog):
         self.lbl_summary.setText(tr("Zapisano wykresy ({n} plików) w folderze {f}").format(n=len(files), f=folder))
         return files
 
-    def _label(self, s):
+    def _label(self, s, chart=False):
+        """Nazwa mapy; stan bieżący z niezapisanymi zmianami: „*” w tabelach, „[niezapisana]” na wykresach
+        (tam gwiazdka oznacza podobną parę map w macierzy podobieństwa)."""
         label = cv.analysis_label(s.column) if s.key != cv.CURRENT else (s.analysis.title or tr("bieżąca analiza"))
         if s.key == self.series.current_id and (self.current_dirty or s.key == cv.CURRENT):
-            label += " *"
+            label += " " + tr("[niezapisana]") if chart else " *"
         return label
+
+    def _chart_label(self, s):
+        return self._label(s, chart=True)
 
     def _sheets_text(self, s):
         """Numer arkusza (jeden arkusz) albo liczba arkuszy wydawnictwa z listą w podpowiedzi."""

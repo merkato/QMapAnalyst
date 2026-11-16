@@ -123,6 +123,10 @@ dlg.refresh()
 assert dlg.tbl_sheets.rowCount() == 4 and dlg.tbl_sheets.item(3, 0).text().endswith("*"), \
     [dlg.tbl_sheets.item(r, 0).text() for r in range(dlg.tbl_sheets.rowCount())]
 assert dlg.tbl_sheets.item(3, 2).text() == "8"
+# na wykresach – „[niezapisana]” zamiast gwiazdki (gwiazdka = podobna para w macierzy podobieństwa)
+svg = dict((name, s) for name, _t, s in dlg.charts)
+assert "[niezapisana]" in svg["bledy_punktow"] and " *<" not in svg["bledy_punktow"], "gwiazdka na wykresie"
+assert "r ≥ 0,5 i p &lt; 0,05" in svg["podobienstwo"] or "r ≥ 0,5 i p < 0,05" in svg["podobienstwo"]
 
 # przycisk w zakładce Biblioteka otwiera okno
 sd.SeriesDialog.exec = lambda self: QDialog.DialogCode.Rejected

@@ -36,7 +36,7 @@ def chart_texts():
         "errors_sub": tr("każdy punkt to obiekt zestawu; kreska – mediana (skala logarytmiczna)"),
         "outlier": tr("odstający (test Baardy)"), "median": tr("mediana"),
         "similarity_title": tr("Podobieństwo błędów między mapami"),
-        "similarity_sub": tr("korelacja wektorowa r błędów punktów wspólnych; * – istotne (p < 0,05)"),
+        "similarity_sub": tr("korelacja wektorowa r błędów punktów wspólnych; * – podobne: r ≥ 0,5 i p < 0,05 (test permutacyjny)"),
         "similar": tr("podobne"), "unrelated": tr("bez związku"), "opposite": tr("przeciwne"),
         "too_few": tr("za mało punktów wspólnych"),
         "vectors_title": tr("Wektory błędów położenia"),

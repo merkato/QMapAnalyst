@@ -3341,6 +3341,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zapisano wykresy ({n} plików) w folderze {f}</translation>
     </message>
     <message>
+        <source>[niezapisana]</source>
+        <translation>[niezapisana]</translation>
+    </message>
+    <message>
         <source>arkusze: {names}</source>
         <translation>arkusze: {names}</translation>
     </message>
@@ -3493,8 +3497,8 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Podobieństwo błędów między mapami</translation>
     </message>
     <message>
-        <source>korelacja wektorowa r błędów punktów wspólnych; * – istotne (p &lt; 0,05)</source>
-        <translation>korelacja wektorowa r błędów punktów wspólnych; * – istotne (p &lt; 0,05)</translation>
+        <source>korelacja wektorowa r błędów punktów wspólnych; * – podobne: r ≥ 0,5 i p &lt; 0,05 (test permutacyjny)</source>
+        <translation>korelacja wektorowa r błędów punktów wspólnych; * – podobne: r ≥ 0,5 i p &lt; 0,05 (test permutacyjny)</translation>
     </message>
     <message>
         <source>podobne</source>

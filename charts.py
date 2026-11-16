@@ -39,7 +39,7 @@ TEXTS = {
     "outlier": "odstający (test Baardy)",
     "median": "mediana",
     "similarity_title": "Podobieństwo błędów między mapami",
-    "similarity_sub": "korelacja wektorowa r błędów punktów wspólnych; * – istotne (p < 0,05)",
+    "similarity_sub": "korelacja wektorowa r błędów punktów wspólnych; * – podobne: r ≥ 0,5 i p < 0,05 (test permutacyjny)",
     "similar": "podobne",
     "unrelated": "bez związku",
     "opposite": "przeciwne",

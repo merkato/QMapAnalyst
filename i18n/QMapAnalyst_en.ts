@@ -3341,6 +3341,10 @@ Update the reference coordinates of these points?</translation>
         <translation>Charts saved ({n} files) in the folder {f}</translation>
     </message>
     <message>
+        <source>[niezapisana]</source>
+        <translation>[unsaved]</translation>
+    </message>
+    <message>
         <source>arkusze: {names}</source>
         <translation>sheets: {names}</translation>
     </message>
@@ -3493,8 +3497,8 @@ Update the reference coordinates of these points?</translation>
         <translation>Error similarity between maps</translation>
     </message>
     <message>
-        <source>korelacja wektorowa r błędów punktów wspólnych; * – istotne (p &lt; 0,05)</source>
-        <translation>vector correlation r of the errors of common points; * – significant (p &lt; 0.05)</translation>
+        <source>korelacja wektorowa r błędów punktów wspólnych; * – podobne: r ≥ 0,5 i p &lt; 0,05 (test permutacyjny)</source>
+        <translation>vector correlation r of the errors of common points; * – similar: r ≥ 0.5 and p &lt; 0.05 (permutation test)</translation>
     </message>
     <message>
         <source>podobne</source>

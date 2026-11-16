@@ -32,7 +32,7 @@ from . import math_engine as me
 
 MIN_COMMON = 4            # minimalna liczba punktów wspólnych do porównania pary map
 SIMILAR_R = 0.5           # próg podobieństwa reszt
-SIMILAR_P = 0.05          # próg istotności testu permutacyjnego
+SIMILAR_P = 0.05          # próg istotności testu permutacyjnego (oba progi – w legendzie wykresu: charts/series_report)
 PERMUTATIONS = 999
 
 
