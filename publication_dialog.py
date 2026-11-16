@@ -89,6 +89,11 @@ class PublicationDialog(QDialog):
         close = QPushButton(tr("Zamknij"))
         close.clicked.connect(self.reject)
         row.addWidget(self.btn_index)
+        self.btn_rectify = QPushButton(tr("Rektyfikacja wydawnictwa…"))
+        self.btn_rectify.setToolTip(tr("Wszystkie arkusze jako jedna mozaika: zszycie, pole korekcji lokalnej, przycięcie "
+                                       "do ramek, priorytet i blendowanie zakładek, mozaika VRT"))
+        self.btn_rectify.clicked.connect(self.open_rectify)
+        row.addWidget(self.btn_rectify)
         row.addStretch()
         row.addWidget(self.btn_export)
         row.addWidget(close)
@@ -212,6 +217,17 @@ class PublicationDialog(QDialog):
         if aid != self.pub.current_id and self.host.open_library_analysis(aid):
             self.chosen_analysis = aid
             self.accept()
+
+    def open_rectify(self):
+        blk = self.block
+        if not blk.sheets or self.pub is None:
+            return None
+        from .block_panel import bk
+        from .publication_rectify_dialog import PublicationRectifyDialog
+        dlg = PublicationRectifyDialog(self.panel, blk.sheets, self.pub.map, blk.unit_m,
+                                       bk.slider_to_weight(blk.sld_seam.value()), blk.model(), self)
+        dlg.exec()
+        return dlg
 
     def add_index_layer(self):
         pub = self.pub

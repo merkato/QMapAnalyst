@@ -315,11 +315,21 @@ def test_migration_1_to_2():
         con.execute(f"DELETE FROM {t} WHERE table_name = 'maps'")      # noqa: S608 – stała nazwa tabeli
     con.execute("ALTER TABLE analyses DROP COLUMN map_id")
     con.execute("ALTER TABLE analyses DROP COLUMN frame")
+    for col in ("grid_row", "grid_col", "priority"):
+        con.execute(f"ALTER TABLE analyses DROP COLUMN {col}")
+    con.execute("DROP TABLE sheet_footprints")
+    for trig in [r[0] for r in con.execute("SELECT name FROM sqlite_master WHERE type = 'trigger' AND name LIKE 'rtree_sheet_footprints%'")]:
+        con.execute(f"DROP TRIGGER {trig}")
+    con.execute("DROP TABLE IF EXISTS rtree_sheet_footprints_geom")
+    con.execute("DELETE FROM gpkg_extensions WHERE table_name = 'sheet_footprints'")
+    for t in ("gpkg_contents", "gpkg_ogr_contents", "gpkg_geometry_columns"):
+        con.execute(f"DELETE FROM {t} WHERE table_name = 'sheet_footprints'")  # noqa: S608 – stała nazwa tabeli
     con.execute("UPDATE qma_meta SET value = '1' WHERE key = 'schema_version'")
     con.commit()
     con.close()
     with Library.open(path) as lib:
-        assert lib.schema_version == lib_mod.SCHEMA_VERSION                # 1 → 2 → 3
+        assert lib.schema_version == lib_mod.SCHEMA_VERSION                # 1 → 2 → 3 → 4
+        assert lib.footprints() == [] and lib.get_analysis(ids[0]).grid_row is None
         assert os.path.isfile(os.path.join(TMP, "v1.v1.bak.gpkg"))       # kopia sprzed migracji
         by_id = {a.analysis_id: a for a in lib.analyses()}
         assert by_id[ids[0]].map_id == by_id[ids[1]].map_id               # ten sam tytuł (bez wielkości liter)
@@ -329,6 +339,28 @@ def test_migration_1_to_2():
         assert by_id[ids[1]].title == "Zannoni" and by_id[ids[1]].year_from == 1772   # opis mapy w arkuszach
         assert by_id[ids[1]].sheet == "15"
         assert len(lib.maps()) == 4
+
+
+def test_sheet_layout_and_footprints():
+    path = os.path.join(TMP, "layout.gpkg")
+    with Library.create(path, "EPSG:2180") as lib:
+        mid = lib.save_map(lib_mod.MapInfo(title="Schmettau"))
+        a = lib.save_analysis(Analysis(sheet="214", map_id=mid))
+        b = lib.save_analysis(Analysis(sheet="215", map_id=mid))
+        lib.set_sheet_layout({a: (0, 0, 2), b: (0, 1, None)})
+        ga, gb = lib.get_analysis(a), lib.get_analysis(b)
+        assert (ga.grid_row, ga.grid_col, ga.priority) == (0, 0, 2) and (gb.grid_col, gb.priority) == (1, None)
+        lib.save_analysis(ga)                                             # zapis analizy nie gubi siatki
+        assert lib.get_analysis(a).priority == 2
+        ring = [(0, 0), (100, 0), (100, 50), (0, 50)]
+        lib.save_footprints(mid, [{"analysis_id": a, "ring": ring, "method": "tps", "rmse_m": 700.0, "loo_m": float("nan")},
+                                  {"analysis_id": b, "ring": ring, "method": "tps"}])
+        lib.save_footprints(mid, [{"analysis_id": a, "ring": ring, "method": "none", "rmse_m": 650.0}])   # zastępuje
+        fp = lib.footprints(mid)
+        assert len(fp) == 1 and fp[0]["method"] == "none" and fp[0]["ring"] == [(0.0, 0.0), (100.0, 0.0), (100.0, 50.0), (0.0, 50.0)]
+        assert fp[0]["loo_m"] is None and fp[0]["map_id"] == mid
+        lib.delete_analysis(a)
+        assert lib.footprints(mid) == []
 
 
 if __name__ == "__main__":

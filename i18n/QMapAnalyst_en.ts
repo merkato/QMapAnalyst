@@ -3413,6 +3413,14 @@ Update the reference coordinates of these points?</translation>
         <translation>Data (CSV)…</translation>
     </message>
     <message>
+        <source>Rektyfikacja wydawnictwa…</source>
+        <translation>Rectify the publication…</translation>
+    </message>
+    <message>
+        <source>Wszystkie arkusze jako jedna mozaika: zszycie, pole korekcji lokalnej, przycięcie do ramek, priorytet i blendowanie zakładek, mozaika VRT</source>
+        <translation>All sheets as one mosaic: stitching, local correction field, clipping to frames, priority and blending of overlaps, VRT mosaic</translation>
+    </message>
+    <message>
         <source>Raport wydawnictwa wieloarkuszowego</source>
         <translation>Multi-sheet publication report</translation>
     </message>
@@ -3501,6 +3509,18 @@ Update the reference coordinates of these points?</translation>
         <translation>Layers: sheet footprints after the block adjustment and gap vectors at the seams and tie points</translation>
     </message>
     <message>
+        <source>Zapisz układ siatki</source>
+        <translation>Save the sheet grid</translation>
+    </message>
+    <message>
+        <source>Zapisz w bibliotece położenie arkuszy w siatce (wiersz, kolumna) – wykryte po wpasowaniu albo poprawione w kolumnie „Siatka”</source>
+        <translation>Save the position of the sheets in the grid (row, column) in the library – detected after fitting or corrected in the “Grid” column</translation>
+    </message>
+    <message>
+        <source>Zapisano układ siatki arkuszy w bibliotece.</source>
+        <translation>The sheet grid has been saved in the library.</translation>
+    </message>
+    <message>
         <source>Wyrównanie blokowe – zasięgi arkuszy</source>
         <translation>Block adjustment – sheet footprints</translation>
     </message>
@@ -3537,8 +3557,12 @@ Update the reference coordinates of these points?</translation>
         <translation>No sheets with a map frame – the block adjustment needs frames (Map extent in the GCP panel).</translation>
     </message>
     <message>
-        <source>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu</source>
-        <translation>row, column in the sheet grid – detected after a preliminary fit</translation>
+        <source>wiersz, kolumna w siatce arkuszy – zapisane w bibliotece</source>
+        <translation>row, column in the sheet grid – saved in the library</translation>
+    </message>
+    <message>
+        <source>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu; dwuklik – popraw (np. „2, 3”)</source>
+        <translation>row, column in the sheet grid – detected after a preliminary fit; double-click to correct (e.g. “2, 3”)</translation>
     </message>
     <message>
         <source>σ₀ = {s} m, RMSE punktów = {r} m, liczba nadwyżkowa {f}.</source>
@@ -3563,6 +3587,162 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Nie można wyrównać: {e}</source>
         <translation>Cannot adjust: {e}</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja wydawnictwa wieloarkuszowego</source>
+        <translation>Rectification of a multi-sheet publication</translation>
+    </message>
+    <message>
+        <source>Węzły siatki – styki bez szczelin</source>
+        <translation>Grid nodes – seams without gaps</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe (suwak z zakładki) – arkusze zachodzące na siebie</source>
+        <translation>Block adjustment (slider from the tab) – overlapping sheets</translation>
+    </message>
+    <message>
+        <source>Zszycie</source>
+        <translation>Stitching</translation>
+    </message>
+    <message>
+        <source>Korekcja</source>
+        <translation>Correction</translation>
+    </message>
+    <message>
+        <source>auto</source>
+        <translation>auto</translation>
+    </message>
+    <message>
+        <source>Wygładzanie</source>
+        <translation>Smoothing</translation>
+    </message>
+    <message>
+        <source>Lewy koniec – strefa zakładki należy do arkusza o wyższym priorytecie; w prawo – szersze płynne przejście między arkuszami</source>
+        <translation>Left end – the overlap belongs to the sheet with higher priority; to the right – a wider smooth transition between sheets</translation>
+    </message>
+    <message>
+        <source>Kolejność arkuszy przy zakładkach – przeciągnij; u góry arkusz najważniejszy</source>
+        <translation>Order of sheets in overlaps – drag; the most important sheet at the top</translation>
+    </message>
+    <message>
+        <source>Priorytet</source>
+        <translation>Priority</translation>
+    </message>
+    <message>
+        <source>Wynik</source>
+        <translation>Result</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość</source>
+        <translation>Resolution</translation>
+    </message>
+    <message>
+        <source>Format</source>
+        <translation>Format</translation>
+    </message>
+    <message>
+        <source>Katalog wynikowy</source>
+        <translation>Output folder</translation>
+    </message>
+    <message>
+        <source>Dodaj do projektu</source>
+        <translation>Add to the project</translation>
+    </message>
+    <message>
+        <source>Zapisz też mozaikę COG z blendowaniem</source>
+        <translation>Also save a blended COG mosaic</translation>
+    </message>
+    <message>
+        <source>Zapisz siatkę, priorytet i zasięgi arkuszy w bibliotece</source>
+        <translation>Save the grid, priority and sheet footprints in the library</translation>
+    </message>
+    <message>
+        <source>Rektyfikuj</source>
+        <translation>Rectify</translation>
+    </message>
+    <message>
+        <source>Przetwarzanie arkuszy…</source>
+        <translation>Processing sheets…</translation>
+    </message>
+    <message>
+        <source>Przerwij</source>
+        <translation>Cancel</translation>
+    </message>
+    <message>
+        <source>wydawnictwo</source>
+        <translation>publication</translation>
+    </message>
+    <message>
+        <source>luźno</source>
+        <translation>loose</translation>
+    </message>
+    <message>
+        <source>sztywno</source>
+        <translation>stiff</translation>
+    </message>
+    <message>
+        <source>przycinanie</source>
+        <translation>clip</translation>
+    </message>
+    <message>
+        <source>blendowanie</source>
+        <translation>blend</translation>
+    </message>
+    <message>
+        <source>przycięcie</source>
+        <translation>clipping</translation>
+    </message>
+    <message>
+        <source>Arkusze stykają się bez zakładek.</source>
+        <translation>The sheets meet without overlaps.</translation>
+    </message>
+    <message>
+        <source>RMSE przed korekcją {a} m → po korekcji {b} m</source>
+        <translation>RMSE before correction {a} m → after correction {b} m</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja wydawnictwa</source>
+        <translation>Publication rectification</translation>
+    </message>
+    <message>
+        <source>{t} – rektyfikacja</source>
+        <translation>{t} – rectification</translation>
+    </message>
+    <message>
+        <source>walidacja krzyżowa {v} m</source>
+        <translation>cross-validation {v} m</translation>
+    </message>
+    <message>
+        <source>Zakładki arkuszy: {n} par.</source>
+        <translation>Sheet overlaps: {n} pairs.</translation>
+    </message>
+    <message>
+        <source>Arkusz {k} z {n}…</source>
+        <translation>Sheet {k} of {n}…</translation>
+    </message>
+    <message>
+        <source>Zapisano {n} arkuszy w katalogu {d}.</source>
+        <translation>{n} sheets saved in the folder {d}.</translation>
+    </message>
+    <message>
+        <source>{t} – mozaika z blendowaniem</source>
+        <translation>{t} – blended mosaic</translation>
+    </message>
+    <message>
+        <source>Nie można zbudować planu: {e}</source>
+        <translation>Cannot build the plan: {e}</translation>
+    </message>
+    <message>
+        <source>Nie udało się przetworzyć arkuszy: {e}</source>
+        <translation>Could not process the sheets: {e}</translation>
+    </message>
+    <message>
+        <source>{t} – mozaika</source>
+        <translation>{t} – mosaic</translation>
+    </message>
+    <message>
+        <source>Brak pliku skanu: {s} – arkusze zostaną pominięte.</source>
+        <translation>Scan file missing: {s} – these sheets will be skipped.</translation>
     </message>
     <message>
         <source>Dokładność map w czasie</source>

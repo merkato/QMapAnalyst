@@ -67,6 +67,8 @@ class BlockPanel(QWidget):
         split = QSplitter(Qt.Orientation.Horizontal)
         self.tbl = _table([tr("Arkusz"), tr("Siatka"), tr("Punkty"), "σ₀ [m]", "RMSE [m]",
                            tr("Przesunięcie wzgl. sąsiadów [m]"), tr("Odstający")])
+        self.tbl.itemChanged.connect(self.on_item_changed)
+        self._filling = False
         split.addWidget(self.tbl)
         self.lbl_chart = QLabel()
         self.lbl_chart.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -84,6 +86,11 @@ class BlockPanel(QWidget):
                                       "oraz w punktach wiążących"))
         self.btn_layers.clicked.connect(self.add_layers)
         row.addWidget(self.btn_layers)
+        self.btn_save_grid = QPushButton(tr("Zapisz układ siatki"))
+        self.btn_save_grid.setToolTip(tr("Zapisz w bibliotece położenie arkuszy w siatce (wiersz, kolumna) – "
+                                         "wykryte po wpasowaniu albo poprawione w kolumnie „Siatka”"))
+        self.btn_save_grid.clicked.connect(self.save_grid)
+        row.addWidget(self.btn_save_grid)
         row.addStretch()
         lay.addLayout(row)
 
@@ -127,6 +134,7 @@ class BlockPanel(QWidget):
     def _fill_table(self):
         r = self.result
         t = self.tbl
+        self._filling = True
         t.setRowCount(len(self.sheets))
         for k, s in enumerate(self.sheets):
             out = k in r.outlier_sheets
@@ -137,9 +145,44 @@ class BlockPanel(QWidget):
             if out:
                 for it in cells:
                     it.setBackground(QBrush(QColor(220, 50, 50, 60)))
-            cells[1].setToolTip(tr("wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu"))
+            cells[1].setToolTip(tr("wiersz, kolumna w siatce arkuszy – zapisane w bibliotece") if s.grid_saved else
+                                tr("wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu; "
+                                   "dwuklik – popraw (np. „2, 3”)"))
+            cells[1].setFlags(cells[1].flags() | Qt.ItemFlag.ItemIsEditable)
             for c, it in enumerate(cells):
                 t.setItem(k, c, it)
+        self._filling = False
+
+    def on_item_changed(self, item):
+        if self._filling or item.column() != 1 or not 0 <= item.row() < len(self.sheets):
+            return
+        parts = [p for p in item.text().replace(";", ",").split(",") if p.strip()]
+        try:
+            row, col = (int(p) - 1 for p in parts)
+        except ValueError:
+            self.recompute()
+            return
+        s = self.sheets[item.row()]
+        s.grid, s.grid_saved = (row, col), False
+        self.curve = []
+        self._timer.start()
+
+    def save_grid(self):
+        if not self.sheets:
+            return False
+        layout = {s.key: (s.grid[0] if s.grid else None, s.grid[1] if s.grid else None,
+                          getattr(s.analysis, "priority", None)) for s in self.sheets if s.key}
+        try:
+            with self.panel.library() as lib:
+                lib.set_sheet_layout(layout)
+        except lb.LibraryError as e:
+            self.lbl_info.setText(self.panel._library_error(e))
+            return False
+        for s in self.sheets:
+            s.grid_saved = s.grid is not None
+        self._fill_table()
+        self.lbl_info.setText(tr("Zapisano układ siatki arkuszy w bibliotece."))
+        return True
 
     def _fill_info(self):
         r = self.result

@@ -47,6 +47,8 @@ class BlockSheet:
     uids: list = field(default_factory=list)
     names: list = field(default_factory=list)
     grid: tuple = None                         # (wiersz, kolumna) – wykryty albo zapisany
+    analysis: object = None                    # library.Analysis (skan, priorytet, zapisana siatka)
+    grid_saved: bool = False                   # siatka z biblioteki (nie wykryta)
 
     def __post_init__(self):
         self.frame = rc.order_corners(self.frame)
@@ -385,8 +387,12 @@ def sheets_from_library(lib, map_id, current=None):
         dst = [to_lib(ln.ref_x, ln.ref_y) if to_lib else (ln.ref_x, ln.ref_y) for ln in use]
         label = a.sheet or f"#{a.analysis_id}"
         sheets.append(BlockSheet(a.analysis_id, label, frame, [(ln.x_old, ln.y_old) for ln in use], dst,
-                                 [ln.uid or "" for ln in use], [ln.name or "" for ln in use]))
+                                 [ln.uid or "" for ln in use], [ln.name or "" for ln in use], analysis=a))
     grid = detect_grid(sheets)
     for i, s in enumerate(sheets):
-        s.grid = grid.get(i)
+        a = s.analysis
+        if a.grid_row is not None and a.grid_col is not None:
+            s.grid, s.grid_saved = (a.grid_row, a.grid_col), True
+        else:
+            s.grid = grid.get(i)
     return sheets, skipped

@@ -3413,6 +3413,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Dane (CSV)…</translation>
     </message>
     <message>
+        <source>Rektyfikacja wydawnictwa…</source>
+        <translation>Rektyfikacja wydawnictwa…</translation>
+    </message>
+    <message>
+        <source>Wszystkie arkusze jako jedna mozaika: zszycie, pole korekcji lokalnej, przycięcie do ramek, priorytet i blendowanie zakładek, mozaika VRT</source>
+        <translation>Wszystkie arkusze jako jedna mozaika: zszycie, pole korekcji lokalnej, przycięcie do ramek, priorytet i blendowanie zakładek, mozaika VRT</translation>
+    </message>
+    <message>
         <source>Raport wydawnictwa wieloarkuszowego</source>
         <translation>Raport wydawnictwa wieloarkuszowego</translation>
     </message>
@@ -3501,6 +3509,18 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Warstwy: zasięgi arkuszy po wyrównaniu blokowym i wektory szczelin na stykach oraz w punktach wiążących</translation>
     </message>
     <message>
+        <source>Zapisz układ siatki</source>
+        <translation>Zapisz układ siatki</translation>
+    </message>
+    <message>
+        <source>Zapisz w bibliotece położenie arkuszy w siatce (wiersz, kolumna) – wykryte po wpasowaniu albo poprawione w kolumnie „Siatka”</source>
+        <translation>Zapisz w bibliotece położenie arkuszy w siatce (wiersz, kolumna) – wykryte po wpasowaniu albo poprawione w kolumnie „Siatka”</translation>
+    </message>
+    <message>
+        <source>Zapisano układ siatki arkuszy w bibliotece.</source>
+        <translation>Zapisano układ siatki arkuszy w bibliotece.</translation>
+    </message>
+    <message>
         <source>Wyrównanie blokowe – zasięgi arkuszy</source>
         <translation>Wyrównanie blokowe – zasięgi arkuszy</translation>
     </message>
@@ -3537,8 +3557,12 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Brak arkuszy z ramką mapy – wyrównanie blokowe wymaga ramek (Zasięg mapy w panelu GCP).</translation>
     </message>
     <message>
-        <source>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu</source>
-        <translation>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu</translation>
+        <source>wiersz, kolumna w siatce arkuszy – zapisane w bibliotece</source>
+        <translation>wiersz, kolumna w siatce arkuszy – zapisane w bibliotece</translation>
+    </message>
+    <message>
+        <source>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu; dwuklik – popraw (np. „2, 3”)</source>
+        <translation>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu; dwuklik – popraw (np. „2, 3”)</translation>
     </message>
     <message>
         <source>σ₀ = {s} m, RMSE punktów = {r} m, liczba nadwyżkowa {f}.</source>
@@ -3563,6 +3587,162 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Nie można wyrównać: {e}</source>
         <translation>Nie można wyrównać: {e}</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja wydawnictwa wieloarkuszowego</source>
+        <translation>Rektyfikacja wydawnictwa wieloarkuszowego</translation>
+    </message>
+    <message>
+        <source>Węzły siatki – styki bez szczelin</source>
+        <translation>Węzły siatki – styki bez szczelin</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe (suwak z zakładki) – arkusze zachodzące na siebie</source>
+        <translation>Wyrównanie blokowe (suwak z zakładki) – arkusze zachodzące na siebie</translation>
+    </message>
+    <message>
+        <source>Zszycie</source>
+        <translation>Zszycie</translation>
+    </message>
+    <message>
+        <source>Korekcja</source>
+        <translation>Korekcja</translation>
+    </message>
+    <message>
+        <source>auto</source>
+        <translation>auto</translation>
+    </message>
+    <message>
+        <source>Wygładzanie</source>
+        <translation>Wygładzanie</translation>
+    </message>
+    <message>
+        <source>Lewy koniec – strefa zakładki należy do arkusza o wyższym priorytecie; w prawo – szersze płynne przejście między arkuszami</source>
+        <translation>Lewy koniec – strefa zakładki należy do arkusza o wyższym priorytecie; w prawo – szersze płynne przejście między arkuszami</translation>
+    </message>
+    <message>
+        <source>Kolejność arkuszy przy zakładkach – przeciągnij; u góry arkusz najważniejszy</source>
+        <translation>Kolejność arkuszy przy zakładkach – przeciągnij; u góry arkusz najważniejszy</translation>
+    </message>
+    <message>
+        <source>Priorytet</source>
+        <translation>Priorytet</translation>
+    </message>
+    <message>
+        <source>Wynik</source>
+        <translation>Wynik</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość</source>
+        <translation>Rozdzielczość</translation>
+    </message>
+    <message>
+        <source>Format</source>
+        <translation>Format</translation>
+    </message>
+    <message>
+        <source>Katalog wynikowy</source>
+        <translation>Katalog wynikowy</translation>
+    </message>
+    <message>
+        <source>Dodaj do projektu</source>
+        <translation>Dodaj do projektu</translation>
+    </message>
+    <message>
+        <source>Zapisz też mozaikę COG z blendowaniem</source>
+        <translation>Zapisz też mozaikę COG z blendowaniem</translation>
+    </message>
+    <message>
+        <source>Zapisz siatkę, priorytet i zasięgi arkuszy w bibliotece</source>
+        <translation>Zapisz siatkę, priorytet i zasięgi arkuszy w bibliotece</translation>
+    </message>
+    <message>
+        <source>Rektyfikuj</source>
+        <translation>Rektyfikuj</translation>
+    </message>
+    <message>
+        <source>Przetwarzanie arkuszy…</source>
+        <translation>Przetwarzanie arkuszy…</translation>
+    </message>
+    <message>
+        <source>Przerwij</source>
+        <translation>Przerwij</translation>
+    </message>
+    <message>
+        <source>wydawnictwo</source>
+        <translation>wydawnictwo</translation>
+    </message>
+    <message>
+        <source>luźno</source>
+        <translation>luźno</translation>
+    </message>
+    <message>
+        <source>sztywno</source>
+        <translation>sztywno</translation>
+    </message>
+    <message>
+        <source>przycinanie</source>
+        <translation>przycinanie</translation>
+    </message>
+    <message>
+        <source>blendowanie</source>
+        <translation>blendowanie</translation>
+    </message>
+    <message>
+        <source>przycięcie</source>
+        <translation>przycięcie</translation>
+    </message>
+    <message>
+        <source>Arkusze stykają się bez zakładek.</source>
+        <translation>Arkusze stykają się bez zakładek.</translation>
+    </message>
+    <message>
+        <source>RMSE przed korekcją {a} m → po korekcji {b} m</source>
+        <translation>RMSE przed korekcją {a} m → po korekcji {b} m</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja wydawnictwa</source>
+        <translation>Rektyfikacja wydawnictwa</translation>
+    </message>
+    <message>
+        <source>{t} – rektyfikacja</source>
+        <translation>{t} – rektyfikacja</translation>
+    </message>
+    <message>
+        <source>walidacja krzyżowa {v} m</source>
+        <translation>walidacja krzyżowa {v} m</translation>
+    </message>
+    <message>
+        <source>Zakładki arkuszy: {n} par.</source>
+        <translation>Zakładki arkuszy: {n} par.</translation>
+    </message>
+    <message>
+        <source>Arkusz {k} z {n}…</source>
+        <translation>Arkusz {k} z {n}…</translation>
+    </message>
+    <message>
+        <source>Zapisano {n} arkuszy w katalogu {d}.</source>
+        <translation>Zapisano {n} arkuszy w katalogu {d}.</translation>
+    </message>
+    <message>
+        <source>{t} – mozaika z blendowaniem</source>
+        <translation>{t} – mozaika z blendowaniem</translation>
+    </message>
+    <message>
+        <source>Nie można zbudować planu: {e}</source>
+        <translation>Nie można zbudować planu: {e}</translation>
+    </message>
+    <message>
+        <source>Nie udało się przetworzyć arkuszy: {e}</source>
+        <translation>Nie udało się przetworzyć arkuszy: {e}</translation>
+    </message>
+    <message>
+        <source>{t} – mozaika</source>
+        <translation>{t} – mozaika</translation>
+    </message>
+    <message>
+        <source>Brak pliku skanu: {s} – arkusze zostaną pominięte.</source>
+        <translation>Brak pliku skanu: {s} – arkusze zostaną pominięte.</translation>
     </message>
     <message>
         <source>Dokładność map w czasie</source>

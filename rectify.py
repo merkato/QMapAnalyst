@@ -399,3 +399,24 @@ def correction_magnitude_grid(correction, bounds, n=60):
     X, Y = np.meshgrid(x, y)
     C = correction(np.column_stack([X.ravel(), Y.ravel()]))
     return x, y, np.hypot(C[:, 0], C[:, 1]).reshape(n, n)
+
+
+def inv_bilinear(quad, pts, iterations=30):
+    """(u, v) punktów pts w czworokącie quad = [TL, TR, BR, BL] (Newton, wektorowo)."""
+    q = np.asarray(quad, float)
+    P = np.atleast_2d(np.asarray(pts, float))
+    u = np.full(len(P), 0.5)
+    v = np.full(len(P), 0.5)
+    for _ in range(iterations):
+        cur = bilinear(q, u, v)
+        du = (1 - v)[:, None] * (q[1] - q[0]) + v[:, None] * (q[2] - q[3])
+        dv = (1 - u)[:, None] * (q[3] - q[0]) + u[:, None] * (q[2] - q[1])
+        det = du[:, 0] * dv[:, 1] - du[:, 1] * dv[:, 0]
+        det = np.where(np.abs(det) < 1e-30, 1e-30, det)
+        r = P - cur
+        su = (r[:, 0] * dv[:, 1] - r[:, 1] * dv[:, 0]) / det
+        sv = (du[:, 0] * r[:, 1] - du[:, 1] * r[:, 0]) / det
+        u, v = u + su, v + sv
+        if max(np.abs(su).max(), np.abs(sv).max()) < 1e-12:
+            break
+    return u, v
