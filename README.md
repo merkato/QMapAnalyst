@@ -4,7 +4,7 @@
 
 ![QMapAnalyst panel: reference grid, scale isolines and displacement vectors on an Austrian cadastral sheet (1:2880)](docs/results_en.png)
 
-## 🆕 What's new in 0.3.2
+## 🆕 What's new in 0.3.2 „Karolina”
 
 Rectification – rasters that match the modern map, with methods the QGIS Georeferencer does not offer:
 
