@@ -32,8 +32,12 @@ CONTEXTS = {
     "maps_dialog.py": "QMapAnalystLibrary",
     "sets_dialog.py": "QMapAnalystLibrary",
     "series_dialog.py": "QMapAnalystLibrary",
+    "series_fields_panel.py": "QMapAnalystLibrary",
     "publication_dialog.py": "QMapAnalystLibrary",
+    "block_panel.py": "QMapAnalystLibrary",
+    "publication_rectify_dialog.py": "QMapAnalystLibrary",
     "series_report.py": "QMapAnalystLibrary",
+    "rectify_dialog.py": "QMapAnalystRectify",
 }
 
 

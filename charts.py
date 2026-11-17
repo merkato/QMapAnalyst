@@ -39,7 +39,7 @@ TEXTS = {
     "outlier": "odstający (test Baardy)",
     "median": "mediana",
     "similarity_title": "Podobieństwo błędów między mapami",
-    "similarity_sub": "korelacja wektorowa r błędów punktów wspólnych; * – istotne (p < 0,05)",
+    "similarity_sub": "korelacja wektorowa r błędów punktów wspólnych; * – podobne: r ≥ 0,5 i p < 0,05 (test permutacyjny)",
     "similar": "podobne",
     "unrelated": "bez związku",
     "opposite": "przeciwne",
@@ -55,6 +55,9 @@ TEXTS = {
     "overlap": "zakładka",
     "overlap_worst": "największa rozbieżność",
     "no_data": "brak danych",
+    "tradeoff_title": "Zszycie arkuszy: dopasowanie a szczeliny",
+    "tradeoff_sub": "każdy punkt to pozycja suwaka „niezależne ↔ zszyte”; obwódka – pozycja bieżąca",
+    "seam_gap": "średnia szczelina na stykach",
 }
 
 
@@ -551,3 +554,47 @@ def sheet_index(sheets, overlaps, texts=None, width=760, height=None):
             out.append(f"<circle cx='120' cy='{ly - 4}' r='5' fill='{CRITICAL}'/>"
                        + _text(130, ly, _t(texts, "overlap_worst"), 10, INK2))
     return _svg(width, height, "".join(out), _t(texts, "index_title"))
+
+
+def tradeoff_curve(points, current=None, texts=None, width=560, height=320):
+    """Krzywa „RMSE ↔ szczelina”: points = [(pozycja suwaka, waga, RMSE, szczelina średnia, maks.)] [m];
+    oś X – średnia szczelina (log), oś Y – RMSE punktów (od zera)."""
+    pts = [p for p in points if math.isfinite(p[2]) and math.isfinite(p[3])]
+    if len(pts) < 2:
+        return _empty(width, height, texts, "tradeoff_title", "tradeoff_sub")
+    left, right, top, bottom = 70, 24, 74, 50
+    pw, ph = width - left - right, height - top - bottom
+    gx = [max(p[3], 1.0) for p in pts]
+    lo, hi = _log_domain(gx)
+    ymax = max(p[2] for p in pts) * 1.15
+    step = _nice_step(ymax, 5)
+    ymax = math.ceil(ymax / step) * step
+
+    def x_of(v):
+        return left + pw * (math.log10(max(v, lo)) - math.log10(lo)) / (math.log10(hi) - math.log10(lo))
+
+    def y_of(v):
+        return top + ph * (1 - v / ymax)
+    out = [_header(texts, "tradeoff_title", "tradeoff_sub", width)]
+    v = 0.0
+    while v <= ymax + 1e-9:
+        y = y_of(v)
+        out.append(f"<line x1='{left}' x2='{left + pw}' y1='{_f(y)}' y2='{_f(y)}' stroke='{GRID}'/>")
+        out.append(_text(left - 8, y + 4, metres_label(v), 10, MUTED, "end"))
+        v += step
+    for t in _log_ticks(lo, hi):
+        x = x_of(t)
+        out.append(f"<line x1='{_f(x)}' x2='{_f(x)}' y1='{top + ph}' y2='{top + ph + 4}' stroke='{AXIS}'/>")
+        out.append(_text(x, top + ph + 16, metres_label(t), 10, MUTED, "middle"))
+    out.append(_text(left + pw / 2, height - 10, _t(texts, "seam_gap"), 10, MUTED, "middle"))
+    out.append(_text(14, top - 10, "RMSE", 10, MUTED))
+    path = " ".join(f"{'M' if k == 0 else 'L'}{_f(x_of(max(p[3], 1.0)))},{_f(y_of(p[2]))}" for k, p in enumerate(pts))
+    out.append(f"<path d='{path}' fill='none' stroke='{SERIES}' stroke-width='2'/>")
+    for p in pts:
+        x, y = x_of(max(p[3], 1.0)), y_of(p[2])
+        cur = current is not None and p[0] == current
+        out.append(f"<circle cx='{_f(x)}' cy='{_f(y)}' r='{6 if cur else 4.5}' fill='{SERIES}' stroke='{INK if cur else SURFACE}' "
+                   f"stroke-width='2'><title>{p[0]:.0f}: RMSE {escape(metres_label(round(p[2])))}, "
+                   f"{escape(metres_label(round(p[3])))} / {escape(metres_label(round(p[4])))}</title></circle>")
+        out.append(_text(x + 7, y - 7, f"{p[0]:.0f}", 9, MUTED))
+    return _svg(width, height, "".join(out), _t(texts, "tradeoff_title"))

@@ -98,6 +98,9 @@ class SeriesDialog(QDialog):
         self.tabs.addTab(self.tbl_pairs, tr("Podobieństwo reszt"))
         self.tbl_points = _table([])
         self.tabs.addTab(self.tbl_points, tr("Błędy punktów"))
+        from .series_fields_panel import FieldsPanel
+        self.fields = FieldsPanel(self)
+        self.tabs.addTab(self.fields, tr("Pola korekcji"))
         self.charts_view = srep.ChartsView()
         self.tabs.addTab(self.charts_view, tr("Wykresy"))
         self.charts = []
@@ -125,6 +128,10 @@ class SeriesDialog(QDialog):
         self.btn_traj.clicked.connect(self.add_trajectories_layer)
         row.addWidget(self.btn_vectors)
         row.addWidget(self.btn_traj)
+        self.btn_rectify = QPushButton(tr("Rektyfikacja serii…"))
+        self.btn_rectify.setToolTip(tr("Wszystkie mapy serii jedną metodą rektyfikacji – warstwy w grupie projektu w kolejności lat"))
+        self.btn_rectify.clicked.connect(self.open_rectify)
+        row.addWidget(self.btn_rectify)
         row.addStretch()
         self.btn_export = QPushButton(tr("Eksport"))
         self.btn_export.setToolTip(tr("Raport PDF lub HTML z wykresami, same wykresy (SVG i PNG – do prezentacji) "
@@ -161,7 +168,8 @@ class SeriesDialog(QDialog):
         self._fill_pairs()
         self._fill_points()
         self._fill_summary()
-        self.charts = srep.series_charts(self.series, self._unit_m(), self._label)
+        self.fields.set_series(self.series)
+        self.charts = srep.series_charts(self.series, self._unit_m(), self._chart_label)
         self.charts_view.set_charts(self.charts)
 
     def _unit_m(self):
@@ -192,11 +200,16 @@ class SeriesDialog(QDialog):
         self.lbl_summary.setText(tr("Zapisano wykresy ({n} plików) w folderze {f}").format(n=len(files), f=folder))
         return files
 
-    def _label(self, s):
+    def _label(self, s, chart=False):
+        """Nazwa mapy; stan bieżący z niezapisanymi zmianami: „*” w tabelach, „[niezapisana]” na wykresach
+        (tam gwiazdka oznacza podobną parę map w macierzy podobieństwa)."""
         label = cv.analysis_label(s.column) if s.key != cv.CURRENT else (s.analysis.title or tr("bieżąca analiza"))
         if s.key == self.series.current_id and (self.current_dirty or s.key == cv.CURRENT):
-            label += " *"
+            label += " " + tr("[niezapisana]") if chart else " *"
         return label
+
+    def _chart_label(self, s):
+        return self._label(s, chart=True)
 
     def _sheets_text(self, s):
         """Numer arkusza (jeden arkusz) albo liczba arkuszy wydawnictwa z listą w podpowiedzi."""
@@ -292,7 +305,19 @@ class SeriesDialog(QDialog):
                 pairs="; ".join(f"{self._label(by_key[p.a])} → {self._label(by_key[p.b])} (r = {_num(p.r, 2)})" for p in similar)))
         else:
             lines.append(tr("Brak par map o istotnie podobnych błędach."))
+        from .series_fields_panel import suspect_text
+        sus = suspect_text(ser)
+        if sus:
+            lines.append(sus)
         self.lbl_summary.setText("\n".join(lines))
+
+    def open_rectify(self):
+        if self.series is None or not self.series.maps:
+            return None
+        from .series_fields_panel import SeriesRectifyDialog
+        dlg = SeriesRectifyDialog(self)
+        dlg.exec()
+        return dlg
 
     # --- warstwy -------------------------------------------------------------------
     def _new_layer(self, kind, name):

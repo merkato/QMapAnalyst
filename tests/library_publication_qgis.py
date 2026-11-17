@@ -81,6 +81,22 @@ assert o.rowCount() == 5 and o.item(0, 0).text() == "Z1" and o.item(0, 1).text()
 assert "rozrzut" in dlg.lbl_summary.text() and "Z1" in dlg.lbl_summary.text(), dlg.lbl_summary.text()
 assert dlg.lbl_title.text() == "„Flötzkarte” (1857): arkusze 3"
 
+# --- wyrównanie blokowe (#8)
+blk = dlg.block
+assert len(blk.sheets) == 3 and blk.result is not None and blk.tbl.rowCount() == 3, blk.lbl_info.text()
+assert all(s.grid is not None for s in blk.sheets) and "σ₀" in blk.lbl_info.text()
+assert len(blk.curve) >= 5 and blk.chart_svg and "<svg" in blk.chart_svg
+blk.sld_seam.setValue(100)
+blk.recompute()
+tight = blk.result.gap_stats()[1]
+blk.sld_seam.setValue(0)
+blk.recompute()
+assert blk.lbl_weight.text() == "w = 0" and blk.result.gap_stats()[1] >= tight
+blk.cmb_model.setCurrentIndex(blk.cmb_model.findData("affine"))
+assert blk.result is not None and blk.result.model == "affine"
+poly, lines = blk.add_layers()
+assert poly.featureCount() == 3 and lines.featureCount() >= 1 and poly.crs().authid() == "EPSG:2180"
+
 layer = dlg.add_index_layer()
 assert layer.featureCount() == 3 and layer.crs().authid() == "EPSG:2180" and layer.labelsEnabled()
 assert sorted(f["sheet"] for f in layer.getFeatures()) == ["1", "10", "2"]

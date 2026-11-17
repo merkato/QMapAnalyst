@@ -256,6 +256,14 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>Save the full analysis report (input data, statistics, points, projection) as PDF, TXT or HTML</translation>
     </message>
     <message>
+        <source>Rektyfikacja…</source>
+        <translation>Rectification…</translation>
+    </message>
+    <message>
+        <source>Raster mapy dawnej dopasowany do mapy współczesnej: model globalny + pole korekcji lokalnej (wygładzony TPS, trójkąty, MLS), przycięcie do ramki</source>
+        <translation>Raster of the historical map fitted to the modern map: global model + local correction field (smoothed TPS, triangles, MLS), clipped to the map frame</translation>
+    </message>
+    <message>
         <source>Wyniki analizy pojawią się tutaj.</source>
         <translation>Analysis results will appear here.</translation>
     </message>
@@ -3221,6 +3229,10 @@ Update the reference coordinates of these points?</translation>
         <translation>Point errors</translation>
     </message>
     <message>
+        <source>Pola korekcji</source>
+        <translation>Correction fields</translation>
+    </message>
+    <message>
         <source>Wykresy</source>
         <translation>Charts</translation>
     </message>
@@ -3243,6 +3255,14 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Dla każdego punktu: łamana przez położenia, które nadają mu kolejne mapy (wg roku)</source>
         <translation>For each point: a polyline through the positions given to it by successive maps (by year)</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii…</source>
+        <translation>Rectify the series…</translation>
+    </message>
+    <message>
+        <source>Wszystkie mapy serii jedną metodą rektyfikacji – warstwy w grupie projektu w kolejności lat</source>
+        <translation>All maps of the series with one rectification method – layers in a project group in order of years</translation>
     </message>
     <message>
         <source>Eksport</source>
@@ -3341,6 +3361,10 @@ Update the reference coordinates of these points?</translation>
         <translation>Charts saved ({n} files) in the folder {f}</translation>
     </message>
     <message>
+        <source>[niezapisana]</source>
+        <translation>[unsaved]</translation>
+    </message>
+    <message>
         <source>arkusze: {names}</source>
         <translation>sheets: {names}</translation>
     </message>
@@ -3377,12 +3401,136 @@ Update the reference coordinates of these points?</translation>
         <translation>too few common points to compare (min. {k})</translation>
     </message>
     <message>
+        <source>Pole korekcji mapy – wygładzony TPS jej reszt (jak w rektyfikacji). Podobne pola dwóch map to drugi, obok korelacji reszt w punktach, ślad kopiowania. Istotność: losowy obrót pola drugiej mapy (zachowuje jego gładkość).</source>
+        <translation>The correction field of a map is a smoothed TPS of its residuals (as in rectification). Similar fields of two maps are a second trace of copying, besides the correlation of residuals at the points. Significance: random rotation of the second map's field (preserves its smoothness).</translation>
+    </message>
+    <message>
+        <source>Porównaj pola korekcji</source>
+        <translation>Compare correction fields</translation>
+    </message>
+    <message>
+        <source>Warstwa różnic pól</source>
+        <translation>Field difference layer</translation>
+    </message>
+    <message>
+        <source>Dla zaznaczonej pary: wektory c_A − c_B w węzłach wspólnego obszaru</source>
+        <translation>For the selected pair: vectors c_A − c_B at the nodes of the common area</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii czasowej</source>
+        <translation>Time series rectification</translation>
+    </message>
+    <message>
+        <source>Każda mapa serii tą samą metodą; wygładzanie dobierane walidacją krzyżową osobno dla każdej mapy. Wydawnictwa wieloarkuszowe zszywane węzłami siatki. Warstwy w grupie projektu w kolejności lat.</source>
+        <translation>Every map of the series with the same method; smoothing chosen by cross-validation separately for each map. Multi-sheet publications stitched with grid nodes. Layers in a project group in order of years.</translation>
+    </message>
+    <message>
+        <source>Metoda</source>
+        <translation>Method</translation>
+    </message>
+    <message>
+        <source>Format</source>
+        <translation>Format</translation>
+    </message>
+    <message>
+        <source>Katalog wynikowy</source>
+        <translation>Output folder</translation>
+    </message>
+    <message>
+        <source>Dodaj do projektu</source>
+        <translation>Add to the project</translation>
+    </message>
+    <message>
+        <source>Rektyfikuj</source>
+        <translation>Rectify</translation>
+    </message>
+    <message>
+        <source>Przerwij</source>
+        <translation>Cancel</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii</source>
+        <translation>Series rectification</translation>
+    </message>
+    <message>
+        <source>Punkty podejrzane – duży błąd na wszystkich mapach w zgodnym kierunku (sprawdź współrzędne w bibliotece albo zmianę obiektu): {p}.</source>
+        <translation>Suspect points – a large error on all maps in a consistent direction (check the coordinates in the library or whether the object moved): {p}.</translation>
+    </message>
+    <message>
+        <source>za mało punktów na jednej z map</source>
+        <translation>too few points on one of the maps</translation>
+    </message>
+    <message>
+        <source>brak wspólnego obszaru punktów</source>
+        <translation>no common area of points</translation>
+    </message>
+    <message>
+        <source>za mały wspólny obszar</source>
+        <translation>common area too small</translation>
+    </message>
+    <message>
+        <source>Węzły</source>
+        <translation>Nodes</translation>
+    </message>
+    <message>
+        <source>r pól</source>
+        <translation>field r</translation>
+    </message>
+    <message>
+        <source>Mantel r</source>
+        <translation>Mantel r</translation>
+    </message>
+    <message>
+        <source>r dylatacji</source>
+        <translation>dilation r</translation>
+    </message>
+    <message>
+        <source>r obrotu</source>
+        <translation>rotation r</translation>
+    </message>
+    <message>
+        <source>Uwagi</source>
+        <translation>Notes</translation>
+    </message>
+    <message>
+        <source>Różnica pól korekcji: {a} − {b}</source>
+        <translation>Correction field difference: {a} − {b}</translation>
+    </message>
+    <message>
+        <source>Zrektyfikowano map: {n}.</source>
+        <translation>Maps rectified: {n}.</translation>
+    </message>
+    <message>
+        <source>Przerwano.</source>
+        <translation>Canceled.</translation>
+    </message>
+    <message>
+        <source>Seria „{s}” – rektyfikacja</source>
+        <translation>Series “{s}” – rectification</translation>
+    </message>
+    <message>
+        <source>{m} – brak skanu</source>
+        <translation>{m} – no scan</translation>
+    </message>
+    <message>
+        <source>Pominięte: {s}.</source>
+        <translation>Skipped: {s}.</translation>
+    </message>
+    <message>
+        <source>Mapa {k} z {n}: {m}</source>
+        <translation>Map {k} of {n}: {m}</translation>
+    </message>
+    <message>
         <source>Wydawnictwo wieloarkuszowe</source>
         <translation>Multi-sheet publication</translation>
     </message>
     <message>
         <source>Zakładki</source>
         <translation>Overlaps</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe</source>
+        <translation>Block adjustment</translation>
     </message>
     <message>
         <source>Skorowidz arkuszy</source>
@@ -3395,6 +3543,14 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Dane (CSV)…</source>
         <translation>Data (CSV)…</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja wydawnictwa…</source>
+        <translation>Rectify the publication…</translation>
+    </message>
+    <message>
+        <source>Wszystkie arkusze jako jedna mozaika: zszycie, pole korekcji lokalnej, przycięcie do ramek, priorytet i blendowanie zakładek, mozaika VRT</source>
+        <translation>All sheets as one mosaic: stitching, local correction field, clipping to frames, priority and blending of overlaps, VRT mosaic</translation>
     </message>
     <message>
         <source>Raport wydawnictwa wieloarkuszowego</source>
@@ -3461,6 +3617,254 @@ Update the reference coordinates of these points?</translation>
         <translation>Overlaps: {n} pairs of identifications; largest discrepancy {d} m – {name} ({a} / {b}).</translation>
     </message>
     <message>
+        <source>Biliniowa w ramce (8 parametrów)</source>
+        <translation>Bilinear in the frame (8 parameters)</translation>
+    </message>
+    <message>
+        <source>Afiniczna (6 parametrów)</source>
+        <translation>Affine (6 parameters)</translation>
+    </message>
+    <message>
+        <source>Helmert (4 parametry)</source>
+        <translation>Helmert (4 parameters)</translation>
+    </message>
+    <message>
+        <source>Waga warunków zgodności wspólnych narożników ramek względem punktów dopasowania: w lewo – arkusze wpasowane osobno, w prawo – styki domknięte</source>
+        <translation>Weight of the conditions that shared frame corners coincide, relative to the control points: left – sheets fitted separately, right – seams closed</translation>
+    </message>
+    <message>
+        <source>Zasięgi i szczeliny na mapie</source>
+        <translation>Footprints and seam gaps on the map</translation>
+    </message>
+    <message>
+        <source>Warstwy: zasięgi arkuszy po wyrównaniu blokowym i wektory szczelin na stykach oraz w punktach wiążących</source>
+        <translation>Layers: sheet footprints after the block adjustment and gap vectors at the seams and tie points</translation>
+    </message>
+    <message>
+        <source>Zapisz układ siatki</source>
+        <translation>Save the sheet grid</translation>
+    </message>
+    <message>
+        <source>Zapisz w bibliotece położenie arkuszy w siatce (wiersz, kolumna) – wykryte po wpasowaniu albo poprawione w kolumnie „Siatka”</source>
+        <translation>Save the position of the sheets in the grid (row, column) in the library – detected after fitting or corrected in the “Grid” column</translation>
+    </message>
+    <message>
+        <source>Zapisano układ siatki arkuszy w bibliotece.</source>
+        <translation>The sheet grid has been saved in the library.</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe – zasięgi arkuszy</source>
+        <translation>Block adjustment – sheet footprints</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe – szczeliny</source>
+        <translation>Block adjustment – seam gaps</translation>
+    </message>
+    <message>
+        <source>Model arkusza:</source>
+        <translation>Sheet model:</translation>
+    </message>
+    <message>
+        <source>niezależne</source>
+        <translation>independent</translation>
+    </message>
+    <message>
+        <source>zszyte</source>
+        <translation>stitched</translation>
+    </message>
+    <message>
+        <source>Siatka</source>
+        <translation>Grid</translation>
+    </message>
+    <message>
+        <source>Przesunięcie wzgl. sąsiadów [m]</source>
+        <translation>Offset from neighbours [m]</translation>
+    </message>
+    <message>
+        <source>Odstający</source>
+        <translation>Outlier</translation>
+    </message>
+    <message>
+        <source>Brak arkuszy z ramką mapy – wyrównanie blokowe wymaga ramek (Zasięg mapy w panelu GCP).</source>
+        <translation>No sheets with a map frame – the block adjustment needs frames (Map extent in the GCP panel).</translation>
+    </message>
+    <message>
+        <source>wiersz, kolumna w siatce arkuszy – zapisane w bibliotece</source>
+        <translation>row, column in the sheet grid – saved in the library</translation>
+    </message>
+    <message>
+        <source>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu; dwuklik – popraw (np. „2, 3”)</source>
+        <translation>row, column in the sheet grid – detected after a preliminary fit; double-click to correct (e.g. “2, 3”)</translation>
+    </message>
+    <message>
+        <source>σ₀ = {s} m, RMSE punktów = {r} m, liczba nadwyżkowa {f}.</source>
+        <translation>σ₀ = {s} m, point RMSE = {r} m, redundancy {f}.</translation>
+    </message>
+    <message>
+        <source>Szczeliny na stykach (narożniki ramek): średnio {a} m, maks. {b} m.</source>
+        <translation>Seam gaps (frame corners): mean {a} m, max. {b} m.</translation>
+    </message>
+    <message>
+        <source>Punkty wiążące (ten sam obiekt na dwóch arkuszach): {n}, odstające {k}.</source>
+        <translation>Tie points (the same object on two sheets): {n}, outliers {k}.</translation>
+    </message>
+    <message>
+        <source>Arkusz odstający: {s} – jego punkty są systematycznie przesunięte względem sąsiadów.</source>
+        <translation>Outlier sheet: {s} – its points are systematically shifted relative to the neighbours.</translation>
+    </message>
+    <message>
+        <source>Pominięte arkusze bez ramki mapy: {s}.</source>
+        <translation>Skipped sheets without a map frame: {s}.</translation>
+    </message>
+    <message>
+        <source>Nie można wyrównać: {e}</source>
+        <translation>Cannot adjust: {e}</translation>
+    </message>
+    <message>
+        <source>Mozaika VRT…</source>
+        <translation>VRT mosaic…</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja wydawnictwa wieloarkuszowego</source>
+        <translation>Rectification of a multi-sheet publication</translation>
+    </message>
+    <message>
+        <source>Węzły siatki – styki bez szczelin</source>
+        <translation>Grid nodes – seams without gaps</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe (suwak z zakładki) – arkusze zachodzące na siebie</source>
+        <translation>Block adjustment (slider from the tab) – overlapping sheets</translation>
+    </message>
+    <message>
+        <source>Zszycie</source>
+        <translation>Stitching</translation>
+    </message>
+    <message>
+        <source>Korekcja</source>
+        <translation>Correction</translation>
+    </message>
+    <message>
+        <source>auto</source>
+        <translation>auto</translation>
+    </message>
+    <message>
+        <source>Wygładzanie</source>
+        <translation>Smoothing</translation>
+    </message>
+    <message>
+        <source>Lewy koniec – strefa zakładki należy do arkusza o wyższym priorytecie; w prawo – szersze płynne przejście między arkuszami</source>
+        <translation>Left end – the overlap belongs to the sheet with higher priority; to the right – a wider smooth transition between sheets</translation>
+    </message>
+    <message>
+        <source>Kolejność arkuszy przy zakładkach – przeciągnij; u góry arkusz najważniejszy</source>
+        <translation>Order of sheets in overlaps – drag; the most important sheet at the top</translation>
+    </message>
+    <message>
+        <source>Priorytet</source>
+        <translation>Priority</translation>
+    </message>
+    <message>
+        <source>Wynik</source>
+        <translation>Result</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość</source>
+        <translation>Resolution</translation>
+    </message>
+    <message>
+        <source>Zapisz też mozaikę COG z blendowaniem</source>
+        <translation>Also save a blended COG mosaic</translation>
+    </message>
+    <message>
+        <source>Zapisz siatkę, priorytet i zasięgi arkuszy w bibliotece</source>
+        <translation>Save the grid, priority and sheet footprints in the library</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja wydawnictwa</source>
+        <translation>Publication rectification</translation>
+    </message>
+    <message>
+        <source>wydawnictwo</source>
+        <translation>publication</translation>
+    </message>
+    <message>
+        <source>Mozaika z blendowaniem…</source>
+        <translation>Blended mosaic…</translation>
+    </message>
+    <message>
+        <source>luźno</source>
+        <translation>loose</translation>
+    </message>
+    <message>
+        <source>sztywno</source>
+        <translation>stiff</translation>
+    </message>
+    <message>
+        <source>przycinanie</source>
+        <translation>clip</translation>
+    </message>
+    <message>
+        <source>blendowanie</source>
+        <translation>blend</translation>
+    </message>
+    <message>
+        <source>przycięcie</source>
+        <translation>clipping</translation>
+    </message>
+    <message>
+        <source>Arkusze stykają się bez zakładek.</source>
+        <translation>The sheets meet without overlaps.</translation>
+    </message>
+    <message>
+        <source>RMSE przed korekcją {a} m → po korekcji {b} m</source>
+        <translation>RMSE before correction {a} m → after correction {b} m</translation>
+    </message>
+    <message>
+        <source>Przetwarzanie trwa. Przerwać?</source>
+        <translation>Processing is running. Cancel it?</translation>
+    </message>
+    <message>
+        <source>{t} – rektyfikacja</source>
+        <translation>{t} – rectification</translation>
+    </message>
+    <message>
+        <source>Arkusz {k} z {n}: {s}</source>
+        <translation>Sheet {k} of {n}: {s}</translation>
+    </message>
+    <message>
+        <source>walidacja krzyżowa {v} m</source>
+        <translation>cross-validation {v} m</translation>
+    </message>
+    <message>
+        <source>Zakładki arkuszy: {n} par.</source>
+        <translation>Sheet overlaps: {n} pairs.</translation>
+    </message>
+    <message>
+        <source>Zapisano {n} arkuszy w katalogu {d}.</source>
+        <translation>{n} sheets saved in the folder {d}.</translation>
+    </message>
+    <message>
+        <source>{t} – mozaika z blendowaniem</source>
+        <translation>{t} – blended mosaic</translation>
+    </message>
+    <message>
+        <source>Nie można zbudować planu: {e}</source>
+        <translation>Cannot build the plan: {e}</translation>
+    </message>
+    <message>
+        <source>Nie udało się przetworzyć arkuszy: {e}</source>
+        <translation>Could not process the sheets: {e}</translation>
+    </message>
+    <message>
+        <source>{t} – mozaika</source>
+        <translation>{t} – mosaic</translation>
+    </message>
+    <message>
+        <source>Brak pliku skanu: {s} – arkusze zostaną pominięte.</source>
+        <translation>Scan file missing: {s} – these sheets will be skipped.</translation>
+    </message>
+    <message>
         <source>Dokładność map w czasie</source>
         <translation>Map accuracy over time</translation>
     </message>
@@ -3493,8 +3897,8 @@ Update the reference coordinates of these points?</translation>
         <translation>Error similarity between maps</translation>
     </message>
     <message>
-        <source>korelacja wektorowa r błędów punktów wspólnych; * – istotne (p &lt; 0,05)</source>
-        <translation>vector correlation r of the errors of common points; * – significant (p &lt; 0.05)</translation>
+        <source>korelacja wektorowa r błędów punktów wspólnych; * – podobne: r ≥ 0,5 i p &lt; 0,05 (test permutacyjny)</source>
+        <translation>vector correlation r of the errors of common points; * – similar: r ≥ 0.5 and p &lt; 0.05 (permutation test)</translation>
     </message>
     <message>
         <source>podobne</source>
@@ -3553,6 +3957,18 @@ Update the reference coordinates of these points?</translation>
         <translation>no data</translation>
     </message>
     <message>
+        <source>Zszycie arkuszy: dopasowanie a szczeliny</source>
+        <translation>Stitching sheets: fit versus gaps</translation>
+    </message>
+    <message>
+        <source>każdy punkt to pozycja suwaka „niezależne ↔ zszyte”; obwódka – pozycja bieżąca</source>
+        <translation>each point is a position of the “independent ↔ stitched” slider; outline – current position</translation>
+    </message>
+    <message>
+        <source>średnia szczelina na stykach</source>
+        <translation>mean seam gap</translation>
+    </message>
+    <message>
         <source>Elementem serii jest mapa: wydawnictwo wieloarkuszowe to jeden element (arkusze wyrównywane osobno, wyniki łączone). Wszystkie mapy wyrównano tym samym modelem.</source>
         <translation>The element of the series is a map: a multi-sheet publication is one element (sheets adjusted separately, results combined). All maps were adjusted with the same model.</translation>
     </message>
@@ -3587,6 +4003,161 @@ Update the reference coordinates of these points?</translation>
     <message>
         <source>Rok</source>
         <translation>Year</translation>
+    </message>
+</context>
+<context>
+    <name>QMapAnalystRectify</name>
+    <message>
+        <source>Wygładzony TPS (zalecana)</source>
+        <translation>Smoothed TPS (recommended)</translation>
+    </message>
+    <message>
+        <source>TPS interpolujący (jak Georeferencer)</source>
+        <translation>Interpolating TPS (as in Georeferencer)</translation>
+    </message>
+    <message>
+        <source>Trójkąty (afiniczna w trójkątach)</source>
+        <translation>Triangles (affine per triangle)</translation>
+    </message>
+    <message>
+        <source>MLS – lokalnie sztywna</source>
+        <translation>MLS – locally rigid</translation>
+    </message>
+    <message>
+        <source>Tylko model globalny</source>
+        <translation>Global model only</translation>
+    </message>
+    <message>
+        <source>COG, WEBP (mały, z kanałem alfa)</source>
+        <translation>COG, WEBP (small, with alpha)</translation>
+    </message>
+    <message>
+        <source>COG, JPEG</source>
+        <translation>COG, JPEG</translation>
+    </message>
+    <message>
+        <source>GeoTIFF, LZW (bezstratny, duży)</source>
+        <translation>GeoTIFF, LZW (lossless, large)</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja mapy dawnej</source>
+        <translation>Rectification of the historical map</translation>
+    </message>
+    <message>
+        <source>Analiza ocenia mapę modelem globalnym; rektyfikacja dodatkowo usuwa lokalne zniekształcenia (pole korekcji), żeby raster pokrył się z mapą współczesną. O dokładności mapy mówi analiza, nie raster.</source>
+        <translation>The analysis assesses the map with a global model; rectification also removes local distortions (correction field) so that the raster matches the modern map. The accuracy of the map is reported by the analysis, not by the raster.</translation>
+    </message>
+    <message>
+        <source>Metoda</source>
+        <translation>Method</translation>
+    </message>
+    <message>
+        <source>auto</source>
+        <translation>auto</translation>
+    </message>
+    <message>
+        <source>Wygładzanie z walidacji krzyżowej (najmniejszy błąd dla pominiętego punktu)</source>
+        <translation>Smoothing from cross-validation (smallest error at a left-out point)</translation>
+    </message>
+    <message>
+        <source>W lewo – luźniej (bliżej TPS interpolującego), w prawo – sztywniej (bliżej modelu globalnego)</source>
+        <translation>Left – looser (closer to interpolating TPS), right – stiffer (closer to the global model)</translation>
+    </message>
+    <message>
+        <source>Wygładzanie</source>
+        <translation>Smoothing</translation>
+    </message>
+    <message>
+        <source>Wynik</source>
+        <translation>Result</translation>
+    </message>
+    <message>
+        <source>Przytnij do ramki mapy (zasięg z panelu GCP)</source>
+        <translation>Clip to the map frame (extent from the GCP panel)</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość</source>
+        <translation>Resolution</translation>
+    </message>
+    <message>
+        <source>Format</source>
+        <translation>Format</translation>
+    </message>
+    <message>
+        <source>Plik wynikowy</source>
+        <translation>Output file</translation>
+    </message>
+    <message>
+        <source>Dodaj raster do projektu</source>
+        <translation>Add the raster to the project</translation>
+    </message>
+    <message>
+        <source>Dodaj warstwę wektorów korekcji</source>
+        <translation>Add a layer of correction vectors</translation>
+    </message>
+    <message>
+        <source>Rektyfikuj</source>
+        <translation>Rectify</translation>
+    </message>
+    <message>
+        <source>Przerwij</source>
+        <translation>Cancel</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja mapy</source>
+        <translation>Map rectification</translation>
+    </message>
+    <message>
+        <source>luźno</source>
+        <translation>loose</translation>
+    </message>
+    <message>
+        <source>sztywno</source>
+        <translation>stiff</translation>
+    </message>
+    <message>
+        <source>RMSE modelu globalnego {a} m → po korekcji {b} m</source>
+        <translation>RMSE of the global model {a} m → after correction {b} m</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja</source>
+        <translation>Rectification</translation>
+    </message>
+    <message>
+        <source>Przetwarzanie trwa. Przerwać?</source>
+        <translation>Processing is running. Cancel it?</translation>
+    </message>
+    <message>
+        <source>{n} – korekcja</source>
+        <translation>{n} – correction</translation>
+    </message>
+    <message>
+        <source>walidacja krzyżowa {v} m (błąd w miejscu pominiętego punktu)</source>
+        <translation>cross-validation {v} m (error at a left-out point)</translation>
+    </message>
+    <message>
+        <source>Przetwarzanie rastra…</source>
+        <translation>Processing the raster…</translation>
+    </message>
+    <message>
+        <source>Zapisano raster po rektyfikacji: {p}</source>
+        <translation>Rectified raster saved: {p}</translation>
+    </message>
+    <message>
+        <source>Błąd: {e}</source>
+        <translation>Error: {e}</translation>
+    </message>
+    <message>
+        <source>Odwzorowanie ma fałdy ({p}% ramki). Kontynuować?</source>
+        <translation>The mapping has folds ({p}% of the frame). Continue?</translation>
+    </message>
+    <message>
+        <source>Fałdy: {p}% ramki – odwzorowanie zmienia orientację; zwiększ wygładzanie albo sprawdź punkty.</source>
+        <translation>Folds: {p}% of the frame – the mapping flips orientation; increase smoothing or check the points.</translation>
+    </message>
+    <message>
+        <source>Nie udało się przetworzyć rastra: {e}</source>
+        <translation>Could not process the raster: {e}</translation>
     </message>
 </context>
 <context>

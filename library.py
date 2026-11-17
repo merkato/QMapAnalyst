@@ -8,7 +8,11 @@ Tabele (schemat w wersji SCHEMA_VERSION):
     maps         – mapy (tytuł, autor, lata, skala), map_id = FID; od wersji 2
     analyses     – analizy arkuszy map (skan, arkusz, DPI…), analysis_id = FID; map_id – mapa
                    (opis mapy jest kopiowany do analizy i aktualizowany przy zmianie mapy);
-                   frame – ramka mapy na skanie (JSON [[x, y], …] we współrzędnych skanu; od wersji 3)
+                   frame – ramka mapy na skanie (JSON [[x, y], …] we współrzędnych skanu; od wersji 3);
+                   grid_row, grid_col, priority – położenie arkusza w siatce wydawnictwa i kolejność przy
+                   zakładkach (od wersji 4)
+    sheet_footprints – zasięgi arkuszy po wyrównaniu / rektyfikacji wydawnictwa (poligony w układzie
+                   biblioteki; wynik – nadpisywany przy każdym wyrównaniu; od wersji 4)
     gcp_links    – punkty GCP analizy: położenie na skanie, kopia współrzędnych odniesienia, status
     qma_meta     – wersja schematu
 
@@ -37,7 +41,7 @@ from dataclasses import dataclass, fields
 
 from osgeo import gdal, ogr, osr
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 # status identyfikacji punktu na danej mapie
 STATUSES = ("sure", "uncertain", "illegible", "absent")
@@ -55,6 +59,7 @@ _MAPS = "maps"
 _ANALYSES = "analyses"
 _LINKS = "gcp_links"
 _META = "qma_meta"
+_FOOTPRINTS = "sheet_footprints"
 
 S, I, R = ogr.OFTString, ogr.OFTInteger, ogr.OFTReal
 _SCHEMA = {
@@ -66,10 +71,13 @@ _SCHEMA = {
             ("created", S), ("modified", S)],
     _ANALYSES: [("title", S), ("author", S), ("year_from", I), ("year_to", I), ("scale", I), ("sheet", S),
                 ("dpi", R), ("scan_path", S), ("scan_sha256", S), ("ref_crs", S), ("note", S),
-                ("created", S), ("modified", S), ("map_id", I), ("frame", S)],
+                ("created", S), ("modified", S), ("map_id", I), ("frame", S),
+                ("grid_row", I), ("grid_col", I), ("priority", I)],
     _LINKS: [("analysis_id", I), ("seq", I), ("uid", S), ("name", S), ("x_old", R), ("y_old", R),
              ("ref_x", R), ("ref_y", R), ("enabled", I), ("status", S), ("comment", S)],
     _META: [("key", S), ("value", S)],
+    _FOOTPRINTS: [("analysis_id", I), ("map_id", I), ("method", S), ("smoothing", R), ("rmse_m", R),
+                  ("rmse_corr_m", R), ("loo_m", R), ("modified", S)],
 }
 _INDEXES = (
     "CREATE UNIQUE INDEX IF NOT EXISTS qma_ref_points_uid ON ref_points(uid)",
@@ -144,6 +152,9 @@ class Analysis:
     analysis_id: int = None
     map_id: int = None           # mapa, do której należy arkusz (library.Map)
     frame: str = ""              # ramka mapy na skanie – zob. frame_points() / frame_text()
+    grid_row: int = None         # położenie arkusza w siatce wydawnictwa (od wersji 4)
+    grid_col: int = None
+    priority: int = None         # kolejność przy zakładkach (mniejsza = ważniejszy arkusz)
 
 
 @dataclass
@@ -397,6 +408,8 @@ class Library:
         cls._add_fields(lyr, _POINTS)
         for name in (_SETS, _MEMBERS, _MAPS, _ANALYSES, _LINKS, _META):
             cls._add_fields(ds.CreateLayer(name, None, ogr.wkbNone, ["FID=fid"]), name)
+        cls._add_fields(ds.CreateLayer(_FOOTPRINTS, _srs(crs), ogr.wkbPolygon, ["FID=fid", "GEOMETRY_NAME=geom"]),
+                        _FOOTPRINTS)
         for sql in _INDEXES:
             ds.ExecuteSQL(sql)
         lib = cls(ds, path)
@@ -473,6 +486,17 @@ class Library:
         lyr = self._layer(_ANALYSES)
         if lyr.GetLayerDefn().GetFieldIndex("frame") < 0:
             _ok(lyr.CreateField(ogr.FieldDefn("frame", S)), "analyses.frame")
+
+    def _migrate_3(self):
+        """3 → 4: siatka arkuszy i priorytet (analyses.grid_row, grid_col, priority), warstwa sheet_footprints."""
+        lyr = self._layer(_ANALYSES)
+        for name in ("grid_row", "grid_col", "priority"):
+            if lyr.GetLayerDefn().GetFieldIndex(name) < 0:
+                _ok(lyr.CreateField(ogr.FieldDefn(name, I)), f"analyses.{name}")
+        if self.ds.GetLayerByName(_FOOTPRINTS) is None:
+            srs = self._layer(_POINTS).GetSpatialRef().Clone()
+            self._add_fields(self.ds.CreateLayer(_FOOTPRINTS, srs, ogr.wkbPolygon, ["FID=fid", "GEOMETRY_NAME=geom"]),
+                             _FOOTPRINTS)
 
     def close(self):
         self.ds = None
@@ -726,6 +750,7 @@ class Library:
             for a in sheets:
                 self._delete_where(_LINKS, f"analysis_id = {int(a.analysis_id)}")
                 _ok(self._layer(_ANALYSES).DeleteFeature(int(a.analysis_id)), "delete analysis")
+            self._delete_where(_FOOTPRINTS, f"map_id = {int(map_id)}")
             _ok(self._layer(_MAPS).DeleteFeature(int(map_id)), "delete map")
 
     # --- analizy ----------------------------------------------------------------
@@ -791,8 +816,55 @@ class Library:
             return [a for a in self.analyses() if a.scan_path and os.path.normcase(os.path.abspath(a.scan_path)) == norm]
         return []
 
+    def set_sheet_layout(self, layout):
+        """Zapis siatki arkuszy: {analysis_id: (wiersz, kolumna, priorytet)}; None – wartość usunięta."""
+        lyr = self._layer(_ANALYSES)
+        with self._tx():
+            for aid, (row, col, prio) in layout.items():
+                feat = lyr.GetFeature(int(aid))
+                if feat is None:
+                    raise LibraryError(f"no analysis {aid}")
+                for name, v in (("grid_row", row), ("grid_col", col), ("priority", prio)):
+                    _set(feat, name, None if v is None else int(v))
+                _ok(lyr.SetFeature(feat), "save sheet layout")
+
+    def save_footprints(self, map_id, items):
+        """Zasięgi arkuszy mapy po wyrównaniu – zastępują poprzednie. items: [{analysis_id, ring [(x, y)…],
+        method, smoothing, rmse_m, rmse_corr_m, loo_m}] w układzie biblioteki."""
+        lyr = self._layer(_FOOTPRINTS)
+        now = _now()
+        with self._tx():
+            self._delete_where(_FOOTPRINTS, f"map_id = {int(map_id)}")
+            for it in items:
+                feat = ogr.Feature(lyr.GetLayerDefn())
+                ring = ogr.Geometry(ogr.wkbLinearRing)
+                for x, y in list(it["ring"]) + [it["ring"][0]]:
+                    ring.AddPoint_2D(float(x), float(y))
+                poly = ogr.Geometry(ogr.wkbPolygon)
+                poly.AddGeometry(ring)
+                feat.SetGeometry(poly)
+                _set(feat, "map_id", int(map_id))
+                _set(feat, "modified", now)
+                for name in ("analysis_id", "method", "smoothing", "rmse_m", "rmse_corr_m", "loo_m"):
+                    v = it.get(name)
+                    _set(feat, name, None if v is None or (isinstance(v, float) and not math.isfinite(v)) else v)
+                _ok(lyr.CreateFeature(feat), "save footprint")
+
+    def footprints(self, map_id=None):
+        """[{analysis_id, map_id, ring, method, …}] zasięgów zapisanych w bibliotece."""
+        where = f"map_id = {int(map_id)}" if map_id is not None else None
+        out = []
+        for f in self._features(_FOOTPRINTS, where):
+            g = f.GetGeometryRef()
+            ring = g.GetGeometryRef(0) if g is not None else None
+            item = {name: _get(f, name) for name, _t in _SCHEMA[_FOOTPRINTS]}
+            item["ring"] = [(ring.GetX(i), ring.GetY(i)) for i in range(ring.GetPointCount() - 1)] if ring else []
+            out.append(item)
+        return out
+
     def delete_analysis(self, analysis_id):
         with self._tx():
+            self._delete_where(_FOOTPRINTS, f"analysis_id = {int(analysis_id)}")
             self._delete_where(_LINKS, f"analysis_id = {int(analysis_id)}")
             _ok(self._layer(_ANALYSES).DeleteFeature(int(analysis_id)), "delete analysis")
 

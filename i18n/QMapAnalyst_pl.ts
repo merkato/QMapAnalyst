@@ -256,6 +256,14 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>Zapisz pełny raport analizy (dane wejściowe, statystyki, punkty, odwzorowanie) jako PDF, TXT lub HTML</translation>
     </message>
     <message>
+        <source>Rektyfikacja…</source>
+        <translation>Rektyfikacja…</translation>
+    </message>
+    <message>
+        <source>Raster mapy dawnej dopasowany do mapy współczesnej: model globalny + pole korekcji lokalnej (wygładzony TPS, trójkąty, MLS), przycięcie do ramki</source>
+        <translation>Raster mapy dawnej dopasowany do mapy współczesnej: model globalny + pole korekcji lokalnej (wygładzony TPS, trójkąty, MLS), przycięcie do ramki</translation>
+    </message>
+    <message>
         <source>Wyniki analizy pojawią się tutaj.</source>
         <translation>Wyniki analizy pojawią się tutaj.</translation>
     </message>
@@ -3221,6 +3229,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Błędy punktów</translation>
     </message>
     <message>
+        <source>Pola korekcji</source>
+        <translation>Pola korekcji</translation>
+    </message>
+    <message>
         <source>Wykresy</source>
         <translation>Wykresy</translation>
     </message>
@@ -3243,6 +3255,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Dla każdego punktu: łamana przez położenia, które nadają mu kolejne mapy (wg roku)</source>
         <translation>Dla każdego punktu: łamana przez położenia, które nadają mu kolejne mapy (wg roku)</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii…</source>
+        <translation>Rektyfikacja serii…</translation>
+    </message>
+    <message>
+        <source>Wszystkie mapy serii jedną metodą rektyfikacji – warstwy w grupie projektu w kolejności lat</source>
+        <translation>Wszystkie mapy serii jedną metodą rektyfikacji – warstwy w grupie projektu w kolejności lat</translation>
     </message>
     <message>
         <source>Eksport</source>
@@ -3341,6 +3361,10 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zapisano wykresy ({n} plików) w folderze {f}</translation>
     </message>
     <message>
+        <source>[niezapisana]</source>
+        <translation>[niezapisana]</translation>
+    </message>
+    <message>
         <source>arkusze: {names}</source>
         <translation>arkusze: {names}</translation>
     </message>
@@ -3377,12 +3401,136 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>za mało punktów wspólnych do porównania (min. {k})</translation>
     </message>
     <message>
+        <source>Pole korekcji mapy – wygładzony TPS jej reszt (jak w rektyfikacji). Podobne pola dwóch map to drugi, obok korelacji reszt w punktach, ślad kopiowania. Istotność: losowy obrót pola drugiej mapy (zachowuje jego gładkość).</source>
+        <translation>Pole korekcji mapy – wygładzony TPS jej reszt (jak w rektyfikacji). Podobne pola dwóch map to drugi, obok korelacji reszt w punktach, ślad kopiowania. Istotność: losowy obrót pola drugiej mapy (zachowuje jego gładkość).</translation>
+    </message>
+    <message>
+        <source>Porównaj pola korekcji</source>
+        <translation>Porównaj pola korekcji</translation>
+    </message>
+    <message>
+        <source>Warstwa różnic pól</source>
+        <translation>Warstwa różnic pól</translation>
+    </message>
+    <message>
+        <source>Dla zaznaczonej pary: wektory c_A − c_B w węzłach wspólnego obszaru</source>
+        <translation>Dla zaznaczonej pary: wektory c_A − c_B w węzłach wspólnego obszaru</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii czasowej</source>
+        <translation>Rektyfikacja serii czasowej</translation>
+    </message>
+    <message>
+        <source>Każda mapa serii tą samą metodą; wygładzanie dobierane walidacją krzyżową osobno dla każdej mapy. Wydawnictwa wieloarkuszowe zszywane węzłami siatki. Warstwy w grupie projektu w kolejności lat.</source>
+        <translation>Każda mapa serii tą samą metodą; wygładzanie dobierane walidacją krzyżową osobno dla każdej mapy. Wydawnictwa wieloarkuszowe zszywane węzłami siatki. Warstwy w grupie projektu w kolejności lat.</translation>
+    </message>
+    <message>
+        <source>Metoda</source>
+        <translation>Metoda</translation>
+    </message>
+    <message>
+        <source>Format</source>
+        <translation>Format</translation>
+    </message>
+    <message>
+        <source>Katalog wynikowy</source>
+        <translation>Katalog wynikowy</translation>
+    </message>
+    <message>
+        <source>Dodaj do projektu</source>
+        <translation>Dodaj do projektu</translation>
+    </message>
+    <message>
+        <source>Rektyfikuj</source>
+        <translation>Rektyfikuj</translation>
+    </message>
+    <message>
+        <source>Przerwij</source>
+        <translation>Przerwij</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja serii</source>
+        <translation>Rektyfikacja serii</translation>
+    </message>
+    <message>
+        <source>Punkty podejrzane – duży błąd na wszystkich mapach w zgodnym kierunku (sprawdź współrzędne w bibliotece albo zmianę obiektu): {p}.</source>
+        <translation>Punkty podejrzane – duży błąd na wszystkich mapach w zgodnym kierunku (sprawdź współrzędne w bibliotece albo zmianę obiektu): {p}.</translation>
+    </message>
+    <message>
+        <source>za mało punktów na jednej z map</source>
+        <translation>za mało punktów na jednej z map</translation>
+    </message>
+    <message>
+        <source>brak wspólnego obszaru punktów</source>
+        <translation>brak wspólnego obszaru punktów</translation>
+    </message>
+    <message>
+        <source>za mały wspólny obszar</source>
+        <translation>za mały wspólny obszar</translation>
+    </message>
+    <message>
+        <source>Węzły</source>
+        <translation>Węzły</translation>
+    </message>
+    <message>
+        <source>r pól</source>
+        <translation>r pól</translation>
+    </message>
+    <message>
+        <source>Mantel r</source>
+        <translation>Mantel r</translation>
+    </message>
+    <message>
+        <source>r dylatacji</source>
+        <translation>r dylatacji</translation>
+    </message>
+    <message>
+        <source>r obrotu</source>
+        <translation>r obrotu</translation>
+    </message>
+    <message>
+        <source>Uwagi</source>
+        <translation>Uwagi</translation>
+    </message>
+    <message>
+        <source>Różnica pól korekcji: {a} − {b}</source>
+        <translation>Różnica pól korekcji: {a} − {b}</translation>
+    </message>
+    <message>
+        <source>Zrektyfikowano map: {n}.</source>
+        <translation>Zrektyfikowano map: {n}.</translation>
+    </message>
+    <message>
+        <source>Przerwano.</source>
+        <translation>Przerwano.</translation>
+    </message>
+    <message>
+        <source>Seria „{s}” – rektyfikacja</source>
+        <translation>Seria „{s}” – rektyfikacja</translation>
+    </message>
+    <message>
+        <source>{m} – brak skanu</source>
+        <translation>{m} – brak skanu</translation>
+    </message>
+    <message>
+        <source>Pominięte: {s}.</source>
+        <translation>Pominięte: {s}.</translation>
+    </message>
+    <message>
+        <source>Mapa {k} z {n}: {m}</source>
+        <translation>Mapa {k} z {n}: {m}</translation>
+    </message>
+    <message>
         <source>Wydawnictwo wieloarkuszowe</source>
         <translation>Wydawnictwo wieloarkuszowe</translation>
     </message>
     <message>
         <source>Zakładki</source>
         <translation>Zakładki</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe</source>
+        <translation>Wyrównanie blokowe</translation>
     </message>
     <message>
         <source>Skorowidz arkuszy</source>
@@ -3395,6 +3543,14 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Dane (CSV)…</source>
         <translation>Dane (CSV)…</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja wydawnictwa…</source>
+        <translation>Rektyfikacja wydawnictwa…</translation>
+    </message>
+    <message>
+        <source>Wszystkie arkusze jako jedna mozaika: zszycie, pole korekcji lokalnej, przycięcie do ramek, priorytet i blendowanie zakładek, mozaika VRT</source>
+        <translation>Wszystkie arkusze jako jedna mozaika: zszycie, pole korekcji lokalnej, przycięcie do ramek, priorytet i blendowanie zakładek, mozaika VRT</translation>
     </message>
     <message>
         <source>Raport wydawnictwa wieloarkuszowego</source>
@@ -3461,6 +3617,254 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Zakładki: {n} par wskazań; największa rozbieżność {d} m – {name} ({a} / {b}).</translation>
     </message>
     <message>
+        <source>Biliniowa w ramce (8 parametrów)</source>
+        <translation>Biliniowa w ramce (8 parametrów)</translation>
+    </message>
+    <message>
+        <source>Afiniczna (6 parametrów)</source>
+        <translation>Afiniczna (6 parametrów)</translation>
+    </message>
+    <message>
+        <source>Helmert (4 parametry)</source>
+        <translation>Helmert (4 parametry)</translation>
+    </message>
+    <message>
+        <source>Waga warunków zgodności wspólnych narożników ramek względem punktów dopasowania: w lewo – arkusze wpasowane osobno, w prawo – styki domknięte</source>
+        <translation>Waga warunków zgodności wspólnych narożników ramek względem punktów dopasowania: w lewo – arkusze wpasowane osobno, w prawo – styki domknięte</translation>
+    </message>
+    <message>
+        <source>Zasięgi i szczeliny na mapie</source>
+        <translation>Zasięgi i szczeliny na mapie</translation>
+    </message>
+    <message>
+        <source>Warstwy: zasięgi arkuszy po wyrównaniu blokowym i wektory szczelin na stykach oraz w punktach wiążących</source>
+        <translation>Warstwy: zasięgi arkuszy po wyrównaniu blokowym i wektory szczelin na stykach oraz w punktach wiążących</translation>
+    </message>
+    <message>
+        <source>Zapisz układ siatki</source>
+        <translation>Zapisz układ siatki</translation>
+    </message>
+    <message>
+        <source>Zapisz w bibliotece położenie arkuszy w siatce (wiersz, kolumna) – wykryte po wpasowaniu albo poprawione w kolumnie „Siatka”</source>
+        <translation>Zapisz w bibliotece położenie arkuszy w siatce (wiersz, kolumna) – wykryte po wpasowaniu albo poprawione w kolumnie „Siatka”</translation>
+    </message>
+    <message>
+        <source>Zapisano układ siatki arkuszy w bibliotece.</source>
+        <translation>Zapisano układ siatki arkuszy w bibliotece.</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe – zasięgi arkuszy</source>
+        <translation>Wyrównanie blokowe – zasięgi arkuszy</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe – szczeliny</source>
+        <translation>Wyrównanie blokowe – szczeliny</translation>
+    </message>
+    <message>
+        <source>Model arkusza:</source>
+        <translation>Model arkusza:</translation>
+    </message>
+    <message>
+        <source>niezależne</source>
+        <translation>niezależne</translation>
+    </message>
+    <message>
+        <source>zszyte</source>
+        <translation>zszyte</translation>
+    </message>
+    <message>
+        <source>Siatka</source>
+        <translation>Siatka</translation>
+    </message>
+    <message>
+        <source>Przesunięcie wzgl. sąsiadów [m]</source>
+        <translation>Przesunięcie wzgl. sąsiadów [m]</translation>
+    </message>
+    <message>
+        <source>Odstający</source>
+        <translation>Odstający</translation>
+    </message>
+    <message>
+        <source>Brak arkuszy z ramką mapy – wyrównanie blokowe wymaga ramek (Zasięg mapy w panelu GCP).</source>
+        <translation>Brak arkuszy z ramką mapy – wyrównanie blokowe wymaga ramek (Zasięg mapy w panelu GCP).</translation>
+    </message>
+    <message>
+        <source>wiersz, kolumna w siatce arkuszy – zapisane w bibliotece</source>
+        <translation>wiersz, kolumna w siatce arkuszy – zapisane w bibliotece</translation>
+    </message>
+    <message>
+        <source>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu; dwuklik – popraw (np. „2, 3”)</source>
+        <translation>wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu; dwuklik – popraw (np. „2, 3”)</translation>
+    </message>
+    <message>
+        <source>σ₀ = {s} m, RMSE punktów = {r} m, liczba nadwyżkowa {f}.</source>
+        <translation>σ₀ = {s} m, RMSE punktów = {r} m, liczba nadwyżkowa {f}.</translation>
+    </message>
+    <message>
+        <source>Szczeliny na stykach (narożniki ramek): średnio {a} m, maks. {b} m.</source>
+        <translation>Szczeliny na stykach (narożniki ramek): średnio {a} m, maks. {b} m.</translation>
+    </message>
+    <message>
+        <source>Punkty wiążące (ten sam obiekt na dwóch arkuszach): {n}, odstające {k}.</source>
+        <translation>Punkty wiążące (ten sam obiekt na dwóch arkuszach): {n}, odstające {k}.</translation>
+    </message>
+    <message>
+        <source>Arkusz odstający: {s} – jego punkty są systematycznie przesunięte względem sąsiadów.</source>
+        <translation>Arkusz odstający: {s} – jego punkty są systematycznie przesunięte względem sąsiadów.</translation>
+    </message>
+    <message>
+        <source>Pominięte arkusze bez ramki mapy: {s}.</source>
+        <translation>Pominięte arkusze bez ramki mapy: {s}.</translation>
+    </message>
+    <message>
+        <source>Nie można wyrównać: {e}</source>
+        <translation>Nie można wyrównać: {e}</translation>
+    </message>
+    <message>
+        <source>Mozaika VRT…</source>
+        <translation>Mozaika VRT…</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja wydawnictwa wieloarkuszowego</source>
+        <translation>Rektyfikacja wydawnictwa wieloarkuszowego</translation>
+    </message>
+    <message>
+        <source>Węzły siatki – styki bez szczelin</source>
+        <translation>Węzły siatki – styki bez szczelin</translation>
+    </message>
+    <message>
+        <source>Wyrównanie blokowe (suwak z zakładki) – arkusze zachodzące na siebie</source>
+        <translation>Wyrównanie blokowe (suwak z zakładki) – arkusze zachodzące na siebie</translation>
+    </message>
+    <message>
+        <source>Zszycie</source>
+        <translation>Zszycie</translation>
+    </message>
+    <message>
+        <source>Korekcja</source>
+        <translation>Korekcja</translation>
+    </message>
+    <message>
+        <source>auto</source>
+        <translation>auto</translation>
+    </message>
+    <message>
+        <source>Wygładzanie</source>
+        <translation>Wygładzanie</translation>
+    </message>
+    <message>
+        <source>Lewy koniec – strefa zakładki należy do arkusza o wyższym priorytecie; w prawo – szersze płynne przejście między arkuszami</source>
+        <translation>Lewy koniec – strefa zakładki należy do arkusza o wyższym priorytecie; w prawo – szersze płynne przejście między arkuszami</translation>
+    </message>
+    <message>
+        <source>Kolejność arkuszy przy zakładkach – przeciągnij; u góry arkusz najważniejszy</source>
+        <translation>Kolejność arkuszy przy zakładkach – przeciągnij; u góry arkusz najważniejszy</translation>
+    </message>
+    <message>
+        <source>Priorytet</source>
+        <translation>Priorytet</translation>
+    </message>
+    <message>
+        <source>Wynik</source>
+        <translation>Wynik</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość</source>
+        <translation>Rozdzielczość</translation>
+    </message>
+    <message>
+        <source>Zapisz też mozaikę COG z blendowaniem</source>
+        <translation>Zapisz też mozaikę COG z blendowaniem</translation>
+    </message>
+    <message>
+        <source>Zapisz siatkę, priorytet i zasięgi arkuszy w bibliotece</source>
+        <translation>Zapisz siatkę, priorytet i zasięgi arkuszy w bibliotece</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja wydawnictwa</source>
+        <translation>Rektyfikacja wydawnictwa</translation>
+    </message>
+    <message>
+        <source>wydawnictwo</source>
+        <translation>wydawnictwo</translation>
+    </message>
+    <message>
+        <source>Mozaika z blendowaniem…</source>
+        <translation>Mozaika z blendowaniem…</translation>
+    </message>
+    <message>
+        <source>luźno</source>
+        <translation>luźno</translation>
+    </message>
+    <message>
+        <source>sztywno</source>
+        <translation>sztywno</translation>
+    </message>
+    <message>
+        <source>przycinanie</source>
+        <translation>przycinanie</translation>
+    </message>
+    <message>
+        <source>blendowanie</source>
+        <translation>blendowanie</translation>
+    </message>
+    <message>
+        <source>przycięcie</source>
+        <translation>przycięcie</translation>
+    </message>
+    <message>
+        <source>Arkusze stykają się bez zakładek.</source>
+        <translation>Arkusze stykają się bez zakładek.</translation>
+    </message>
+    <message>
+        <source>RMSE przed korekcją {a} m → po korekcji {b} m</source>
+        <translation>RMSE przed korekcją {a} m → po korekcji {b} m</translation>
+    </message>
+    <message>
+        <source>Przetwarzanie trwa. Przerwać?</source>
+        <translation>Przetwarzanie trwa. Przerwać?</translation>
+    </message>
+    <message>
+        <source>{t} – rektyfikacja</source>
+        <translation>{t} – rektyfikacja</translation>
+    </message>
+    <message>
+        <source>Arkusz {k} z {n}: {s}</source>
+        <translation>Arkusz {k} z {n}: {s}</translation>
+    </message>
+    <message>
+        <source>walidacja krzyżowa {v} m</source>
+        <translation>walidacja krzyżowa {v} m</translation>
+    </message>
+    <message>
+        <source>Zakładki arkuszy: {n} par.</source>
+        <translation>Zakładki arkuszy: {n} par.</translation>
+    </message>
+    <message>
+        <source>Zapisano {n} arkuszy w katalogu {d}.</source>
+        <translation>Zapisano {n} arkuszy w katalogu {d}.</translation>
+    </message>
+    <message>
+        <source>{t} – mozaika z blendowaniem</source>
+        <translation>{t} – mozaika z blendowaniem</translation>
+    </message>
+    <message>
+        <source>Nie można zbudować planu: {e}</source>
+        <translation>Nie można zbudować planu: {e}</translation>
+    </message>
+    <message>
+        <source>Nie udało się przetworzyć arkuszy: {e}</source>
+        <translation>Nie udało się przetworzyć arkuszy: {e}</translation>
+    </message>
+    <message>
+        <source>{t} – mozaika</source>
+        <translation>{t} – mozaika</translation>
+    </message>
+    <message>
+        <source>Brak pliku skanu: {s} – arkusze zostaną pominięte.</source>
+        <translation>Brak pliku skanu: {s} – arkusze zostaną pominięte.</translation>
+    </message>
+    <message>
         <source>Dokładność map w czasie</source>
         <translation>Dokładność map w czasie</translation>
     </message>
@@ -3493,8 +3897,8 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>Podobieństwo błędów między mapami</translation>
     </message>
     <message>
-        <source>korelacja wektorowa r błędów punktów wspólnych; * – istotne (p &lt; 0,05)</source>
-        <translation>korelacja wektorowa r błędów punktów wspólnych; * – istotne (p &lt; 0,05)</translation>
+        <source>korelacja wektorowa r błędów punktów wspólnych; * – podobne: r ≥ 0,5 i p &lt; 0,05 (test permutacyjny)</source>
+        <translation>korelacja wektorowa r błędów punktów wspólnych; * – podobne: r ≥ 0,5 i p &lt; 0,05 (test permutacyjny)</translation>
     </message>
     <message>
         <source>podobne</source>
@@ -3553,6 +3957,18 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>brak danych</translation>
     </message>
     <message>
+        <source>Zszycie arkuszy: dopasowanie a szczeliny</source>
+        <translation>Zszycie arkuszy: dopasowanie a szczeliny</translation>
+    </message>
+    <message>
+        <source>każdy punkt to pozycja suwaka „niezależne ↔ zszyte”; obwódka – pozycja bieżąca</source>
+        <translation>każdy punkt to pozycja suwaka „niezależne ↔ zszyte”; obwódka – pozycja bieżąca</translation>
+    </message>
+    <message>
+        <source>średnia szczelina na stykach</source>
+        <translation>średnia szczelina na stykach</translation>
+    </message>
+    <message>
         <source>Elementem serii jest mapa: wydawnictwo wieloarkuszowe to jeden element (arkusze wyrównywane osobno, wyniki łączone). Wszystkie mapy wyrównano tym samym modelem.</source>
         <translation>Elementem serii jest mapa: wydawnictwo wieloarkuszowe to jeden element (arkusze wyrównywane osobno, wyniki łączone). Wszystkie mapy wyrównano tym samym modelem.</translation>
     </message>
@@ -3587,6 +4003,161 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
     <message>
         <source>Rok</source>
         <translation>Rok</translation>
+    </message>
+</context>
+<context>
+    <name>QMapAnalystRectify</name>
+    <message>
+        <source>Wygładzony TPS (zalecana)</source>
+        <translation>Wygładzony TPS (zalecana)</translation>
+    </message>
+    <message>
+        <source>TPS interpolujący (jak Georeferencer)</source>
+        <translation>TPS interpolujący (jak Georeferencer)</translation>
+    </message>
+    <message>
+        <source>Trójkąty (afiniczna w trójkątach)</source>
+        <translation>Trójkąty (afiniczna w trójkątach)</translation>
+    </message>
+    <message>
+        <source>MLS – lokalnie sztywna</source>
+        <translation>MLS – lokalnie sztywna</translation>
+    </message>
+    <message>
+        <source>Tylko model globalny</source>
+        <translation>Tylko model globalny</translation>
+    </message>
+    <message>
+        <source>COG, WEBP (mały, z kanałem alfa)</source>
+        <translation>COG, WEBP (mały, z kanałem alfa)</translation>
+    </message>
+    <message>
+        <source>COG, JPEG</source>
+        <translation>COG, JPEG</translation>
+    </message>
+    <message>
+        <source>GeoTIFF, LZW (bezstratny, duży)</source>
+        <translation>GeoTIFF, LZW (bezstratny, duży)</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja mapy dawnej</source>
+        <translation>Rektyfikacja mapy dawnej</translation>
+    </message>
+    <message>
+        <source>Analiza ocenia mapę modelem globalnym; rektyfikacja dodatkowo usuwa lokalne zniekształcenia (pole korekcji), żeby raster pokrył się z mapą współczesną. O dokładności mapy mówi analiza, nie raster.</source>
+        <translation>Analiza ocenia mapę modelem globalnym; rektyfikacja dodatkowo usuwa lokalne zniekształcenia (pole korekcji), żeby raster pokrył się z mapą współczesną. O dokładności mapy mówi analiza, nie raster.</translation>
+    </message>
+    <message>
+        <source>Metoda</source>
+        <translation>Metoda</translation>
+    </message>
+    <message>
+        <source>auto</source>
+        <translation>auto</translation>
+    </message>
+    <message>
+        <source>Wygładzanie z walidacji krzyżowej (najmniejszy błąd dla pominiętego punktu)</source>
+        <translation>Wygładzanie z walidacji krzyżowej (najmniejszy błąd dla pominiętego punktu)</translation>
+    </message>
+    <message>
+        <source>W lewo – luźniej (bliżej TPS interpolującego), w prawo – sztywniej (bliżej modelu globalnego)</source>
+        <translation>W lewo – luźniej (bliżej TPS interpolującego), w prawo – sztywniej (bliżej modelu globalnego)</translation>
+    </message>
+    <message>
+        <source>Wygładzanie</source>
+        <translation>Wygładzanie</translation>
+    </message>
+    <message>
+        <source>Wynik</source>
+        <translation>Wynik</translation>
+    </message>
+    <message>
+        <source>Przytnij do ramki mapy (zasięg z panelu GCP)</source>
+        <translation>Przytnij do ramki mapy (zasięg z panelu GCP)</translation>
+    </message>
+    <message>
+        <source>Rozdzielczość</source>
+        <translation>Rozdzielczość</translation>
+    </message>
+    <message>
+        <source>Format</source>
+        <translation>Format</translation>
+    </message>
+    <message>
+        <source>Plik wynikowy</source>
+        <translation>Plik wynikowy</translation>
+    </message>
+    <message>
+        <source>Dodaj raster do projektu</source>
+        <translation>Dodaj raster do projektu</translation>
+    </message>
+    <message>
+        <source>Dodaj warstwę wektorów korekcji</source>
+        <translation>Dodaj warstwę wektorów korekcji</translation>
+    </message>
+    <message>
+        <source>Rektyfikuj</source>
+        <translation>Rektyfikuj</translation>
+    </message>
+    <message>
+        <source>Przerwij</source>
+        <translation>Przerwij</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja mapy</source>
+        <translation>Rektyfikacja mapy</translation>
+    </message>
+    <message>
+        <source>luźno</source>
+        <translation>luźno</translation>
+    </message>
+    <message>
+        <source>sztywno</source>
+        <translation>sztywno</translation>
+    </message>
+    <message>
+        <source>RMSE modelu globalnego {a} m → po korekcji {b} m</source>
+        <translation>RMSE modelu globalnego {a} m → po korekcji {b} m</translation>
+    </message>
+    <message>
+        <source>Rektyfikacja</source>
+        <translation>Rektyfikacja</translation>
+    </message>
+    <message>
+        <source>Przetwarzanie trwa. Przerwać?</source>
+        <translation>Przetwarzanie trwa. Przerwać?</translation>
+    </message>
+    <message>
+        <source>{n} – korekcja</source>
+        <translation>{n} – korekcja</translation>
+    </message>
+    <message>
+        <source>walidacja krzyżowa {v} m (błąd w miejscu pominiętego punktu)</source>
+        <translation>walidacja krzyżowa {v} m (błąd w miejscu pominiętego punktu)</translation>
+    </message>
+    <message>
+        <source>Przetwarzanie rastra…</source>
+        <translation>Przetwarzanie rastra…</translation>
+    </message>
+    <message>
+        <source>Zapisano raster po rektyfikacji: {p}</source>
+        <translation>Zapisano raster po rektyfikacji: {p}</translation>
+    </message>
+    <message>
+        <source>Błąd: {e}</source>
+        <translation>Błąd: {e}</translation>
+    </message>
+    <message>
+        <source>Odwzorowanie ma fałdy ({p}% ramki). Kontynuować?</source>
+        <translation>Odwzorowanie ma fałdy ({p}% ramki). Kontynuować?</translation>
+    </message>
+    <message>
+        <source>Fałdy: {p}% ramki – odwzorowanie zmienia orientację; zwiększ wygładzanie albo sprawdź punkty.</source>
+        <translation>Fałdy: {p}% ramki – odwzorowanie zmienia orientację; zwiększ wygładzanie albo sprawdź punkty.</translation>
+    </message>
+    <message>
+        <source>Nie udało się przetworzyć rastra: {e}</source>
+        <translation>Nie udało się przetworzyć rastra: {e}</translation>
     </message>
 </context>
 <context>
