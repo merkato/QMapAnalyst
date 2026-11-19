@@ -126,13 +126,25 @@ class BlockResult:
 # ---------------------------------------------------------------------------
 #  Układ arkuszy
 # ---------------------------------------------------------------------------
+class _Affine:
+    """Wstępne wpasowanie afiniczne (same parametry, bez statystyk) – siatka arkuszy i bliskie narożniki."""
+
+    def __init__(self, P, c, s):
+        self.P, self.c, self.s = P, c, s
+
+    def predict(self, pts):
+        t = (np.atleast_2d(np.asarray(pts, float)) - self.c) / self.s
+        return np.column_stack([np.ones(len(t)), t]) @ self.P
+
+
 def _initial(sheet):
     if len(sheet.src) < 3:
         return None
-    try:
-        return me.fit_transform("affine", sheet.src, sheet.dst)
-    except me.EngineError:
-        return None
+    c = sheet.src.mean(axis=0)
+    s = float(np.sqrt(((sheet.src - c) ** 2).sum(axis=1).mean())) or 1.0
+    G = np.column_stack([np.ones(len(sheet.src)), (sheet.src - c) / s])
+    P, _res, rank, _sv = np.linalg.lstsq(G, sheet.dst, rcond=None)
+    return _Affine(P, c, s) if rank == 3 else None
 
 
 def detect_grid(sheets):
@@ -301,8 +313,7 @@ def adjust(sheets, model="bilinear", seam_weight=None, ties=None, nodes=None, ti
     nodes = corner_nodes(sheets) if nodes is None else nodes
     A, b, p, tag, offs, corners = _design(model, sheets, ties, nodes, seam_weight, tie_weight)
     N = A.T @ (A * p[:, None])
-    if np.linalg.matrix_rank(N) < N.shape[0]:
-        raise BlockError("układ nieoznaczony – arkusz bez punktów dopasowania, punktów wiążących i sąsiadów")
+    _check_determined(N)
     Qxx = np.linalg.inv(N)
     x = Qxx @ (A.T @ (b * p))
     k = BLOCK_MODELS[model]
@@ -311,48 +322,82 @@ def adjust(sheets, model="bilinear", seam_weight=None, ties=None, nodes=None, ti
     res.ties = ties
     _gaps(res, corners, ties)
     if check_sheets:
-        res.sheet_offset = sheet_offsets(sheets, model, seam_weight, ties, nodes, tie_weight, unit_m)
-        res.outlier_sheets = find_outlier_sheets(sheets, res.sheet_offset, res.sheet_rmse, model, seam_weight, ties,
-                                                 nodes, tie_weight, unit_m)
+        lo = LeaveOut(res, A, b, p, tag, Qxx, x, offs)
+        res.sheet_offset = sheet_offsets(lo, seam_weight, ties, unit_m)
+        res.outlier_sheets = find_outlier_sheets(lo, res.sheet_offset, res.sheet_rmse, unit_m)
     return res
 
 
-def _offset(sheets, i, removed, model, seam_weight, ties, nodes, tie_weight, unit_m):
-    """Średnie przesunięcie GCP arkusza i względem położenia przewidzianego bez punktów arkuszy `removed`."""
-    s = sheets[i]
-    if not len(s.src):
-        return float("nan")
-    reduced = list(sheets)
-    for k in removed:
-        t = sheets[k]
-        reduced[k] = BlockSheet(t.key, t.label, t.frame, np.zeros((0, 2)), np.zeros((0, 2)), grid=t.grid)
+def _check_determined(N):
+    """Układ normalny dodatnio określony (Cholesky – szybciej niż rząd macierzy z SVD); inaczej BlockError."""
     try:
-        r = adjust(reduced, model, seam_weight, ties, nodes, tie_weight, unit_m, check_sheets=False)
-    except BlockError:
-        return float("nan")
-    d = (r.transform(i, s.src) - s.dst).mean(axis=0)
-    return float(np.hypot(*d)) * unit_m
+        L = np.linalg.cholesky(N)
+    except np.linalg.LinAlgError:
+        L = None
+    d = np.abs(np.diag(L)) if L is not None else None
+    if d is None or d.min() <= 1e-9 * d.max():
+        raise BlockError("układ nieoznaczony – arkusz bez punktów dopasowania, punktów wiążących i sąsiadów")
 
 
-def sheet_offsets(sheets, model, seam_weight, ties, nodes, tie_weight=TIE_WEIGHT, unit_m=1.0):
+class LeaveOut:
+    """Wyrównanie z pominiętymi punktami wybranych arkuszy – bez ponownego rozwiązywania układu: poprawka
+    Woodbury’ego do rozwiązania pełnego, x' = x − Q·Aᵣᵀ·(Aᵣ·Q·Aᵣᵀ − Pᵣ⁻¹)⁻¹·(Aᵣ·x − bᵣ), gdzie r – wiersze
+    punktów pomijanych arkuszy. Macierz w nawiasie ma rozmiar 2 × liczba pomijanych punktów (kilkadziesiąt),
+    więc test arkusza odstającego kosztuje ułamek sekundy także przy kilkudziesięciu arkuszach."""
+
+    def __init__(self, res, A, b, p, tag, Qxx, x, offs):
+        self.res, self.A, self.b, self.p, self.Qxx, self.x, self.offs = res, A, b, p, Qxx, x, offs
+        self.rows = {}
+        for row, (kind, i, _j) in enumerate(tag):
+            if kind == "gcp":
+                self.rows.setdefault(i, []).append(row)
+
+    def params(self, removed):
+        r = [row for i in removed for row in self.rows.get(i, [])]
+        if not r:
+            return self.x
+        Ar = self.A[r]
+        QA = self.Qxx @ Ar.T
+        M = Ar @ QA - np.diag(1.0 / self.p[r])
+        try:
+            if np.linalg.cond(M) > 1e12:
+                return None                     # bez tych punktów układ nieoznaczony
+            return self.x - QA @ np.linalg.solve(M, Ar @ self.x - self.b[r])
+        except np.linalg.LinAlgError:
+            return None
+
+    def offset(self, i, removed, unit_m=1.0):
+        """Średnie przesunięcie GCP arkusza i względem położenia przewidzianego bez punktów arkuszy removed [m]."""
+        s = self.res.sheets[i]
+        if not len(s.src):
+            return float("nan")
+        x = self.params(removed)
+        if x is None:
+            return float("nan")
+        k = BLOCK_MODELS[self.res.model]
+        B = _basis(self.res.model, s, s.src)
+        pred = np.einsum("nck,k->nc", B, x[self.offs[i]:self.offs[i] + k])
+        return float(np.hypot(*(pred - s.dst).mean(axis=0))) * unit_m
+
+
+def sheet_offsets(lo, seam_weight, ties, unit_m=1.0):
     """Średnie przesunięcie GCP arkusza względem jego położenia przewidzianego z pozostałych arkuszy
     (punkty arkusza pominięte, warunki zszycia i punkty wiążące zostają) [m]; nan – arkusz bez punktów
     albo bez połączenia z sąsiadami."""
+    n = len(lo.res.sheets)
     if seam_weight <= 0 and not ties:
-        return [float("nan")] * len(sheets)
-    return [_offset(sheets, i, [i], model, seam_weight, ties, nodes, tie_weight, unit_m) for i in range(len(sheets))]
+        return [float("nan")] * n
+    return [lo.offset(i, [i], unit_m) for i in range(n)]
 
 
-def find_outlier_sheets(sheets, offsets, rmse, model, seam_weight, ties, nodes, tie_weight=TIE_WEIGHT, unit_m=1.0,
-                        factor=3.0):
+def find_outlier_sheets(lo, offsets, rmse, unit_m=1.0, factor=3.0):
     """Arkusze odstające, wykrywane po kolei: kandydat o największym przesunięciu jest odstający, gdy przekracza
     factor × max(mediana przesunięć pozostałych arkuszy policzonych BEZ kandydata, RMSE kandydata)."""
     out = []
     good = [i for i, o in enumerate(offsets) if math.isfinite(o)]
     while len(good) - len(out) >= 3 and len(out) < max(1, len(good) // 3):
         cand = max((i for i in good if i not in out), key=lambda i: offsets[i])
-        others = [_offset(sheets, j, [j, cand] + out, model, seam_weight, ties, nodes, tie_weight, unit_m)
-                  for j in good if j != cand and j not in out]
+        others = [lo.offset(j, [j, cand] + out, unit_m) for j in good if j != cand and j not in out]
         others = [o for o in others if math.isfinite(o)]
         if not others:
             break
@@ -408,12 +453,31 @@ def _gaps(res, corners, ties):
     res.gaps = out
 
 
-def tradeoff(sheets, model="bilinear", positions=(0, 25, 40, 50, 60, 75, 90, 100), unit_m=1.0, **kw):
-    """Krzywa „RMSE ↔ szczelina”: [(pozycja suwaka, waga, RMSE, szczelina średnia, maks.)] [m]."""
+def _fit_light(sheets, model, seam_weight, ties, nodes, tie_weight=TIE_WEIGHT, unit_m=1.0):
+    """Parametry, RMSE punktów i szczeliny – bez kowariancji (krzywa RMSE ↔ szczelina)."""
+    A, b, p, tag, offs, corners = _design(model, sheets, ties, nodes, seam_weight, tie_weight)
+    N = A.T @ (A * p[:, None])
+    _check_determined(N)
+    x = np.linalg.solve(N, A.T @ (b * p))
+    k = BLOCK_MODELS[model]
+    res = BlockResult(model, seam_weight, sheets, [x[o:o + k] for o in offs])
+    v = A @ x - b
+    rows = [r for r, (kind, _i, _j) in enumerate(tag) if kind == "gcp"]
+    res.rmse = float(np.sqrt((v[rows] ** 2).sum() / max(len(rows) // 2, 1))) * unit_m if rows else float("nan")
+    _gaps(res, corners, ties)
+    return res
+
+
+def tradeoff(sheets, model="bilinear", positions=(0, 25, 40, 50, 60, 75, 90, 100), unit_m=1.0, ties=None, nodes=None,
+             tie_weight=TIE_WEIGHT):
+    """Krzywa „RMSE ↔ szczelina”: [(pozycja suwaka, waga, RMSE, szczelina średnia, maks.)] [m].
+    Same parametry i reszty (bez kowariancji i testu arkuszy), węzły i punkty wiążące liczone raz."""
+    ties = ties_from_uids(sheets) if ties is None else ties
+    nodes = corner_nodes(sheets) if nodes is None else nodes
     out = []
     for pos in positions:
         try:
-            r = adjust(sheets, model, slider_to_weight(pos), unit_m=unit_m, **kw)
+            r = _fit_light(sheets, model, slider_to_weight(pos), ties, nodes, tie_weight, unit_m)
         except BlockError:
             continue
         g_mean, g_max = r.gap_stats()

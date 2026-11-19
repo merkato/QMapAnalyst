@@ -138,6 +138,28 @@ def test_brick_layout_wrong_grid_not_stitched():
     assert res.rmse < 12 and res.gap_stats()[1] < 1.0, (res.rmse, res.gap_stats())
 
 
+def test_leave_out_matches_direct_solution():
+    """Poprawka Woodbury’ego = wyrównanie od nowa bez punktów arkusza."""
+    sheets = _with_grid(make_sheets())
+    A, b, p, tag, offs, _c = bk._design("affine", sheets, [], bk.corner_nodes(sheets), 10.0, 1.0)
+    N = A.T @ (A * p[:, None])
+    Q = np.linalg.inv(N)
+    x = Q @ (A.T @ (b * p))
+    res = bk.BlockResult("affine", 10.0, sheets, [x[o:o + 6] for o in offs])
+    lo = bk.LeaveOut(res, A, b, p, tag, Q, x, offs)
+    for removed in ([1], [3], [1, 2], [0, 2]):
+        reduced = list(sheets)
+        for k in removed:
+            t = sheets[k]
+            reduced[k] = bk.BlockSheet(t.key, t.label, t.frame, np.zeros((0, 2)), np.zeros((0, 2)), grid=t.grid)
+        try:
+            direct = bk.adjust(reduced, "affine", 10.0, ties=[], nodes=bk.corner_nodes(sheets), check_sheets=False)
+        except bk.BlockError:
+            assert lo.params(removed) is None, removed                     # nieoznaczony w obu metodach
+            continue
+        assert np.allclose(lo.params(removed), np.concatenate(direct.params), atol=1e-6), removed
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_") and callable(f)]
     failed = 0

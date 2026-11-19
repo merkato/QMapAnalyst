@@ -84,6 +84,7 @@ assert dlg.lbl_title.text() == "„Flötzkarte” (1857): arkusze 3"
 
 # --- wyrównanie blokowe (#8)
 blk = dlg.block
+assert blk.result is None and blk.ensure() is not None       # zakładka liczona leniwie
 assert len(blk.sheets) == 3 and blk.result is not None and blk.tbl.rowCount() == 3, blk.lbl_info.text()
 assert all(s.grid is not None for s in blk.sheets) and "σ₀" in blk.lbl_info.text()
 assert len(blk.curve) >= 5 and blk.chart_svg and "<svg" in blk.chart_svg

@@ -38,7 +38,7 @@ class BlockPanel(QWidget):
         super().__init__(parent)
         self.panel = panel
         self.sheets, self.skipped, self.result, self.curve = [], [], None, []
-        self.unit_m, self.chart_svg, self.map_id = 1.0, None, None
+        self.unit_m, self.chart_svg, self.map_id, self._pending = 1.0, None, None, False
         self._timer = QTimer(self)
         self._timer.setSingleShot(True)
         self._timer.setInterval(200)
@@ -99,7 +99,20 @@ class BlockPanel(QWidget):
         self.sheets, self.skipped = bk.sheets_from_library(lib, map_id, current)
         self.unit_m = lb.crs_metres_per_unit(lib.crs_wkt)
         self.curve = []
-        self.recompute()
+        self._pending = True
+        if self.isVisible():                            # zakładka otwarta – od razu; inaczej przy pierwszym pokazaniu
+            self.recompute()
+
+    def ensure(self):
+        """Wyniki policzone (zakładka liczy się leniwie – okno wydawnictwa otwiera się od razu)."""
+        if self._pending:
+            self.recompute()
+        return self.result
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self._pending:
+            self.recompute()
 
     def model(self):
         return self.cmb_model.currentData()
@@ -109,6 +122,7 @@ class BlockPanel(QWidget):
         self.recompute()
 
     def recompute(self):
+        self._pending = False
         w = bk.slider_to_weight(self.sld_seam.value())
         self.lbl_weight.setText("w = 0" if w == 0 else f"w = {w:.3g}")
         self.result = None

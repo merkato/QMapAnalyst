@@ -224,6 +224,7 @@ class PublicationDialog(QDialog):
 
     def open_rectify(self):
         blk = self.block
+        blk.ensure()
         if not blk.sheets or self.pub is None:
             return None
         from .block_panel import bk

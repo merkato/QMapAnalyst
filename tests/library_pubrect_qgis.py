@@ -74,6 +74,7 @@ assert panel.use_library(path)
 
 dlg = pd.PublicationDialog(panel, mid, dock)
 blk = dlg.block
+blk.ensure()
 assert len(blk.sheets) == 4 and {s.label: s.grid for s in blk.sheets} == {"00": (0, 0), "01": (0, 1), "10": (1, 0), "11": (1, 1)}
 assert not any(s.grid_saved for s in blk.sheets)
 # poprawka siatki w tabeli i zapis
