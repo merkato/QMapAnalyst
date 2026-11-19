@@ -19,7 +19,6 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from . import math_engine as me
 from . import rectify as rc
 
 BLOCK_MODELS = {"helmert": 4, "affine": 6, "bilinear": 8}
