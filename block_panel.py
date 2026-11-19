@@ -20,7 +20,8 @@ from . import block as bk
 from . import charts as ch
 from . import library as lb
 from . import series_report as srep
-from .series_dialog import _INT, _REAL, _STR, _item, _num, _table
+from .layers import replace_features, tag_layer, tagged_layer
+from .series_dialog import _INT, _REAL, _STR, _item, _num, _table, row_index, sorted_fill
 
 
 def tr(text):
@@ -37,7 +38,7 @@ class BlockPanel(QWidget):
         super().__init__(parent)
         self.panel = panel
         self.sheets, self.skipped, self.result, self.curve = [], [], None, []
-        self.unit_m, self.chart_svg = 1.0, None
+        self.unit_m, self.chart_svg, self.map_id = 1.0, None, None
         self._timer = QTimer(self)
         self._timer.setSingleShot(True)
         self._timer.setInterval(200)
@@ -94,6 +95,7 @@ class BlockPanel(QWidget):
 
     # --- dane --------------------------------------------------------------------
     def load(self, lib, map_id, current=None):
+        self.map_id = map_id
         self.sheets, self.skipped = bk.sheets_from_library(lib, map_id, current)
         self.unit_m = lb.crs_metres_per_unit(lib.crs_wkt)
         self.curve = []
@@ -125,9 +127,10 @@ class BlockPanel(QWidget):
         if not self.curve:
             self.curve = bk.tradeoff(self.sheets, self.model(), positions=(0, 25, 40, 50, 60, 75, 90, 100), unit_m=self.unit_m)
         self.btn_layers.setEnabled(True)
-        self._fill_table()
+        sorted_fill(self.tbl, self._fill_table)
         self._fill_info()
         self._draw_chart()
+        self.refresh_layers()
 
     def _fill_table(self):
         r = self.result
@@ -147,12 +150,14 @@ class BlockPanel(QWidget):
                                 tr("wiersz, kolumna w siatce arkuszy – wykryte po wstępnym wpasowaniu; "
                                    "dwuklik – popraw (np. „2, 3”)"))
             cells[1].setFlags(cells[1].flags() | Qt.ItemFlag.ItemIsEditable)
+            cells[0].setData(Qt.ItemDataRole.UserRole, k)
             for c, it in enumerate(cells):
                 t.setItem(k, c, it)
         self._filling = False
 
     def on_item_changed(self, item):
-        if self._filling or item.column() != 1 or not 0 <= item.row() < len(self.sheets):
+        k = row_index(self.tbl, item.row())
+        if self._filling or item.column() != 1 or not 0 <= k < len(self.sheets):
             return
         parts = [p for p in item.text().replace(";", ",").split(",") if p.strip()]
         try:
@@ -160,7 +165,7 @@ class BlockPanel(QWidget):
         except ValueError:
             self.recompute()
             return
-        s = self.sheets[item.row()]
+        s = self.sheets[k]
         s.grid, s.grid_saved = (row, col), False
         self.curve = []
         self._timer.start()
@@ -178,7 +183,7 @@ class BlockPanel(QWidget):
             return False
         for s in self.sheets:
             s.grid_saved = s.grid is not None
-        self._fill_table()
+        sorted_fill(self.tbl, self._fill_table)
         self.lbl_info.setText(tr("Zapisano układ siatki arkuszy w bibliotece."))
         return True
 
@@ -190,6 +195,12 @@ class BlockPanel(QWidget):
         if math.isfinite(g_mean):
             lines.append(tr("Szczeliny na stykach (narożniki ramek): średnio {a} m, maks. {b} m.").format(
                 a=_num(g_mean * self.unit_m), b=_num(g_max * self.unit_m)))
+        nodes = bk.corner_nodes(self.sheets)
+        linked = {i for owners in nodes.values() for i, _k in owners}
+        lines.append(tr("Zszyte narożniki: {n} węzłów (narożniki odległe po wstępnym wpasowaniu nie są łączone).").format(n=len(nodes)))
+        lonely = [s.label for i, s in enumerate(self.sheets) if i not in linked]
+        if lonely and len(self.sheets) > 1:
+            lines.append(tr("Arkusze bez wspólnych narożników z sąsiadami: {s}.").format(s=", ".join(lonely)))
         if r.ties:
             bad = sum(1 for w in r.tie_std if w > 3.29)
             lines.append(tr("Punkty wiążące (ten sam obiekt na dwóch arkuszach): {n}, odstające {k}.").format(n=len(r.ties), k=bad))
@@ -213,10 +224,45 @@ class BlockPanel(QWidget):
         return min((p[0] for p in self.curve), key=lambda q: abs(q - v))
 
     # --- warstwy -----------------------------------------------------------------
+    def _poly_features(self, layer):
+        r = self.result
+        feats = []
+        for k, s in enumerate(self.sheets):
+            f = QgsFeature(layer.fields())
+            f.setGeometry(QgsGeometry.fromPolygonXY([[QgsPointXY(x, y) for x, y in r.footprint(k)]]))
+            f.setAttributes([s.label, len(s.src), _finite(r.sheet_sigma0[k]), _finite(r.sheet_rmse[k]),
+                             _finite(r.sheet_offset[k] if r.sheet_offset else float("nan"))])
+            feats.append(f)
+        return feats
+
+    def _gap_features(self, layer):
+        feats = []
+        for g in self.result.gaps:
+            (x, y), (dx, dy) = g.at, g.vec
+            f = QgsFeature(layer.fields())
+            f.setGeometry(QgsGeometry.fromPolylineXY([QgsPointXY(x - dx / 2, y - dy / 2), QgsPointXY(x + dx / 2, y + dy / 2)]))
+            f.setAttributes([g.kind, f"{self.sheets[g.a].label}/{self.sheets[g.b].label}", g.name, round(g.gap * self.unit_m, 2)])
+            feats.append(f)
+        return feats
+
+    def refresh_layers(self):
+        """Warstwy zasięgów i szczelin już dodane do projektu – wyniki bieżącego wyrównania."""
+        if self.result is None or self.map_id is None:
+            return []
+        out = []
+        for tag, make in (("block_footprints", self._poly_features), ("block_gaps", self._gap_features)):
+            lyr = tagged_layer(tag, self.map_id)
+            if lyr is not None:
+                out.append(replace_features(lyr, make(lyr)))
+        return out
+
     def add_layers(self):
         r = self.result
         if r is None:
             return []
+        existing = self.refresh_layers()
+        if len(existing) == 2:
+            return existing
         crs = self.panel.library_crs()
         poly = QgsVectorLayer("Polygon", tr("Wyrównanie blokowe – zasięgi arkuszy"), "memory")
         lines = QgsVectorLayer("LineString", tr("Wyrównanie blokowe – szczeliny"), "memory")
@@ -229,22 +275,8 @@ class BlockPanel(QWidget):
                                             QgsField("gap_m", _REAL)])
         poly.updateFields()
         lines.updateFields()
-        feats = []
-        for k, s in enumerate(self.sheets):
-            f = QgsFeature(poly.fields())
-            f.setGeometry(QgsGeometry.fromPolygonXY([[QgsPointXY(x, y) for x, y in r.footprint(k)]]))
-            f.setAttributes([s.label, len(s.src), _finite(r.sheet_sigma0[k]), _finite(r.sheet_rmse[k]),
-                             _finite(r.sheet_offset[k] if r.sheet_offset else float("nan"))])
-            feats.append(f)
-        poly.dataProvider().addFeatures(feats)
-        feats = []
-        for g in r.gaps:
-            (x, y), (dx, dy) = g.at, g.vec
-            f = QgsFeature(lines.fields())
-            f.setGeometry(QgsGeometry.fromPolylineXY([QgsPointXY(x - dx / 2, y - dy / 2), QgsPointXY(x + dx / 2, y + dy / 2)]))
-            f.setAttributes([g.kind, f"{self.sheets[g.a].label}/{self.sheets[g.b].label}", g.name, round(g.gap * self.unit_m, 2)])
-            feats.append(f)
-        lines.dataProvider().addFeatures(feats)
+        poly.dataProvider().addFeatures(self._poly_features(poly))
+        lines.dataProvider().addFeatures(self._gap_features(lines))
         for lyr in (poly, lines):
             lyr.updateExtents()
         poly.setRenderer(QgsSingleSymbolRenderer(QgsFillSymbol.createSimple(
@@ -258,9 +290,10 @@ class BlockPanel(QWidget):
         poly.setLabelsEnabled(True)
         from .layers import style_arrows
         style_arrows(lines, QColor(208, 59, 59), 0.6)
+        tag_layer(poly, "block_footprints", self.map_id)
+        tag_layer(lines, "block_gaps", self.map_id)
         QgsProject.instance().addMapLayers([poly, lines])
         return [poly, lines]
-
 
 def _finite(v):
     return round(v, 3) if v is not None and math.isfinite(v) else None

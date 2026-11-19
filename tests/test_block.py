@@ -120,6 +120,24 @@ def test_tradeoff_curve_and_ties_std():
     assert abs(bk.slider_to_weight(100) - 100) < 1e-9 and bk.slider_to_weight(0) == 0
 
 
+def test_brick_layout_wrong_grid_not_stitched():
+    """Rząd dolny przesunięty o pół arkusza, a siatka błędnie przypisana (wszystkie arkusze w jednej komórce):
+    zszywane są tylko narożniki rzeczywiście bliskie, wyrównanie nie psuje arkuszy."""
+    rng = np.random.default_rng(9)
+    sheets = []
+    for r in range(2):
+        for c in range(2):
+            off = 0.5 * W if r == 1 else 0.0
+            src = np.column_stack([rng.uniform(50, W - 50, 8), rng.uniform(-H + 50, -50, 8)])
+            dst = np.array([world(0, 0, c * W + off + x, -r * H + y) for x, y in src]) + rng.normal(0, 5, (8, 2))
+            sheets.append(bk.BlockSheet(len(sheets), f"{r}{c}", [(0, 0), (W, 0), (W, -H), (0, -H)], src, dst,
+                                        [""] * 8, [""] * 8, grid=(0, 0)))
+    nodes = bk.corner_nodes(sheets)
+    assert sorted(len(o) for o in nodes.values()) == [2, 2, 2, 2], nodes        # tylko styki w obrębie rzędów
+    res = bk.adjust(sheets, "affine", seam_weight=100)
+    assert res.rmse < 12 and res.gap_stats()[1] < 1.0, (res.rmse, res.gap_stats())
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_") and callable(f)]
     failed = 0

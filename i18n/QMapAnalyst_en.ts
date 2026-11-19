@@ -3701,8 +3701,16 @@ Update the reference coordinates of these points?</translation>
         <translation>σ₀ = {s} m, point RMSE = {r} m, redundancy {f}.</translation>
     </message>
     <message>
+        <source>Zszyte narożniki: {n} węzłów (narożniki odległe po wstępnym wpasowaniu nie są łączone).</source>
+        <translation>Stitched corners: {n} nodes (corners far apart after the preliminary fit are not joined).</translation>
+    </message>
+    <message>
         <source>Szczeliny na stykach (narożniki ramek): średnio {a} m, maks. {b} m.</source>
         <translation>Seam gaps (frame corners): mean {a} m, max. {b} m.</translation>
+    </message>
+    <message>
+        <source>Arkusze bez wspólnych narożników z sąsiadami: {s}.</source>
+        <translation>Sheets without shared corners with neighbours: {s}.</translation>
     </message>
     <message>
         <source>Punkty wiążące (ten sam obiekt na dwóch arkuszach): {n}, odstające {k}.</source>

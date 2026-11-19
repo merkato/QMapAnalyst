@@ -281,3 +281,30 @@ def set_labels(layer, expression: str, color: QColor, on_line=False, size=8.0):
         s.dist = 1.0
     layer.setLabeling(QgsVectorLayerSimpleLabeling(s))
     layer.setLabelsEnabled(True)
+
+
+# ---------------------------------------------------------------------------
+#  Warstwy wynikowe odświeżane w miejscu (skorowidz, zasięgi po wyrównaniu…)
+# ---------------------------------------------------------------------------
+def tagged_layer(tag, key):
+    """Warstwa projektu oznaczona przez tag_layer(tag, key) albo None."""
+    for lyr in QgsProject.instance().mapLayers().values():
+        if lyr.customProperty("qma/tag") == tag and str(lyr.customProperty("qma/key")) == str(key):
+            return lyr
+    return None
+
+
+def tag_layer(layer, tag, key):
+    layer.setCustomProperty("qma/tag", tag)
+    layer.setCustomProperty("qma/key", str(key))
+    return layer
+
+
+def replace_features(layer, feats):
+    """Nowe obiekty w istniejącej warstwie pamięciowej (bez dodawania kolejnej warstwy do projektu)."""
+    pr = layer.dataProvider()
+    pr.truncate()
+    pr.addFeatures(feats)
+    layer.updateExtents()
+    layer.triggerRepaint()
+    return layer

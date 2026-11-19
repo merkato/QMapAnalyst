@@ -77,7 +77,7 @@ def node_quads(result):
     """Czworokąty węzłów dla arkuszy: narożnik wspólny = średnia położeń z arkuszy, które go dzielą."""
     sheets = result.sheets
     quads = [result.transform(i, s.frame).copy() for i, s in enumerate(sheets)]
-    for owners in bk.nodes_from_grid(sheets).values():
+    for owners in bk.corner_nodes(sheets).values():
         mean = np.mean([quads[i][k] for i, k in owners], axis=0)
         for i, k in owners:
             quads[i][k] = mean
@@ -110,8 +110,6 @@ def build_plan(sheets, method="tps", lam=None, stitch=STITCH_NODES, model="bilin
                priorities=None, unit_m=1.0):
     """Plan rektyfikacji wydawnictwa. stitch=nodes wymaga siatki (s.grid); seam_weight – tylko w trybie blok."""
     if stitch == STITCH_NODES:
-        if any(s.grid is None for s in sheets):
-            raise bk.BlockError("tryb węzłów wymaga położenia wszystkich arkuszy w siatce")
         result = bk.adjust(sheets, "bilinear", HARD_SEAM_WEIGHT, unit_m=unit_m, check_sheets=False)
         quads = node_quads(result)
         bases = [_bilinear_func(s.frame, q) for s, q in zip(sheets, quads)]

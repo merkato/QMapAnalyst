@@ -170,6 +170,67 @@ def nodes_from_grid(sheets):
     return nodes
 
 
+CORNER_TOL = 0.25                              # zszywane narożniki: do 25 % mediany boku arkusza
+
+
+class _UnionFind:
+    def __init__(self):
+        self.parent = {}
+
+    def find(self, a):
+        while self.parent.setdefault(a, a) != a:
+            self.parent[a] = self.parent[self.parent[a]]
+            a = self.parent[a]
+        return a
+
+    def union(self, a, b):
+        self.parent[self.find(a)] = self.find(b)
+
+    def groups(self):
+        out = {}
+        for key in list(self.parent):
+            out.setdefault(self.find(key), []).append(key)
+        return list(out.values())
+
+
+def _initial_corners(sheets):
+    """Narożniki ramek po wstępnym wpasowaniu afinicznym {arkusz: 4×2} i mediana boku arkusza."""
+    corners = {}
+    for i, s in enumerate(sheets):
+        f = _initial(s)
+        if f is not None:
+            corners[i] = f.predict(np.asarray(s.frame, float))
+    sides = [np.hypot(*(q[1] - q[0])) for q in corners.values()] + [np.hypot(*(q[3] - q[0])) for q in corners.values()]
+    return corners, (float(np.median(sides)) if sides else 0.0)
+
+
+def _link_close(uf, a, ca, b, cb, limit):
+    """Łączy narożniki dwóch arkuszy, które są dla siebie nawzajem najbliższe i bliższe niż limit."""
+    d = np.hypot(*(ca[:, None, :] - cb[None, :, :]).transpose(2, 0, 1))      # 4×4
+    for k in range(4):
+        m = int(np.argmin(d[k]))
+        if d[k, m] < limit and int(np.argmin(d[:, m])) == k:
+            uf.union((a, k), (b, m))
+
+
+def corner_nodes(sheets, tol=CORNER_TOL):
+    """Węzły zszycia: narożniki ramek, które po wstępnym wpasowaniu afinicznym każdego arkusza leżą blisko
+    siebie (< tol × mediana boku arkusza) – niezależnie od siatki, więc działa też dla arkuszy zachodzących
+    na siebie, przesuniętych o pół arkusza („cegiełka”) i źle przypisanych do siatki. Arkusz bez wstępnego
+    wpasowania (< 3 GCP) łączy się wg siatki (nodes_from_grid). Zwraca {węzeł: [(arkusz, narożnik)]}."""
+    corners, side = _initial_corners(sheets)
+    uf = _UnionFind()
+    keys = sorted(corners)
+    for x, a in enumerate(keys):
+        for b in keys[x + 1:]:
+            _link_close(uf, a, corners[a], b, corners[b], tol * side)
+    for owners in nodes_from_grid(sheets).values():                          # arkusze bez wpasowania
+        for o in owners[1:]:
+            if o[0] not in corners or owners[0][0] not in corners:
+                uf.union(owners[0], o)
+    return {n: sorted(g) for n, g in enumerate(uf.groups()) if len(g) > 1}
+
+
 def ties_from_uids(sheets):
     """Punkty biblioteki wskazane na dwóch arkuszach → punkty wiążące (ia, pa, ib, pb, nazwa)."""
     where = {}
@@ -237,7 +298,7 @@ def adjust(sheets, model="bilinear", seam_weight=None, ties=None, nodes=None, ti
         raise BlockError(f"unknown model {model}")
     seam_weight = slider_to_weight(SEAM_SLIDER_DEFAULT) if seam_weight is None else float(seam_weight)
     ties = ties_from_uids(sheets) if ties is None else ties
-    nodes = nodes_from_grid(sheets) if nodes is None else nodes
+    nodes = corner_nodes(sheets) if nodes is None else nodes
     A, b, p, tag, offs, corners = _design(model, sheets, ties, nodes, seam_weight, tie_weight)
     N = A.T @ (A * p[:, None])
     if np.linalg.matrix_rank(N) < N.shape[0]:
@@ -389,10 +450,21 @@ def sheets_from_library(lib, map_id, current=None):
         sheets.append(BlockSheet(a.analysis_id, label, frame, [(ln.x_old, ln.y_old) for ln in use], dst,
                                  [ln.uid or "" for ln in use], [ln.name or "" for ln in use], analysis=a))
     grid = detect_grid(sheets)
+    saved = {i: (s.analysis.grid_row, s.analysis.grid_col) for i, s in enumerate(sheets)
+             if s.analysis.grid_row is not None and s.analysis.grid_col is not None}
+    shift = _grid_shift(grid, saved)
     for i, s in enumerate(sheets):
-        a = s.analysis
-        if a.grid_row is not None and a.grid_col is not None:
-            s.grid, s.grid_saved = (a.grid_row, a.grid_col), True
-        else:
-            s.grid = grid.get(i)
+        if i in saved:
+            s.grid, s.grid_saved = saved[i], True
+        elif i in grid:
+            s.grid = (grid[i][0] + shift[0], grid[i][1] + shift[1])
     return sheets, skipped
+
+
+def _grid_shift(detected, saved):
+    """Przesunięcie (wiersz, kolumna) wykrytej siatki względem zapisanej – najczęstsza różnica dla arkuszy, które
+    mają oba położenia (siatka wykryta na nowo, gdy doszły arkusze, zaczyna się od innego wiersza/kolumny)."""
+    diffs = [(saved[i][0] - detected[i][0], saved[i][1] - detected[i][1]) for i in saved if i in detected]
+    if not diffs:
+        return (0, 0)
+    return max(set(diffs), key=diffs.count)

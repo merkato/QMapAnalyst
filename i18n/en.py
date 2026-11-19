@@ -1048,4 +1048,8 @@ EN = {
     'Przetwarzanie trwa. Przerwać?': 'Processing is running. Cancel it?',
     'Arkusz {k} z {n}: {s}': 'Sheet {k} of {n}: {s}',
     'Rektyfikacja mapy': 'Map rectification',
+
+    # --- wydawnictwo: arkusze nieregularne
+    'Zszyte narożniki: {n} węzłów (narożniki odległe po wstępnym wpasowaniu nie są łączone).': 'Stitched corners: {n} nodes (corners far apart after the preliminary fit are not joined).',
+    'Arkusze bez wspólnych narożników z sąsiadami: {s}.': 'Sheets without shared corners with neighbours: {s}.',
 }

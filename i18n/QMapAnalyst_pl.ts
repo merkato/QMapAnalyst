@@ -3701,8 +3701,16 @@ Zaktualizować współrzędne odniesienia tych punktów?</translation>
         <translation>σ₀ = {s} m, RMSE punktów = {r} m, liczba nadwyżkowa {f}.</translation>
     </message>
     <message>
+        <source>Zszyte narożniki: {n} węzłów (narożniki odległe po wstępnym wpasowaniu nie są łączone).</source>
+        <translation>Zszyte narożniki: {n} węzłów (narożniki odległe po wstępnym wpasowaniu nie są łączone).</translation>
+    </message>
+    <message>
         <source>Szczeliny na stykach (narożniki ramek): średnio {a} m, maks. {b} m.</source>
         <translation>Szczeliny na stykach (narożniki ramek): średnio {a} m, maks. {b} m.</translation>
+    </message>
+    <message>
+        <source>Arkusze bez wspólnych narożników z sąsiadami: {s}.</source>
+        <translation>Arkusze bez wspólnych narożników z sąsiadami: {s}.</translation>
     </message>
     <message>
         <source>Punkty wiążące (ten sam obiekt na dwóch arkuszach): {n}, odstające {k}.</source>

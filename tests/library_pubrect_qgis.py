@@ -77,9 +77,10 @@ blk = dlg.block
 assert len(blk.sheets) == 4 and {s.label: s.grid for s in blk.sheets} == {"00": (0, 0), "01": (0, 1), "10": (1, 0), "11": (1, 1)}
 assert not any(s.grid_saved for s in blk.sheets)
 # poprawka siatki w tabeli i zapis
-row = [s.label for s in blk.sheets].index("11")
+row = next(r for r in range(blk.tbl.rowCount()) if blk.tbl.item(r, 0).text() == "11")   # wiersz w tabeli
+k11 = [s.label for s in blk.sheets].index("11")
 blk.tbl.item(row, 1).setText("3, 3")
-assert blk.sheets[row].grid == (2, 2)
+assert blk.sheets[k11].grid == (2, 2)
 blk.tbl.item(row, 1).setText("2, 2")
 assert blk.save_grid()
 with lb.Library.open(path) as lib:

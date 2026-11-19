@@ -19,7 +19,8 @@ from . import library as lb
 from . import math_engine as me
 from . import publication as pb
 from . import series_report as srep
-from .series_dialog import _INT, _REAL, _STR, _item, _num, _table
+from .layers import replace_features, tag_layer, tagged_layer
+from .series_dialog import _INT, _REAL, _STR, _item, _num, _table, row_index, sorted_fill
 
 
 def tr(text):
@@ -114,9 +115,10 @@ class PublicationDialog(QDialog):
             self.pub = None
             self.lbl_summary.setText(self.panel._library_error(e))
             return
-        self._fill_sheets()
-        self._fill_overlaps()
+        sorted_fill(self.tbl_sheets, self._fill_sheets)
+        sorted_fill(self.tbl_overlaps, self._fill_overlaps)
         self._fill_summary()
+        self.refresh_index_layer()
         self.charts = srep.publication_charts(self.pub, self._sheet_label)
         self.charts_view.set_charts(self.charts)
 
@@ -166,6 +168,7 @@ class PublicationDialog(QDialog):
                          align=Qt.AlignmentFlag.AlignCenter)]
             if not s.fitted:
                 cells[1].setToolTip(tr("za mało punktów do wyrównania wybranym modelem"))
+            cells[0].setData(Qt.ItemDataRole.UserRole, r)
             for c, it in enumerate(cells):
                 t.setItem(r, c, it)
 
@@ -211,6 +214,7 @@ class PublicationDialog(QDialog):
 
     # --- akcje -------------------------------------------------------------------
     def on_sheet_double_clicked(self, row, _col):
+        row = row_index(self.tbl_sheets, row)
         if self.pub is None or not 0 <= row < len(self.pub.sheets) or self.host is None:
             return
         aid = self.pub.sheets[row].analysis.analysis_id
@@ -229,10 +233,29 @@ class PublicationDialog(QDialog):
         dlg.exec()
         return dlg
 
+    def _index_features(self, layer):
+        feats = []
+        for s in self.pub.sheets:
+            if not s.footprint:
+                continue
+            f = QgsFeature(layer.fields())
+            f.setGeometry(QgsGeometry.fromPolygonXY([[QgsPointXY(x, y) for x, y in s.footprint]]))
+            f.setAttributes([s.analysis.sheet, s.n, _finite(s.rmse_m), _finite(s.scale_den), _finite(s.rotation_deg)])
+            feats.append(f)
+        return feats
+
+    def refresh_index_layer(self):
+        """Warstwa skorowidza już dodana do projektu – nowe zasięgi (np. po dodaniu arkusza); None – brak warstwy."""
+        layer = tagged_layer("sheet_index", self.map_id) if self.pub is not None else None
+        return replace_features(layer, self._index_features(layer)) if layer is not None else None
+
     def add_index_layer(self):
         pub = self.pub
         if pub is None:
             return None
+        existing = self.refresh_index_layer()
+        if existing is not None:
+            return existing
         layer = QgsVectorLayer("Polygon", tr("Skorowidz arkuszy – {title}").format(title=pub.map.title or "?"), "memory")
         if self.panel.library_crs().isValid():
             layer.setCrs(self.panel.library_crs())
@@ -240,15 +263,7 @@ class PublicationDialog(QDialog):
         pr.addAttributes([QgsField("sheet", _STR), QgsField("points", _INT), QgsField("rmse_m", _REAL),
                           QgsField("scale_den", _REAL), QgsField("rotation", _REAL)])
         layer.updateFields()
-        feats = []
-        for s in pub.sheets:
-            if not s.footprint:
-                continue
-            f = QgsFeature(layer.fields())
-            f.setGeometry(QgsGeometry.fromPolygonXY([[QgsPointXY(x, y) for x, y in s.footprint]]))
-            f.setAttributes([s.analysis.sheet, s.n, _finite(s.rmse_m), _finite(s.scale_den), _finite(s.rotation_deg)])
-            feats.append(f)
-        pr.addFeatures(feats)
+        pr.addFeatures(self._index_features(layer))
         layer.updateExtents()
         layer.setRenderer(QgsSingleSymbolRenderer(QgsFillSymbol.createSimple(
             {"color": "0,140,200,30", "outline_color": "0,110,170", "outline_width": "0.5"})))
@@ -259,6 +274,7 @@ class PublicationDialog(QDialog):
         settings.setFormat(fmt)
         layer.setLabeling(QgsVectorLayerSimpleLabeling(settings))
         layer.setLabelsEnabled(True)
+        tag_layer(layer, "sheet_index", self.map_id)
         QgsProject.instance().addMapLayer(layer)
         return layer
 

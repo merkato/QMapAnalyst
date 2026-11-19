@@ -5,6 +5,7 @@ i trajektorii punktów na mapie głównej; eksport.
 """
 
 import math
+import re
 
 from qgis.PyQt.QtCore import QCoreApplication, Qt
 from qgis.PyQt.QtGui import QBrush, QColor, QFont
@@ -42,8 +43,55 @@ def _num(v, nd=1):
     return "–" if v is None or not math.isfinite(v) else f"{v:,.{nd}f}".replace(",", " ")
 
 
+_NUM_RE = re.compile(r"[-−]?\d[\d\s ]*(?:[.,]\d+)?")
+
+
+def sort_key(text):
+    """Klucz sortowania komórki: liczba (1 234,5 / 1 : 58 226 / 13.20°) albo naturalny porządek tekstu
+    („arkusz 2” przed „arkusz 10”); puste i „–” na końcu."""
+    t = (text or "").strip()
+    if t in ("", "–", "-", "!"):
+        return (2, 0.0, "") if t != "!" else (0, -1.0, "")
+    if ":" in t and t.startswith("1"):                      # skala 1 : 58 226
+        t = t.split(":", 1)[1]
+    m = _NUM_RE.fullmatch(t.replace("°", "").replace("%", "").replace("m", "").strip())
+    if m:
+        try:
+            return (0, float(m.group(0).replace(" ", "").replace(" ", "").replace(",", ".").replace("−", "-")), "")
+        except ValueError:
+            pass
+    parts = re.split(r"(\d+)", t.lower())
+    return (1, 0.0, tuple((0, int(p), "") if p.isdigit() else (1, 0, p) for p in parts if p))
+
+
+class SortItem(QTableWidgetItem):
+    """Komórka sortowana liczbowo albo naturalnie (QTableWidget porównuje domyślnie tekst)."""
+
+    def __lt__(self, other):
+        try:
+            return sort_key(self.text()) < sort_key(other.text())
+        except TypeError:
+            return self.text() < other.text()
+
+
+def sorted_fill(table, fill):
+    """Wypełnienie tabeli z sortowaniem wyłączonym na czas wstawiania (inaczej wiersze się przestawiają)."""
+    table.setSortingEnabled(False)
+    try:
+        fill()
+    finally:
+        table.setSortingEnabled(True)
+
+
+def row_index(table, row):
+    """Indeks danych wiersza (UserRole w kolumnie 0) – po posortowaniu różny od numeru wiersza."""
+    it = table.item(row, 0)
+    v = it.data(Qt.ItemDataRole.UserRole) if it is not None else None
+    return row if v is None else int(v)
+
+
 def _item(text, tip=None, align=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter):
-    it = QTableWidgetItem(text)
+    it = SortItem(text)
     it.setTextAlignment(align)
     if tip:
         it.setToolTip(tip)
@@ -57,6 +105,7 @@ def _table(columns):
     t.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
     t.verticalHeader().setDefaultSectionSize(22)
     t.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+    t.horizontalHeader().setSortIndicator(0, Qt.SortOrder.AscendingOrder)   # po włączeniu sortowania – wg 1. kolumny
     return t
 
 

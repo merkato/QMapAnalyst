@@ -4,6 +4,7 @@ Okno „Wydawnictwo wieloarkuszowe” (offscreen):
 """
 import faulthandler; faulthandler.enable()  # noqa: E702
 import importlib.util
+import math
 import os
 import shutil
 import sys
@@ -91,14 +92,31 @@ blk.recompute()
 tight = blk.result.gap_stats()[1]
 blk.sld_seam.setValue(0)
 blk.recompute()
-assert blk.lbl_weight.text() == "w = 0" and blk.result.gap_stats()[1] >= tight
+assert blk.lbl_weight.text() == "w = 0"
+# arkusze testowe zachodzą na siebie (wspólne punkty na zakładkach) – ich narożniki nie są zszywane
+assert not blk.result.corner_gaps() and math.isnan(tight) and len(blk.result.ties) > 0
 blk.cmb_model.setCurrentIndex(blk.cmb_model.findData("affine"))
 assert blk.result is not None and blk.result.model == "affine"
 poly, lines = blk.add_layers()
 assert poly.featureCount() == 3 and lines.featureCount() >= 1 and poly.crs().authid() == "EPSG:2180"
+n_layers = len(project.mapLayers())
+assert blk.add_layers() == [poly, lines] and len(project.mapLayers()) == n_layers      # odświeżenie, bez duplikatów
+blk.sld_seam.setValue(40)
+blk.recompute()                                                       # warstwy w projekcie odświeżane same
+assert poly.featureCount() == 3 and "Zszyte narożniki" in blk.lbl_info.text()
+# sortowanie: po RMSE rosnąco, dwuklik nadal wskazuje właściwy arkusz
+from qgis.PyQt.QtCore import Qt as _Qt
+t.sortItems(3, _Qt.SortOrder.AscendingOrder)
+vals = [float(t.item(r, 3).text().replace(" ", "")) for r in range(t.rowCount())]
+assert vals == sorted(vals), vals
+t.sortItems(0, _Qt.SortOrder.AscendingOrder)                         # z powrotem wg arkusza
 
 layer = dlg.add_index_layer()
 assert layer.featureCount() == 3 and layer.crs().authid() == "EPSG:2180" and layer.labelsEnabled()
+n_layers = len(project.mapLayers())
+assert dlg.add_index_layer() is layer and len(project.mapLayers()) == n_layers
+dlg.refresh()
+assert dlg.refresh_index_layer() is layer and layer.featureCount() == 3
 assert sorted(f["sheet"] for f in layer.getFeatures()) == ["1", "10", "2"]
 
 out = os.path.join(TMP, "arkusze")
@@ -119,7 +137,8 @@ QFileDialog.getExistingDirectory = staticmethod(lambda *a, **k: charts_dir)
 assert len(dlg.export_charts()) == 4
 
 # dwuklik w arkusz – wczytanie arkusza
-dlg.on_sheet_double_clicked(2, 0)
+row10 = next(r for r in range(t.rowCount()) if t.item(r, 0).text() == "arkusz 10")   # wiersz po sortowaniu
+dlg.on_sheet_double_clicked(row10, 0)
 assert dlg.chosen_analysis == ids["10"] and dock.library_analysis.analysis_id == ids["10"]
 assert len(dock.gcps) == 7
 
