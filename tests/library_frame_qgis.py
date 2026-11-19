@@ -138,6 +138,25 @@ QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.StandardButton.N
 assert dock.open_library_analysis(aid)
 assert dock.map_frame == [(0, 0), (1000, 0), (1000, -1600), (0, -1600)] and not dock.analysis_dirty()
 
+# --- 5. „Resetuj”: pusty panel pod kolejny arkusz
+assert dock.btn_reset.isEnabled() and not dock.analysis_dirty()
+assert dock.reset_workspace()                                          # zapisane – bez pytania
+assert not dock.gcps and dock.old_raster_layer is None and dock.analysis is None and dock.map_frame is None
+assert dock.library_analysis is None and not dock._frame_bands and not dock.btn_reset.isEnabled()
+assert dock.tbl_gcp.rowCount() == 0 and dock.old_canvas.layers() == [] and not panel._used
+# niezapisane punkty: Anuluj – nic nie znika; Nie – porzucone
+dock.set_old_raster(QgsRasterLayer(raster, "scan"))
+dock.add_gcp(*PIX["P0"], *to_ref(*PIX["P0"]), name="P0", uid=uid["P0"])
+dock.gcps_changed()
+dock._recalc_timer.stop()
+assert dock.analysis_dirty()
+QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.StandardButton.Cancel)
+assert not dock.reset_workspace() and len(dock.gcps) == 1 and dock.old_raster_layer is not None
+QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.StandardButton.No)
+assert dock.reset_workspace() and not dock.gcps and dock.old_raster_layer is None
+dock.set_old_raster(QgsRasterLayer(raster, "scan"))                    # kolejny arkusz – skan wczytuje się normalnie
+assert dock.old_raster_layer is not None and dock.btn_frame.isEnabled()
+
 dock.cleanup()
 assert not dock._frame_bands
 project.removeAllMapLayers()

@@ -168,6 +168,14 @@
         <translation>Save GCPs (CSV / .points)…</translation>
     </message>
     <message>
+        <source>Resetuj</source>
+        <translation>Reset</translation>
+    </message>
+    <message>
+        <source>Nowy arkusz – jak „Resetuj” w Georeferencerze: czyści tabelę GCP, ramkę mapy i wyniki analizy oraz usuwa wczytany skan. Niezapisane punkty – pytanie o zapis w bibliotece.</source>
+        <translation>New sheet – like “Reset” in the Georeferencer: clears the GCP table, the map frame and the analysis results and removes the loaded scan. Unsaved points – asks whether to save them in the library.</translation>
+    </message>
+    <message>
         <source>Nazwy punktów</source>
         <translation>Point names</translation>
     </message>
@@ -532,6 +540,10 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>no (all points equal)</translation>
     </message>
     <message>
+        <source>Wyczyszczono punkty i skan. Wczytaj skan kolejnego arkusza.</source>
+        <translation>Points and scan cleared. Load the scan of the next sheet.</translation>
+    </message>
+    <message>
         <source>Zapisz raport analizy</source>
         <translation>Save analysis report</translation>
     </message>
@@ -836,6 +848,10 @@ Affine – additionally different axis scales and shear (e.g. paper shrinkage).
         <translation>yes – certain 1, uncertain 0.25, coordinate uncertainty from the library; range {lo}–{hi}</translation>
     </message>
     <message>
+        <source>Nie – porzuć zmiany.</source>
+        <translation>No – discard the changes.</translation>
+    </message>
+    <message>
         <source>Eksportowanie…</source>
         <translation>Exporting…</translation>
     </message>
@@ -1068,6 +1084,10 @@ No – append the new points to the existing ones.</translation>
         <translation>Best fit: {name} (σ₀ = {s} px, weight {w}%).</translation>
     </message>
     <message>
+        <source>Punkty ({n}) nie są zapisane. Wyczyścić je i usunąć skan?</source>
+        <translation>The points ({n}) are not saved. Clear them and remove the scan?</translation>
+    </message>
+    <message>
         <source>Podaj wartość parametru: {p}</source>
         <translation>Enter a value for: {p}</translation>
     </message>
@@ -1102,6 +1122,10 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>Estymacja odwzorowania</source>
         <translation>Projection estimation</translation>
+    </message>
+    <message>
+        <source>Punkty ({n}) mają niezapisane zmiany. Zapisać analizę w bibliotece przed resetem?</source>
+        <translation>The points ({n}) have unsaved changes. Save the analysis in the library before resetting?</translation>
     </message>
     <message>
         <source>Niepoprawny zapis kąta „{t}” ({p}).</source>
@@ -1174,10 +1198,6 @@ No – append the new points to the existing ones.</translation>
     <message>
         <source>Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka).</source>
         <translation>First open or create a point library (Library tab).</translation>
-    </message>
-    <message>
-        <source>Nie – porzuć zmiany.</source>
-        <translation>No – discard the changes.</translation>
     </message>
     <message>
         <source>Wszystkie wskazane punkty są już powiązane z biblioteką.</source>

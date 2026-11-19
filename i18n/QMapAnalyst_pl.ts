@@ -168,6 +168,14 @@
         <translation>Zapisz GCP (CSV / .points)…</translation>
     </message>
     <message>
+        <source>Resetuj</source>
+        <translation>Resetuj</translation>
+    </message>
+    <message>
+        <source>Nowy arkusz – jak „Resetuj” w Georeferencerze: czyści tabelę GCP, ramkę mapy i wyniki analizy oraz usuwa wczytany skan. Niezapisane punkty – pytanie o zapis w bibliotece.</source>
+        <translation>Nowy arkusz – jak „Resetuj” w Georeferencerze: czyści tabelę GCP, ramkę mapy i wyniki analizy oraz usuwa wczytany skan. Niezapisane punkty – pytanie o zapis w bibliotece.</translation>
+    </message>
+    <message>
         <source>Nazwy punktów</source>
         <translation>Nazwy punktów</translation>
     </message>
@@ -532,6 +540,10 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>nie (wszystkie punkty równoważne)</translation>
     </message>
     <message>
+        <source>Wyczyszczono punkty i skan. Wczytaj skan kolejnego arkusza.</source>
+        <translation>Wyczyszczono punkty i skan. Wczytaj skan kolejnego arkusza.</translation>
+    </message>
+    <message>
         <source>Zapisz raport analizy</source>
         <translation>Zapisz raport analizy</translation>
     </message>
@@ -836,6 +848,10 @@ Wielomianowa 2. stopnia – łagodne nieliniowe zniekształcenia (min. 6 punktó
         <translation>tak – pewny 1, niepewny 0,25, niepewność współrzędnych z biblioteki; zakres {lo}–{hi}</translation>
     </message>
     <message>
+        <source>Nie – porzuć zmiany.</source>
+        <translation>Nie – porzuć zmiany.</translation>
+    </message>
+    <message>
         <source>Eksportowanie…</source>
         <translation>Eksportowanie…</translation>
     </message>
@@ -1068,6 +1084,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
         <translation>Najlepsze dopasowanie: {name} (σ₀ = {s} px, waga {w}%).</translation>
     </message>
     <message>
+        <source>Punkty ({n}) nie są zapisane. Wyczyścić je i usunąć skan?</source>
+        <translation>Punkty ({n}) nie są zapisane. Wyczyścić je i usunąć skan?</translation>
+    </message>
+    <message>
         <source>Podaj wartość parametru: {p}</source>
         <translation>Podaj wartość parametru: {p}</translation>
     </message>
@@ -1102,6 +1122,10 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>Estymacja odwzorowania</source>
         <translation>Estymacja odwzorowania</translation>
+    </message>
+    <message>
+        <source>Punkty ({n}) mają niezapisane zmiany. Zapisać analizę w bibliotece przed resetem?</source>
+        <translation>Punkty ({n}) mają niezapisane zmiany. Zapisać analizę w bibliotece przed resetem?</translation>
     </message>
     <message>
         <source>Niepoprawny zapis kąta „{t}” ({p}).</source>
@@ -1174,10 +1198,6 @@ Nie – dopisz nowe punkty do istniejących.</translation>
     <message>
         <source>Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka).</source>
         <translation>Najpierw otwórz lub załóż bibliotekę punktów (zakładka Biblioteka).</translation>
-    </message>
-    <message>
-        <source>Nie – porzuć zmiany.</source>
-        <translation>Nie – porzuć zmiany.</translation>
     </message>
     <message>
         <source>Wszystkie wskazane punkty są już powiązane z biblioteką.</source>

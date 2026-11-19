@@ -1052,4 +1052,11 @@ EN = {
     # --- wydawnictwo: arkusze nieregularne
     'Zszyte narożniki: {n} węzłów (narożniki odległe po wstępnym wpasowaniu nie są łączone).': 'Stitched corners: {n} nodes (corners far apart after the preliminary fit are not joined).',
     'Arkusze bez wspólnych narożników z sąsiadami: {s}.': 'Sheets without shared corners with neighbours: {s}.',
+
+    # --- panel GCP: reset
+    'Resetuj': 'Reset',
+    'Nowy arkusz – jak „Resetuj” w Georeferencerze: czyści tabelę GCP, ramkę mapy i wyniki analizy oraz usuwa wczytany skan. Niezapisane punkty – pytanie o zapis w bibliotece.': 'New sheet – like “Reset” in the Georeferencer: clears the GCP table, the map frame and the analysis results and removes the loaded scan. Unsaved points – asks whether to save them in the library.',
+    'Wyczyszczono punkty i skan. Wczytaj skan kolejnego arkusza.': 'Points and scan cleared. Load the scan of the next sheet.',
+    'Punkty ({n}) nie są zapisane. Wyczyścić je i usunąć skan?': 'The points ({n}) are not saved. Clear them and remove the scan?',
+    'Punkty ({n}) mają niezapisane zmiany. Zapisać analizę w bibliotece przed resetem?': 'The points ({n}) have unsaved changes. Save the analysis in the library before resetting?',
 }

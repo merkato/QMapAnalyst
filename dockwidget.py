@@ -511,6 +511,10 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, MapFrameMixin, QDockWidget):
         self.btn_load_gcp.clicked.connect(self.load_gcp_from_file)
         self.btn_save_gcp = _button("", "/mActionFileSave.svg", self.tr("Zapisz GCP (CSV / .points)…"))
         self.btn_save_gcp.clicked.connect(self.save_gcp_to_file)
+        self.btn_reset = _button(self.tr("Resetuj"), "/mActionNewMap.svg", self.tr(
+            "Nowy arkusz – jak „Resetuj” w Georeferencerze: czyści tabelę GCP, ramkę mapy i wyniki analizy oraz "
+            "usuwa wczytany skan. Niezapisane punkty – pytanie o zapis w bibliotece."))
+        self.btn_reset.clicked.connect(self.reset_workspace)
         for b in (self.btn_add_gcp, self.btn_remove_gcp, self.btn_toggle_gcp, self.btn_gcp_to_library, self.btn_gcp_link,
                   self.btn_frame):
             row.addWidget(b)
@@ -524,6 +528,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, MapFrameMixin, QDockWidget):
         row.addWidget(self.chk_names)
         row.addWidget(self.btn_load_gcp)
         row.addWidget(self.btn_save_gcp)
+        row.addWidget(self.btn_reset)
         lay.addLayout(row)
         lay.addLayout(self._build_library_search_row())
 
@@ -1090,6 +1095,7 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, MapFrameMixin, QDockWidget):
         self.btn_lib_next.setEnabled(has_lib)
         self.btn_lib_save.setEnabled(has_lib)
         self.btn_frame.setEnabled(has_raster)
+        self.btn_reset.setEnabled(has_raster or bool(self.gcps) or bool(self.absent))
         self.btn_lib_absent.setEnabled(has_lib and self._lib_target is not None)
 
     # ------------------------------------------------------------------
@@ -2833,6 +2839,56 @@ class QMapAnalystDockWidget(LibraryAnalysisMixin, MapFrameMixin, QDockWidget):
 
     def export_report_html(self, path):
         return ex.write_html(path, self.build_full_report_html(dict(report.LIGHT)), self.report_title())
+
+    def _confirm_reset(self):
+        """Przed resetem: niezapisane punkty – zapisać w bibliotece, porzucić czy anulować? True – można czyścić."""
+        if not self.analysis_dirty():
+            return True
+        buttons = QMessageBox.StandardButton
+        if self.library_panel.path is None:
+            ans = QMessageBox.question(self, "QMapAnalyst", self.tr(
+                "Punkty ({n}) nie są zapisane. Wyczyścić je i usunąć skan?").format(n=len(self.gcps)))
+            return ans == buttons.Yes
+        ans = QMessageBox.question(self, "QMapAnalyst", self.tr(
+            "Punkty ({n}) mają niezapisane zmiany. Zapisać analizę w bibliotece przed resetem?").format(n=len(self.gcps))
+            + "\n\n" + self.tr("Nie – porzuć zmiany."), buttons.Yes | buttons.No | buttons.Cancel)
+        if ans == buttons.Cancel:
+            return False
+        return ans == buttons.No or bool(self.save_library_analysis())
+
+    @guarded
+    def reset_workspace(self):
+        """Jak „Resetuj” w Georeferencerze: pusta tabela GCP, brak skanu, ramki i wyników – pod kolejny arkusz."""
+        if not self._confirm_reset():
+            return False
+        self._recalc_timer.stop()
+        self._clear_lib_target()
+        self._remove_temp_marker()
+        self._remove_pred_marker()
+        self._frame_capture = None
+        self.clear_frame_bands()
+        self.clear_all_gcp()
+        self.registry.clear_old()
+        self.registry.clear_main()
+        self.old_canvas.setLayers([])
+        self.old_canvas.refresh()
+        self.old_raster_layer = None
+        self.map_frame = None
+        self.analysis = None
+        self.analysis_stale = False
+        self.projection = None
+        self.projection_stale = False
+        self.library_analysis = None
+        self._saved_signature = None
+        self.txt_report.clear()
+        self.txt_proj.clear()
+        self.tbl_proj.setRowCount(0)
+        self.refresh_table()
+        self.library_panel.set_used_uids([])
+        self.update_enabled_state()
+        self.update_analysis_label()
+        self.set_status(self.tr("Wyczyszczono punkty i skan. Wczytaj skan kolejnego arkusza."), "ok")
+        return True
 
     @guarded
     def open_rectify_dialog(self):
